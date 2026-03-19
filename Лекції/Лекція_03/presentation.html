@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 3 — Мережева архітектура та механізми тунелювання</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title   { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark    { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal    { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple  { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green   { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red     { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy    { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end     { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 14px 16px 14px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue  { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red   { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow{ border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple{ border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 900px; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 16px 20px;
+      font-family: 'Courier New', monospace; font-size: 0.9rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 3</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:2rem;margin-top:8px;">Мережева архітектура та механізми тунелювання</h1>
+    <p class="subtitle">Underlay / Overlay · Інкапсуляція · TUN/TAP · MTU · Split-Tunnel</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 2 — ПЛАН ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Концепція Underlay та Overlay мереж</li>
+      <li>Механізми інкапсуляції та накладні витрати (Overhead)</li>
+      <li>Віртуальні інтерфейси: драйвери TUN та TAP</li>
+      <li>Проблеми MTU, MSS та фрагментація пакетів у тунелях</li>
+      <li>Маршрутизація: Full-tunnel проти Split-tunnel</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 3 — UNDERLAY / OVERLAY INTRO ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Underlay vs Overlay мережі</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>🌐 Underlay (Фізична мережа)</h3>
+          <p>Реальна фізична або логічна інфраструктура Інтернету. Маршрутизатори, провайдери (ISP), фізичні канали, протоколи BGP/OSPF. Не контролюється VPN-адміністратором.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">🔒 Overlay (Віртуальна мережа)</h3>
+          <p>Логічна мережа, що «накладається» поверх Underlay. VPN-тунель — класичний приклад Overlay. Керується адміністратором VPN незалежно від фізичної топології.</p>
+        </div>
+      </div>
+    </div>
+    <div class="diagram" style="margin-top:10px;">
+      <div class="dbox blue">Хост A<br/><small>10.0.0.1</small></div>
+      <div class="arrow">⟶</div>
+      <div class="dbox yellow">Underlay<br/><small>Інтернет</small></div>
+      <div class="arrow">⟶</div>
+      <div class="dbox blue">Хост B<br/><small>10.0.0.2</small></div>
+    </div>
+    <div class="diagram">
+      <div class="dbox purple" style="font-size:0.85rem;">VPN Overlay тунель між Хост A ↔ Хост B (зашифрований)</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 4 — OVERLAY ПЕРЕВАГИ ═══════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Навіщо потрібна Overlay архітектура?</h2>
+    <div class="divider"></div>
+    <div class="wide">
+      <div class="cols">
+        <div class="col">
+          <div class="card good">
+            <h3 style="color:#50dc64;">Переваги Overlay</h3>
+            <ul style="max-width:100%;">
+              <li>Незалежність від фізичної топології мережі</li>
+              <li>Єдиний адресний простір для розподілених команд</li>
+              <li>Шифрування поверх будь-якого Underlay</li>
+              <li>Гнучка зміна маршрутів без зміни фізики</li>
+              <li>Підтримка multi-vendor середовищ</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card warn">
+            <h3 style="color:#ffaa00;">Недоліки / Виклики</h3>
+            <ul style="max-width:100%;">
+              <li>Додаткові накладні витрати (overhead)</li>
+              <li>Збільшення затримки (latency)</li>
+              <li>Складніше відлагодження мережевих проблем</li>
+              <li>MTU-проблеми через подвійну інкапсуляцію</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 5 — ІНКАПСУЛЯЦІЯ ═══════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Механізм інкапсуляції</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:22px;">Інкапсуляція — це обгортання оригінального пакета в новий пакет із додаванням <span class="hl">нових заголовків</span>. Оригінальний пакет стає «корисним навантаженням» (payload) для зовнішнього пакета.</p>
+    <div class="diagram" style="flex-direction:column;align-items:center;gap:6px;margin-bottom:20px;">
+      <div style="display:flex;gap:4px;align-items:center;">
+        <div class="dbox blue" style="min-width:80px;font-size:0.8rem;">Outer<br/>IP Hdr</div>
+        <div class="dbox purple" style="min-width:80px;font-size:0.8rem;">VPN<br/>Hdr</div>
+        <div class="dbox green" style="min-width:80px;font-size:0.8rem;">Inner<br/>IP Hdr</div>
+        <div class="dbox yellow" style="min-width:80px;font-size:0.8rem;">TCP/UDP<br/>Hdr</div>
+        <div class="dbox" style="min-width:120px;font-size:0.8rem;flex:1;">Payload<br/>(дані)</div>
+      </div>
+      <div style="font-size:0.8rem;color:#90a0b8;margin-top:4px;">← зовнішній заголовок ─────────────── оригінальний пакет ────────────────────→</div>
+    </div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card">
+          <h3>Приклад: IPsec Tunnel Mode</h3>
+          <p>Весь IP-пакет (заголовок + дані) шифрується та обгортається новим IP-заголовком. Зовнішній заголовок містить адреси VPN-шлюзів.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Приклад: WireGuard / OpenVPN</h3>
+          <p>Оригінальний IP-пакет зашифровується та вкладається в UDP-датаграму. Overhead: ~40–60 байт на пакет залежно від протоколу.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 6 — OVERHEAD ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Накладні витрати (Overhead)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:22px;">Кожний доданий заголовок «їсть» корисну пропускну здатність. Реальна ефективна швидкість завжди менша за фізичну.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Протокол</th>
+          <th>Додаткові байти (типово)</th>
+          <th>Ефективна MTU при Ethernet 1500 б</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>WireGuard (IPv4/UDP)</td><td>~60 байт</td><td>~1440 байт</td></tr>
+        <tr><td>OpenVPN (UDP режим)</td><td>~40–55 байт</td><td>~1445–1460 байт</td></tr>
+        <tr><td>IPsec (ESP Tunnel)</td><td>~50–73 байт</td><td>~1427–1450 байт</td></tr>
+        <tr><td>L2TP/IPsec</td><td>~70–80 байт</td><td>~1420–1430 байт</td></tr>
+        <tr><td>GRE + IPsec</td><td>~80–94 байт</td><td>~1406–1420 байт</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:16px;font-size:0.9rem;color:#90a0b8;">* Точні значення залежать від версії IP (v4/v6), режиму шифрування та опцій аутентифікації.</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 7 — VIRTUAL INTERFACES ═══════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Віртуальні мережеві інтерфейси</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Для роботи VPN-клієнту необхідний «вхідний/вихідний» інтерфейс в ОС. Замість фізичної карти використовуються <span class="hl">віртуальні адаптери</span>, реалізовані через драйвери ядра.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>TUN (Network Tunnel)</h3>
+          <ul style="max-width:100%;">
+            <li>Працює на <span class="hl">Рівні 3 (IP)</span></li>
+            <li>Передає IP-пакети напряму</li>
+            <li>Найефективніший для маршрутизації</li>
+            <li>Назва інтерфейсу: <code>tun0</code>, <code>wg0</code></li>
+            <li>Використовується: WireGuard, OpenVPN (routed)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">TAP (Ethernet Tunnel)</h3>
+          <ul style="max-width:100%;">
+            <li>Емулює <span class="hl2">Ethernet-адаптер (Рівень 2)</span></li>
+            <li>Передає Ethernet-фрейми (з MAC-адресами)</li>
+            <li>Підтримує non-IP трафік (IPX, AppleTalk)</li>
+            <li>Назва інтерфейсу: <code>tap0</code></li>
+            <li>Використовується: OpenVPN (bridged), QEMU</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 8 — TUN/TAP KERNEL ═════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Як працює TUN/TAP в ОС</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;align-items:center;">
+      <div class="col" style="flex:1.2;">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:flex-start;margin-left:10px;">
+          <div class="dbox green" style="width:220px;">Застосунок (VPN-клієнт)</div>
+          <div class="arrow" style="margin-left:90px;">↕</div>
+          <div class="dbox blue" style="width:220px;">Файл /dev/tun або /dev/tap</div>
+          <div class="arrow" style="margin-left:90px;">↕</div>
+          <div class="dbox yellow" style="width:220px;">Мережевий стек ядра Linux</div>
+          <div class="arrow" style="margin-left:90px;">↕</div>
+          <div class="dbox red" style="width:220px;">Фізичний інтерфейс (eth0)</div>
+          <div class="arrow" style="margin-left:90px;">↕</div>
+          <div class="dbox" style="width:220px;">Мережа (Інтернет)</div>
+        </div>
+      </div>
+      <div class="col" style="flex:1.8;">
+        <div class="card" style="margin-bottom:12px;">
+          <h3>Принцип роботи</h3>
+          <p>VPN-демон читає пакети з <code>/dev/tun0</code> → шифрує → відправляє через реальний <code>eth0</code> в Інтернет. Зворотньо: приймає з <code>eth0</code> → розшифровує → вкидає у <code>/dev/tun0</code> для стека ядра.</p>
+        </div>
+        <div class="card warn">
+          <h3>Ключова відмінність</h3>
+          <p><span class="hl">TUN</span>: повертає IP-пакети. <span class="hl2">TAP</span>: повертає Ethernet-фрейми (містять MAC-адресу). TAP займає більше ресурсів але підтримує бриджинг та широкомовлення (broadcast).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 9 — MTU ═════════════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Проблема MTU (Maximum Transmission Unit)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <p style="margin-bottom:14px;"><span class="hl">MTU</span> — максимальний розмір кадру/пакета, який може передатися без фрагментації. Стандартне значення для Ethernet: <span class="hl2">1500 байт</span>.</p>
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Проблема в тунелях</h3>
+          <p>Після інкапсуляції пакет збільшується на розмір заголовків. Якщо новий розмір перевищує MTU каналу — пакет або <span class="hl2">фрагментується</span> (повільніше) або <span class="hl2">відкидається</span> (якщо встановлено DF bit).</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:4px;">
+          <div class="dbox green" style="width:260px;font-size:0.85rem;">Оригінальний пакет: 1500 байт</div>
+          <div class="arrow">↓ +60 байт VPN overhead</div>
+          <div class="dbox red" style="width:260px;font-size:0.85rem;">Після інкапсуляції: 1560 байт ❌</div>
+          <div class="arrow">↓ Перевищує MTU 1500!</div>
+          <div class="dbox yellow" style="width:260px;font-size:0.85rem;">Фрагментація або Drop</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 10 — MTU FIX ══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Вирішення проблем MTU</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>TCP MSS Clamping</h3>
+          <p>Примусово зменшує значення поля <span class="hl">MSS (Maximum Segment Size)</span> у SYN-пакетах TCP. MSS = MTU_тунелю – 40 байт (IP + TCP заголовки).</p>
+          <pre style="margin-top:10px;font-size:0.8rem;">iptables -t mangle -A FORWARD \
+  -p tcp --tcp-flags SYN,RST SYN \
+  -j TCPMSS --clamp-mss-to-pmtu</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3>PMTUD (Path MTU Discovery)</h3>
+          <p>Механізм автоматичного виявлення мінімального MTU на шляху. Хост надсилає пакети з DF=1 (Don't Fragment) і зменшує розмір при отриманні ICMP «Fragmentation Needed».</p>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Ручне налаштування MTU</h3>
+          <p>Встановлення MTU інтерфейсу тунелю на 1420–1450 байт замість 1500 вирішує більшість проблем без MSS Clamping.</p>
+          <pre style="font-size:0.8rem;margin-top:8px;">ip link set tun0 mtu 1420</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 11 — MSS ════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>MSS vs MTU — ключова різниця</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Параметр</th>
+          <th>Де діє</th>
+          <th>Типове значення</th>
+          <th>Хто задає</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl">MTU</span> (Max Transmission Unit)</td>
+          <td>Канальний рівень (L2)</td>
+          <td>1500 байт (Ethernet)</td>
+          <td>Адміністратор / обладнання</td>
+        </tr>
+        <tr>
+          <td><span class="hl2">MSS</span> (Max Segment Size)</td>
+          <td>Транспортний рівень (TCP)</td>
+          <td>1460 байт (MTU-40)</td>
+          <td>Узгоджується в TCP SYN/SYN-ACK</td>
+        </tr>
+        <tr>
+          <td>MTU тунелю (VPN)</td>
+          <td>Мережевий рівень (L3)</td>
+          <td>1420–1450 байт</td>
+          <td>VPN-адміністратор</td>
+        </tr>
+        <tr>
+          <td>MSS у тунелі</td>
+          <td>Транспортний рівень (TCP)</td>
+          <td>1360–1410 байт</td>
+          <td>MSS Clamping / PMTUD</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:800px;margin-top:20px;text-align:center;">
+      <p><span class="hl">Правило:</span> MSS = MTU_інтерфейсу – 20 (IP) – 20 (TCP) = MTU – 40</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 12 — FRAGMENTATION ════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Фрагментація пакетів</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <p style="margin-bottom:14px;">Якщо пакет перевищує MTU і не встановлено DF bit, він <span class="hl">фрагментується</span> на кілька менших частин.</p>
+        <div class="card warn">
+          <h3>Наслідки фрагментації</h3>
+          <ul style="max-width:100%;">
+            <li>Збільшення навантаження на маршрутизатори</li>
+            <li>Додаткова затримка при збірці фрагментів</li>
+            <li>Проблеми з брандмауерами (відкидають фрагменти)</li>
+            <li>Зниження продуктивності на 10–30%</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <h3>Сценарій: DF bit = 1</h3>
+          <p>Якщо хост встановив DF bit (Don't Fragment) і пакет перевищує MTU — маршрутизатор <span class="hl2">відкидає</span> пакет і відправляє ICMP Type 3 Code 4 («Fragmentation Needed»).</p>
+          <p style="margin-top:8px;">Проблема: якщо ICMP заблоковано → <span class="hl2">«Black Hole»</span> — з'єднання «зависає», бо хост не дізнається, що треба зменшити MTU.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 13 — ROUTING INTRO ══════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Маршрутизація у VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:22px;">Коли VPN-тунель встановлено, виникає питання: <span class="hl">який трафік направляти через тунель?</span> Є дві основні стратегії.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card" style="border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.07);height:200px;">
+          <h3>🔀 Split-Tunnel</h3>
+          <p>Через VPN-тунель направляється лише визначений трафік (корпоративні підмережі). Решта трафіку (YouTube, соцмережі) іде прямо через ISP.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(80,220,100,0.4);background:rgba(80,220,100,0.07);height:200px;">
+          <h3>🛡️ Full-Tunnel</h3>
+          <p>Весь трафік клієнта направляється через VPN-сервер. Маршрут за замовчуванням (<code>0.0.0.0/0</code>) переписується на VPN-інтерфейс.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 14 — SPLIT-TUNNEL ══════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Split-Tunnel: деталі</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;">
+          <div class="dbox green" style="width:200px;">Хост (клієнт)</div>
+          <div style="display:flex;gap:16px;align-items:flex-start;margin-top:4px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div class="arrow">↙ VPN</div>
+              <div class="dbox blue" style="width:150px;font-size:0.8rem;">10.0.0.0/8<br/>192.168.0.0/16</div>
+              <div class="dbox purple" style="width:150px;font-size:0.8rem;">VPN-сервер<br/>(корп. ресурси)</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div class="arrow">↘ Напряму</div>
+              <div class="dbox yellow" style="width:150px;font-size:0.8rem;">0.0.0.0/0<br/>(решта)</div>
+              <div class="dbox" style="width:150px;font-size:0.8rem;">ISP → Інтернет</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Переваги</h3>
+          <ul style="max-width:100%;">
+            <li>Менше навантаження на VPN-сервер</li>
+            <li>Вища швидкість для інтернет-трафіку</li>
+            <li>Менша затримка для непрофільних сервісів</li>
+          </ul>
+        </div>
+        <div class="card bad" style="margin-top:0;">
+          <h3 style="color:#ff8080;">Ризики</h3>
+          <ul style="max-width:100%;">
+            <li>Інтернет-трафік не захищений VPN</li>
+            <li>DNS-витоки (DNS leaks)</li>
+            <li>Складніше аудитувати дії користувача</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 15 — FULL-TUNNEL ══════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Full-Tunnel: деталі</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;">
+          <div class="dbox green" style="width:200px;">Хост (клієнт)</div>
+          <div class="arrow">↓ Весь трафік</div>
+          <div class="dbox blue" style="width:200px;">tun0 (VPN інтерфейс)<br/><small>маршрут: 0.0.0.0/0</small></div>
+          <div class="arrow">↓ Зашифрований</div>
+          <div class="dbox purple" style="width:200px;">VPN-сервер</div>
+          <div class="arrow">↓ Розшифрований</div>
+          <div class="dbox" style="width:200px;">Інтернет</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Переваги</h3>
+          <ul style="max-width:100%;">
+            <li>Весь трафік захищений та зашифрований</li>
+            <li>Приховування реального IP від сайтів</li>
+            <li>Захист від перехоплення у публічних Wi-Fi</li>
+            <li>Централізована фільтрація та аудит</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Недоліки</h3>
+          <ul style="max-width:100%;">
+            <li>Більше навантаження на VPN-сервер</li>
+            <li>Вища затримка для всього трафіку</li>
+            <li>Зниження швидкості інтернету</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 16 — ПОРІВНЯННЯ ════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Full-Tunnel vs Split-Tunnel: Порівняння</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Критерій</th>
+          <th>Full-Tunnel</th>
+          <th>Split-Tunnel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Захист трафіку</td><td><span class="hl3">Весь трафік</span></td><td><span class="hl2">Тільки вибраний</span></td></tr>
+        <tr><td>Навантаження на сервер</td><td><span class="badge badge-red">Високе</span></td><td><span class="badge badge-green">Низьке</span></td></tr>
+        <tr><td>Швидкість інтернету</td><td><span class="badge badge-red">Нижча</span></td><td><span class="badge badge-green">Вища</span></td></tr>
+        <tr><td>Конфіденційність</td><td><span class="badge badge-green">Максимальна</span></td><td><span class="badge badge-yellow">Часткова</span></td></tr>
+        <tr><td>DNS-витоки</td><td><span class="badge badge-green">Мінімальні</span></td><td><span class="badge badge-red">Можливі</span></td></tr>
+        <tr><td>Сценарій застосування</td><td>Публічні Wi-Fi, журналісти</td><td>Корпоративний доступ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 17 — ROUTING TABLES ═══════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Таблиці маршрутизації: практика</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <h3 style="margin-bottom:8px;color:#00d4ff;">Split-Tunnel (WireGuard)</h3>
+        <pre>[Interface]
+Address = 10.0.0.2/24
+PrivateKey = ...
+
+[Peer]
+PublicKey = ...
+AllowedIPs = 10.0.0.0/24, 192.168.1.0/24
+# лише корп. підмережі → тунель</pre>
+      </div>
+      <div class="col">
+        <h3 style="margin-bottom:8px;color:#50dc64;">Full-Tunnel (WireGuard)</h3>
+        <pre>[Interface]
+Address = 10.0.0.2/24
+DNS = 10.0.0.1
+PrivateKey = ...
+
+[Peer]
+PublicKey = ...
+AllowedIPs = 0.0.0.0/0, ::/0
+# весь трафік → тунель</pre>
+      </div>
+    </div>
+    <p style="margin-top:14px;color:#90a0b8;font-size:0.9rem;max-width:800px;"><span class="hl">AllowedIPs</span> у WireGuard задає і правила маршрутизації, і ACL — пакети з IP поза цим діапазоном відкидаються тунелем.</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 18 — DNS LEAKS ════════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>DNS-витоки (DNS Leaks)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">У Split-Tunnel режимі DNS-запити можуть іти <span class="hl2">поза тунелем</span>, розкриваючи ISP інформацію про відвідувані сайти, навіть якщо сам трафік зашифрований.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Сценарій витоку</h3>
+          <ol style="list-style:decimal;padding-left:20px;color:#cdd8e8;">
+            <li style="padding:6px 0;">Хост підключається до VPN (Split-Tunnel)</li>
+            <li style="padding:6px 0;">DNS налаштований на ISP-сервер (8.8.8.8)</li>
+            <li style="padding:6px 0;">DNS-запити йдуть напряму через ISP</li>
+            <li style="padding:6px 0;">ISP бачить усі запити ↔ витік!</li>
+          </ol>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Виправлення</h3>
+          <ul style="max-width:100%;">
+            <li>Налаштувати DNS на VPN-сервер (наприклад, 10.0.0.1)</li>
+            <li>Використовувати <code>DNS = ...</code> у конфігурації клієнта</li>
+            <li>Перевірити витоки: <strong>dnsleaktest.com</strong></li>
+            <li>У повному тунелі проблема вирішується автоматично</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 19 — АРХІТЕКТУРА OVERLAY ═══════════════ -->
+  <div class="slide bg-purple">
+    <h2>Архітектура Overlay мережі VPN</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:10px;align-items:center;max-width:800px;">
+      <div style="display:flex;gap:20px;align-items:center;width:100%;">
+        <div class="dbox green" style="flex:1;">Клієнт А<br/><small>10.8.0.2</small></div>
+        <div class="dbox green" style="flex:1;">Клієнт Б<br/><small>10.8.0.3</small></div>
+        <div class="dbox green" style="flex:1;">Клієнт В<br/><small>10.8.0.4</small></div>
+      </div>
+      <div style="display:flex;gap:20px;align-items:center;width:100%;">
+        <div class="arrow" style="flex:1;text-align:center;">↗ тунель</div>
+        <div class="arrow" style="flex:1;text-align:center;">↑ тунель</div>
+        <div class="arrow" style="flex:1;text-align:center;">↖ тунель</div>
+      </div>
+      <div class="dbox purple" style="width:300px;padding:16px;">VPN-сервер<br/><small>10.8.0.1 (Overlay)</small><br/><small>203.0.113.1 (Underlay)</small></div>
+      <div class="arrow">↓ зашифрований трафік через Інтернет</div>
+      <div class="dbox yellow" style="width:300px;">Underlay: Інтернет (ISP A, ISP B, ISP C)</div>
+    </div>
+    <p style="margin-top:14px;font-size:0.9rem;color:#90a0b8;max-width:700px;text-align:center;">Overlay адресний простір (10.8.0.0/24) повністю незалежний від реальних IP-адрес клієнтів у Underlay.</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 20 — SITE-TO-SITE ════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Топології VPN Overlay</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Hub-and-Spoke (зірка)</h3>
+          <p>Усі клієнти з'єднані з центральним VPN-сервером. Трафік між клієнтами проходить через хаб. Проста конфігурація, але хаб — єдина точка відмови.</p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Full-Mesh (повна сітка)</h3>
+          <p>Прямі тунелі між кожною парою вузлів. Мінімальна затримка, немає єдиної точки відмови. Складніша конфігурація: O(n²) з'єднань.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Site-to-Site VPN</h3>
+          <p>Два офіси (мережі) з'єднані постійним тунелем між VPN-шлюзами. Усі пристрої всередині офісу автоматично отримують доступ через тунель без налаштувань на хостах.</p>
+        </div>
+        <div class="card warn">
+          <h3>Remote Access VPN</h3>
+          <p>Окремий користувач підключається до корпоративної мережі з будь-якого місця. Потребує VPN-клієнта на пристрої. Типово: OpenVPN, WireGuard, AnyConnect.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 21 — ПРАКТИКА ═════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Практичні аспекти налаштування</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <h3 style="margin-bottom:10px;">Перевірка інтерфейсів TUN/TAP</h3>
+        <pre>$ ip link show
+3: tun0: &lt;POINTOPOINT,UP&gt; mtu 1420
+    link/none
+    inet 10.8.0.2/24 scope global tun0
+
+$ ip route show
+0.0.0.0/0 dev tun0  # full-tunnel
+10.8.0.0/24 dev tun0 proto kernel</pre>
+      </div>
+      <div class="col">
+        <h3 style="margin-bottom:10px;">Діагностика MTU</h3>
+        <pre># Тест з DF bit (не фрагментувати)
+$ ping -M do -s 1472 8.8.8.8
+PING: local error: message too long
+
+# Правильний MTU тунелю
+$ ping -M do -s 1392 10.8.0.1
+64 bytes from 10.8.0.1: icmp_seq=1
+
+# MSS Clamping перевірка
+$ tcpdump -i tun0 "tcp[tcpflags] & tcp-syn != 0"</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 22 — БЕЗПЕКА ═══════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Безпекові аспекти архітектури</h2>
+    <div class="divider"></div>
+    <div class="wide" style="max-width:1000px;">
+      <div class="cols">
+        <div class="col">
+          <div class="card bad">
+            <h3 style="color:#ff8080;">Вразливості</h3>
+            <ul style="max-width:100%;">
+              <li>IPv6 Leak: VPN не охоплює IPv6 трафік</li>
+              <li>WebRTC Leak: браузер розкриває реальний IP</li>
+              <li>Timing attacks через аналіз трафіку</li>
+              <li>Split-horizon DNS атаки</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card good">
+            <h3 style="color:#50dc64;">Захисні заходи</h3>
+            <ul style="max-width:100%;">
+              <li>Блокувати IPv6 або тунелювати разом з IPv4</li>
+              <li>Вимикати WebRTC у браузерах</li>
+              <li>Перевіряти DNS-витоки після підключення</li>
+              <li>Використовувати Kill Switch при обриві VPN</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card warn" style="margin-top:8px;">
+        <h3>Kill Switch</h3>
+        <p>Механізм блокування всього трафіку при обриві VPN-з'єднання. Реалізується через <code>iptables</code> правила, що дозволяють трафік лише через VPN-інтерфейс.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 23 — ЗВЕДЕННЯ ═══════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Ключові поняття лекції</h2>
+    <div class="divider"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1000px;">
+      <span class="badge badge-blue" style="font-size:1rem;padding:8px 18px;">Underlay мережа</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">Overlay мережа</span>
+      <span class="badge badge-green" style="font-size:1rem;padding:8px 18px;">Інкапсуляція</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">Overhead</span>
+      <span class="badge badge-blue" style="font-size:1rem;padding:8px 18px;">TUN-адаптер (L3)</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">TAP-адаптер (L2)</span>
+      <span class="badge badge-red" style="font-size:1rem;padding:8px 18px;">MTU 1500 байт</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">MSS Clamping</span>
+      <span class="badge badge-green" style="font-size:1rem;padding:8px 18px;">PMTUD</span>
+      <span class="badge badge-blue" style="font-size:1rem;padding:8px 18px;">Full-Tunnel</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">Split-Tunnel</span>
+      <span class="badge badge-red" style="font-size:1rem;padding:8px 18px;">DNS Leak</span>
+      <span class="badge badge-green" style="font-size:1rem;padding:8px 18px;">Kill Switch</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">Hub-and-Spoke</span>
+      <span class="badge badge-blue" style="font-size:1rem;padding:8px 18px;">Full-Mesh</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 24 — ПИТАННЯ ═══════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Контрольні питання</h2>
+    <div class="divider"></div>
+    <ul style="max-width:820px;">
+      <li>Чим відрізняється Underlay від Overlay мережі? Наведіть приклад.</li>
+      <li>Як інкапсуляція впливає на ефективну пропускну здатність каналу?</li>
+      <li>Яка різниця між TUN і TAP адаптерами? Коли використовувати кожен?</li>
+      <li>Чому пакет може бути відкинутий при DF bit = 1 у VPN-тунелі?</li>
+      <li>Що таке MSS Clamping і як воно вирішує проблему MTU?</li>
+      <li>Яка різниця між Full-Tunnel та Split-Tunnel? Переваги кожного?</li>
+      <li>Що таке DNS Leak і як його запобігти?</li>
+      <li>Що таке Kill Switch і для чого він потрібен?</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 25 — КІНЕЦЬ ═══════════════════════════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 3: Мережева архітектура та механізми тунелювання</p>
+    <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <span class="tag">Underlay/Overlay</span>
+      <span class="tag">Інкапсуляція</span>
+      <span class="tag">TUN/TAP</span>
+      <span class="tag">MTU/MSS</span>
+      <span class="tag">Split-Tunnel</span>
+      <span class="tag">Full-Tunnel</span>
+    </div>
+    <p style="margin-top:28px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 4 — OpenVPN</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">‹</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">›</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
