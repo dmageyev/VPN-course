@@ -16,7 +16,8 @@
 
 ## Матеріали
 
-- [Слайди презентації](SLIDES.md)
+- [Презентація (HTML)](presentation.html)
+- [Слайди презентації (Markdown)](SLIDES.md)
 
 ---
 
