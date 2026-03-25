@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 9 — Протоколи IPsec</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title   { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark    { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal    { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple  { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green   { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red     { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy    { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end     { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 14px 16px 14px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue  { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red   { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow{ border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple{ border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Frame format ===== */
+    .frame { display: flex; width: 100%; max-width: 960px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; }
+    .frame-field {
+      flex: 1; padding: 10px 6px; text-align: center; font-size: 0.78rem; font-weight: 600;
+      border-right: 1px solid rgba(255,255,255,0.15); line-height: 1.3;
+    }
+    .frame-field:last-child { border-right: none; }
+    .frame-field small { display: block; font-weight: 400; font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .ff-blue   { background: rgba(0,212,255,0.15);  color: #7beeff; }
+    .ff-green  { background: rgba(80,220,100,0.15); color: #80ee94; }
+    .ff-yellow { background: rgba(255,170,0,0.15);  color: #ffcc55; }
+    .ff-purple { background: rgba(176,123,255,0.15);color: #c9a8ff; }
+    .ff-red    { background: rgba(255,100,100,0.15);color: #ff9090; }
+    .ff-gray   { background: rgba(255,255,255,0.06);color: #cdd8e8; }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 960px; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 16px 20px;
+      font-family: 'Courier New', monospace; font-size: 0.88rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+
+    /* ===== Step flow ===== */
+    .steps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 860px; text-align: left; }
+    .step {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px 16px;
+      border-left: 3px solid #00d4ff;
+    }
+    .step-num {
+      min-width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step p { margin: 0; font-size: 0.98rem; }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════ SLIDE 1 — TITLE ═══════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 9</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:2.1rem;margin-top:8px;">Протоколи IPsec</h1>
+    <p class="subtitle">AH · ESP · IKEv1 · IKEv2 · Формати кадрів · Фази встановлення з'єднання</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 2 — ПЛАН ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Загальна архітектура IPsec — компоненти та стандарти (RFC)</li>
+      <li>Бази даних SAD та SPD — Security Associations</li>
+      <li>Протокол AH (Authentication Header) — формат кадру</li>
+      <li>Протокол ESP (Encapsulating Security Payload) — формат кадру</li>
+      <li>Режими роботи: Transport Mode та Tunnel Mode</li>
+      <li>IKEv1 — Фаза 1 (Main Mode, Aggressive Mode) та Фаза 2 (Quick Mode)</li>
+      <li>IKEv2 — спрощене встановлення з'єднання</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════ SLIDE 3 — ЩО ТАКЕ IPSEC ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Що таке IPsec?</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">IPsec (Internet Protocol Security)</span> — це набір відкритих стандартів для захисту IP-трафіку на мережевому рівні (L3) моделі OSI. Забезпечує конфіденційність, цілісність та автентифікацію без зміни застосунків.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Три гарантії IPsec</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Конфіденційність</span> — шифрування даних (ESP)</li>
+            <li><span class="hl">Цілісність</span> — захист від підміни (AH/ESP)</li>
+            <li><span class="hl">Автентифікація джерела</span> — підтвердження відправника</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Ключові стандарти (RFC)</h3>
+          <ul style="max-width:100%;">
+            <li>RFC 4301 — Архітектура IPsec</li>
+            <li>RFC 4302 — Authentication Header (AH)</li>
+            <li>RFC 4303 — ESP (Encapsulating Security Payload)</li>
+            <li>RFC 7296 — Internet Key Exchange v2 (IKEv2)</li>
+            <li>RFC 2409 — Internet Key Exchange v1 (IKEv1)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 4 — АРХІТЕКТУРА ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Архітектура IPsec</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:12px;align-items:center;max-width:900px;">
+      <div style="display:flex;gap:16px;width:100%;justify-content:center;">
+        <div class="dbox blue" style="flex:1;max-width:200px;">Застосунок<br/><small>HTTP, SSH, SMTP…</small></div>
+        <div class="dbox blue" style="flex:1;max-width:200px;">Застосунок<br/><small>HTTP, SSH, SMTP…</small></div>
+      </div>
+      <div class="arrow" style="align-self:center;font-size:1rem;color:#cdd8e8;">↓ прозоро для застосунків</div>
+      <div style="display:flex;gap:16px;width:100%;justify-content:center;">
+        <div class="dbox yellow" style="flex:1;max-width:200px;">IKE (порт UDP 500/4500)<br/><small>Керування ключами</small></div>
+        <div class="dbox purple" style="flex:1;max-width:200px;">AH / ESP<br/><small>Захист трафіку</small></div>
+        <div class="dbox green" style="flex:1;max-width:200px;">SAD / SPD<br/><small>Бази даних SA</small></div>
+      </div>
+      <div class="arrow" style="align-self:center;font-size:1rem;color:#cdd8e8;">↓</div>
+      <div class="dbox" style="width:400px;">Мережевий рівень (IP — IPv4 / IPv6)</div>
+    </div>
+    <p style="margin-top:14px;font-size:0.9rem;color:#90a0b8;max-width:760px;text-align:center;">IPsec вбудовано в стек IP. IPv6 підтримує IPsec нативно; у IPv4 — опціонально. Захист відбувається прозоро для вищих рівнів.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 5 — SA ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Security Association (SA)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">SA (Security Association)</span> — однонаправлений «логічний канал» між двома вузлами, що визначає всі параметри захисту для певного потоку трафіку.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Параметри SA (SAD-запис)</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">SPI</span> — Security Parameter Index (32 біти)</li>
+            <li>IP-адреса призначення</li>
+            <li>Протокол: AH або ESP</li>
+            <li>Алгоритм шифрування + ключ</li>
+            <li>Алгоритм автентифікації + ключ</li>
+            <li>Lifetime (за часом або обсягом)</li>
+            <li>Режим: Transport або Tunnel</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Двонаправленість</h3>
+          <p style="margin-bottom:10px;">SA — однонаправлена. Для двостороннього зв'язку потрібні <span class="hl2">дві SA</span>: одна від A→B, інша від B→A.</p>
+          <div class="diagram" style="margin:0;gap:6px;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="dbox blue" style="min-width:60px;font-size:0.8rem;">Хост A</div>
+              <div style="font-size:0.85rem;color:#00d4ff;">→ SA₁ (SPI=1001) →</div>
+              <div class="dbox blue" style="min-width:60px;font-size:0.8rem;">Хост B</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="dbox blue" style="min-width:60px;font-size:0.8rem;">Хост A</div>
+              <div style="font-size:0.85rem;color:#ffaa00;">← SA₂ (SPI=2002) ←</div>
+              <div class="dbox blue" style="min-width:60px;font-size:0.8rem;">Хост B</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 6 — SPD та SAD ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Бази даних SPD та SAD</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>SPD — Security Policy Database</h3>
+          <p style="margin-bottom:10px;">Визначає <span class="hl">правила</span>: що робити з кожним пакетом. Для кожного потоку трафіку (за 5-tuple: src/dst IP, протокол, порти) задається одна з дій:</p>
+          <ul style="max-width:100%;">
+            <li><span class="hl3">PROTECT</span> — застосувати IPsec (AH або ESP)</li>
+            <li><span class="hl2">BYPASS</span> — пропустити без захисту</li>
+            <li><span class="badge badge-red" style="font-size:0.8rem;">DISCARD</span> — відкинути пакет</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+          <h3 style="color:#b07bff;">SAD — Security Association Database</h3>
+          <p style="margin-bottom:10px;">Містить <span class="hl">активні SA</span> з усіма параметрами захисту. Кожен вхідний пакет ідентифікується за трійкою:</p>
+          <div class="card" style="padding:12px;margin-bottom:0;">
+            <p style="font-family:'Courier New',monospace;font-size:0.9rem;color:#c9a8ff;">{ IP_dst, SPI, Протокол }</p>
+          </div>
+          <p style="margin-top:10px;font-size:0.9rem;">IKE автоматично заповнює SAD після узгодження параметрів.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 7 — AH OVERVIEW ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Протокол AH (Authentication Header)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;"><span class="hl">AH</span> — протокол аутентифікації та цілісності. Захищає незмінні поля IP-заголовка, весь IP-пакет цілісно, але <span class="hl2">не шифрує</span> дані.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Що захищає AH</h3>
+          <ul style="max-width:100%;">
+            <li>Автентифікація джерела пакета</li>
+            <li>Цілісність IP-заголовка і даних</li>
+            <li>Захист від replay-атак (Sequence Number)</li>
+            <li>IP-протокол номер: <span class="hl">51</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Обмеження AH</h3>
+          <ul style="max-width:100%;">
+            <li>Не забезпечує конфіденційність (немає шифрування)</li>
+            <li>Несумісний із NAT (змінює IP-заголовок, що ламає ICV)</li>
+            <li>Рідко використовується окремо від ESP</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card warn" style="max-width:860px;margin-top:6px;">
+      <p><span class="hl2">Алгоритми HMAC:</span> HMAC-MD5-96, HMAC-SHA1-96, HMAC-SHA256-128, AES-XCBC-MAC-96</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 8 — AH FRAME FORMAT ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Формат заголовка AH</h2>
+    <div class="divider"></div>
+    <div style="width:100%;max-width:920px;">
+      <div style="font-size:0.78rem;color:#90a0b8;margin-bottom:6px;text-align:left;">Один рядок = 32 біти (4 байти)</div>
+      <div class="frame" style="margin-bottom:6px;">
+        <div class="frame-field ff-blue" style="flex:1;">Next Header<small>8 біт</small></div>
+        <div class="frame-field ff-yellow" style="flex:1;">Payload Len<small>8 біт</small></div>
+        <div class="frame-field ff-gray" style="flex:1;">Reserved<small>16 біт</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:6px;">
+        <div class="frame-field ff-purple" style="flex:3;">Security Parameters Index (SPI)<small>32 біти</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:6px;">
+        <div class="frame-field ff-green" style="flex:3;">Sequence Number<small>32 біти</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:6px;">
+        <div class="frame-field ff-red" style="flex:3;">Integrity Check Value (ICV / HMAC)<small>96 або 128 біт (змінна довжина, кратна 32 бітам)</small></div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:920px;margin-top:14px;">
+      <div class="col">
+        <div class="card accent" style="padding:14px;">
+          <h3 style="font-size:1.1rem;">Next Header</h3>
+          <p style="font-size:0.9rem;">Ідентифікує протокол наступного заголовка (TCP=6, UDP=17, ESP=50)</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="padding:14px;border-color:rgba(176,123,255,0.4);">
+          <h3 style="font-size:1.1rem;color:#b07bff;">SPI</h3>
+          <p style="font-size:0.9rem;">Вказує SA для обробки пакета на стороні одержувача</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good" style="padding:14px;">
+          <h3 style="font-size:1.1rem;color:#50dc64;">Sequence Number</h3>
+          <p style="font-size:0.9rem;">Монотонно зростаючий лічильник — захист від replay-атак</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 9 — ESP OVERVIEW ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Протокол ESP (Encapsulating Security Payload)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;"><span class="hl">ESP</span> — основний протокол IPsec для захисту даних. Забезпечує шифрування, аутентифікацію, захист від replay. Протокол IP номер: <span class="hl">50</span>.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Можливості ESP</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Конфіденційність</span> — шифрування Payload</li>
+            <li><span class="hl">Автентифікація</span> — HMAC над ESP-пакетом</li>
+            <li><span class="hl">Цілісність</span> — Integrity Check Value (ICV)</li>
+            <li>Захист від <span class="hl2">replay-атак</span></li>
+            <li>Необов'язковість шифрування (NULL-шифр)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Алгоритми шифрування ESP</h3>
+          <ul style="max-width:100%;">
+            <li>AES-CBC (128/256 біт) — найпоширеніший</li>
+            <li>AES-GCM — AEAD (шифрування + автентифікація)</li>
+            <li>AES-CTR — потоковий режим</li>
+            <li>ChaCha20-Poly1305 — сучасна альтернатива</li>
+            <li>3DES-CBC — застарілий, уникати</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 10 — ESP FRAME FORMAT ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Формат пакета ESP</h2>
+    <div class="divider"></div>
+    <div style="width:100%;max-width:940px;">
+      <div style="font-size:0.78rem;color:#90a0b8;margin-bottom:6px;text-align:left;">Один рядок = 32 біти · <span style="color:#c9a8ff">■</span> незашифровано · <span style="color:#80ee94">■</span> зашифровано · <span style="color:#ff9090">■</span> ICV (незашифровано, але автентифіковано)</div>
+      <div class="frame" style="margin-bottom:4px;">
+        <div class="frame-field ff-purple" style="flex:3;">Security Parameters Index (SPI)<small>32 біти | незашифровано</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:4px;">
+        <div class="frame-field ff-purple" style="flex:3;">Sequence Number<small>32 біти | незашифровано</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:4px;">
+        <div class="frame-field ff-yellow" style="flex:3;">IV / Nonce (Initialization Vector)<small>8–16 байт | незашифровано</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:4px;">
+        <div class="frame-field ff-green" style="flex:3;">Payload Data (зашифровані дані)<small>змінна довжина | 🔒 зашифровано</small></div>
+      </div>
+      <div class="frame" style="margin-bottom:4px;">
+        <div class="frame-field ff-green" style="flex:2;">Padding<small>0–255 байт | 🔒</small></div>
+        <div class="frame-field ff-green" style="flex:1;">Pad Len<small>8 біт | 🔒</small></div>
+        <div class="frame-field ff-green" style="flex:1;">Next Hdr<small>8 біт | 🔒</small></div>
+      </div>
+      <div class="frame">
+        <div class="frame-field ff-red" style="flex:3;">Integrity Check Value (ICV / MAC)<small>96–256 біт | незашифровано, але автентифіковано</small></div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:0.85rem;color:#90a0b8;max-width:760px;">ESP аутентифікує від SPI до кінця Trailer (включно з Padding), але не зовнішній IP-заголовок у Tunnel Mode.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 11 — TRANSPORT MODE ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Transport Mode (Транспортний режим)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:14px;">У транспортному режимі <span class="hl">оригінальний IP-заголовок зберігається</span>. Захищається лише корисне навантаження (TCP/UDP + дані). Використовується для захисту зв'язку між двома кінцевими хостами.</p>
+    <div style="width:100%;max-width:960px;margin-bottom:14px;">
+      <div style="font-size:0.85rem;color:#7beeff;margin-bottom:6px;text-align:left;">До застосування IPsec (звичайний IP-пакет):</div>
+      <div class="frame" style="margin-bottom:10px;">
+        <div class="frame-field ff-blue" style="flex:1.5;">Orig IP Hdr<small>src→dst</small></div>
+        <div class="frame-field ff-yellow" style="flex:1;">TCP/UDP</div>
+        <div class="frame-field ff-gray" style="flex:3;">Дані (Payload)</div>
+      </div>
+      <div style="font-size:0.85rem;color:#7beeff;margin-bottom:6px;text-align:left;">ESP Transport Mode:</div>
+      <div class="frame" style="margin-bottom:10px;">
+        <div class="frame-field ff-blue" style="flex:1.5;">Orig IP Hdr<small>незмінений</small></div>
+        <div class="frame-field ff-purple" style="flex:1;">ESP Hdr<small>SPI+Seq</small></div>
+        <div class="frame-field ff-green" style="flex:1;">TCP/UDP<small>🔒 зашифр.</small></div>
+        <div class="frame-field ff-green" style="flex:2.5;">Дані<small>🔒 зашифр.</small></div>
+        <div class="frame-field ff-green" style="flex:1;">ESP Trlr<small>🔒</small></div>
+        <div class="frame-field ff-red" style="flex:1;">ICV</div>
+      </div>
+      <div style="font-size:0.85rem;color:#7beeff;margin-bottom:6px;text-align:left;">AH Transport Mode:</div>
+      <div class="frame">
+        <div class="frame-field ff-blue" style="flex:1.5;">Orig IP Hdr<small>з мітками</small></div>
+        <div class="frame-field ff-red" style="flex:1;">AH Hdr<small>ICV/HMAC</small></div>
+        <div class="frame-field ff-yellow" style="flex:1;">TCP/UDP</div>
+        <div class="frame-field ff-gray" style="flex:2.5;">Дані (відкриті)</div>
+      </div>
+    </div>
+    <div class="card warn" style="max-width:860px;">
+      <p><span class="hl2">Обмеження:</span> Transport Mode не приховує реальні IP-адреси відправника й одержувача — вони видно в оригінальному IP-заголовку.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 12 — TUNNEL MODE ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Tunnel Mode (Тунельний режим)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:14px;">У тунельному режимі <span class="hl">весь оригінальний IP-пакет інкапсулюється</span> в новий пакет із зовнішнім IP-заголовком. IP-адреси шлюзів приховують топологію внутрішньої мережі. Найпоширеніший у VPN-шлюзах.</p>
+    <div style="width:100%;max-width:960px;margin-bottom:14px;">
+      <div style="font-size:0.85rem;color:#7beeff;margin-bottom:6px;text-align:left;">ESP Tunnel Mode:</div>
+      <div class="frame" style="margin-bottom:10px;">
+        <div class="frame-field ff-blue" style="flex:1.5;">New IP Hdr<small>GW→GW</small></div>
+        <div class="frame-field ff-purple" style="flex:1;">ESP Hdr<small>SPI+Seq</small></div>
+        <div class="frame-field ff-green" style="flex:1.2;">Orig IP Hdr<small>🔒 зашифр.</small></div>
+        <div class="frame-field ff-green" style="flex:1;">TCP/UDP<small>🔒</small></div>
+        <div class="frame-field ff-green" style="flex:2;">Дані<small>🔒 зашифр.</small></div>
+        <div class="frame-field ff-green" style="flex:1;">ESP Trlr<small>🔒</small></div>
+        <div class="frame-field ff-red" style="flex:1;">ICV</div>
+      </div>
+      <div style="font-size:0.85rem;color:#7beeff;margin-bottom:6px;text-align:left;">AH Tunnel Mode:</div>
+      <div class="frame">
+        <div class="frame-field ff-blue" style="flex:1.5;">New IP Hdr<small>GW→GW</small></div>
+        <div class="frame-field ff-red" style="flex:1;">AH Hdr<small>ICV/HMAC</small></div>
+        <div class="frame-field ff-yellow" style="flex:1.2;">Orig IP Hdr<small>відкритий</small></div>
+        <div class="frame-field ff-yellow" style="flex:1;">TCP/UDP</div>
+        <div class="frame-field ff-gray" style="flex:2;">Дані (відкриті)</div>
+      </div>
+    </div>
+    <div class="card good" style="max-width:860px;">
+      <p><span class="hl3">Перевага:</span> Tunnel Mode приховує оригінальні IP-адреси. Саме цей режим використовується у Site-to-Site VPN (IPsec між двома шлюзами).</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 13 — TRANSPORT vs TUNNEL ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Transport Mode vs Tunnel Mode: Порівняння</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Критерій</th>
+          <th>Transport Mode</th>
+          <th>Tunnel Mode</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>IP-заголовок</td><td>Оригінальний зберігається</td><td>Новий зовнішній IP-заголовок</td></tr>
+        <tr><td>Приховування IP-адрес</td><td><span class="badge badge-red">Ні</span></td><td><span class="badge badge-green">Так</span></td></tr>
+        <tr><td>Overhead (накладні витрати)</td><td><span class="badge badge-green">Менший</span></td><td><span class="badge badge-yellow">Більший (+20 байт)</span></td></tr>
+        <tr><td>Сумісність з NAT</td><td>Складна</td><td>З NAT-T — повна</td></tr>
+        <tr><td>Типове застосування</td><td>Host-to-Host</td><td>Site-to-Site VPN, Remote Access</td></tr>
+        <tr><td>Захищає</td><td>Тільки Payload</td><td>Весь оригінальний пакет (Hdr + Payload)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 14 — AH vs ESP ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>AH vs ESP: Порівняння протоколів</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Можливість</th>
+          <th>AH (протокол 51)</th>
+          <th>ESP (протокол 50)</th>
+          <th>AH + ESP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Конфіденційність (шифрування)</td><td><span class="badge badge-red">✗ Ні</span></td><td><span class="badge badge-green">✓ Так</span></td><td><span class="badge badge-green">✓ Так</span></td></tr>
+        <tr><td>Автентифікація даних</td><td><span class="badge badge-green">✓ Так</span></td><td><span class="badge badge-green">✓ Так</span></td><td><span class="badge badge-green">✓ Так</span></td></tr>
+        <tr><td>Захист IP-заголовка</td><td><span class="badge badge-green">✓ Повний</span></td><td><span class="badge badge-yellow">Частковий</span></td><td><span class="badge badge-green">✓ Повний</span></td></tr>
+        <tr><td>Захист від replay</td><td><span class="badge badge-green">✓ Так</span></td><td><span class="badge badge-green">✓ Так</span></td><td><span class="badge badge-green">✓ Так</span></td></tr>
+        <tr><td>Сумісність з NAT</td><td><span class="badge badge-red">✗ Ні</span></td><td><span class="badge badge-green">✓ (NAT-T)</span></td><td><span class="badge badge-red">✗ Ні</span></td></tr>
+        <tr><td>Практичне використання</td><td>Рідко</td><td>Найпоширеніший</td><td>Специфічні випадки</td></tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:860px;margin-top:14px;">
+      <p>На практиці <span class="hl">ESP з автентифікацією</span> (ESP+HMAC або ESP-GCM) замінює комбінацію AH+ESP, оскільки надає всі необхідні гарантії безпеки.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 15 — IKE INTRO ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>IKE — Internet Key Exchange</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;"><span class="hl">IKE</span> — протокол автоматичного встановлення і керування Security Associations. Виконується поверх UDP порт <span class="hl">500</span> (або <span class="hl">4500</span> для NAT-T). Існують дві версії: IKEv1 та IKEv2.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <h3>IKEv1 (RFC 2409)</h3>
+          <ul style="max-width:100%;">
+            <li>Розроблений у 1998 р.</li>
+            <li>Дві фази: Фаза 1 (IKE SA) та Фаза 2 (IPsec SA)</li>
+            <li>Фаза 1: Main Mode (6 пов.) або Aggressive Mode (3 пов.)</li>
+            <li>Фаза 2: Quick Mode (3 повідомлення)</li>
+            <li>Складний, надлишковий</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>IKEv2 (RFC 7296)</h3>
+          <ul style="max-width:100%;">
+            <li>Розроблений у 2005 р., оновлений у 2014 р.</li>
+            <li>Спрощений: лише 4 повідомлення для базового з'єднання</li>
+            <li>Вбудована підтримка EAP, MOBIKE, NAT-T</li>
+            <li>Стандартний для сучасних реалізацій</li>
+            <li>Надійніший та ефективніший</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 16 — IKEv1 OVERVIEW ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>IKEv1 — Двофазна модель</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:10px;max-width:860px;">
+      <div class="dbox purple" style="width:100%;padding:14px 20px;font-size:1rem;">
+        🔑 <strong>Фаза 1 — Встановлення IKE SA (захищений канал управління)</strong>
+        <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:4px;">Аутентифікація сторін · Обмін ключами DH · Узгодження алгоритмів IKE</div>
+      </div>
+      <div class="arrow" style="font-size:2rem;">↓</div>
+      <div class="dbox green" style="width:100%;padding:14px 20px;font-size:1rem;">
+        🛡️ <strong>Фаза 2 — Встановлення IPsec SA (через захищений канал IKE SA)</strong>
+        <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-top:4px;">Quick Mode · Узгодження AH/ESP · Генерація сесійних ключів</div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:860px;margin-top:14px;">
+      <div class="col">
+        <div class="card warn" style="padding:14px;">
+          <h3 style="font-size:1.05rem;">Методи автентифікації (Фаза 1)</h3>
+          <ul style="max-width:100%;font-size:0.95rem;">
+            <li>Pre-Shared Key (PSK) — спільний секрет</li>
+            <li>Цифрові сертифікати RSA/ECDSA</li>
+            <li>Шифрований RSA nonce</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent" style="padding:14px;">
+          <h3 style="font-size:1.05rem;">Обмін ключами DH</h3>
+          <p style="font-size:0.95rem;">Алгоритм Діффі-Геллмана дозволяє двом сторонам встановити спільний секрет по відкритому каналу без передачі секрету напряму.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 17 — IKEv1 MAIN MODE ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>IKEv1 Фаза 1 — Main Mode (6 повідомлень)</h2>
+    <div class="divider"></div>
+    <div style="display:flex;gap:24px;width:100%;max-width:1000px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox blue" style="width:110px;padding:10px 6px;">Ініціатор</div>
+        <div style="width:2px;flex:1;background:rgba(0,212,255,0.3);min-height:260px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;padding-top:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">1→</div>
+          <div class="card" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl">SA Propose</span> — пропозиції алгоритмів (шифрування, хеш, DH group, термін дії SA)</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">←2</div>
+          <div class="card" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl2">SA Accept</span> — вибір алгоритмів із запропонованих ініціатором</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">3→</div>
+          <div class="card" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl">KE + Nonce</span> — публічне значення DH та випадковий nonce (відкриті)</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">←4</div>
+          <div class="card" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl2">KE + Nonce</span> — публічне значення DH та nonce відповідача (відкриті)<br/><small style="color:#90a0b8;">→ Обидві сторони обчислюють спільний секрет DH</small></p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">5→</div>
+          <div class="card good" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl3">ID + AUTH</span> — ідентифікатор та автентифікація (<span class="hl3">🔒 зашифровано</span>)</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">←6</div>
+          <div class="card good" style="flex:1;padding:10px 14px;margin-bottom:0;"><p style="font-size:0.88rem;margin:0;"><span class="hl3">ID + AUTH</span> — ідентифікатор та автентифікація відповідача (<span class="hl3">🔒 зашифровано</span>)</p></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox yellow" style="width:110px;padding:10px 6px;">Відповідач</div>
+        <div style="width:2px;flex:1;background:rgba(255,170,0,0.3);min-height:260px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 18 — IKEv1 AGGRESSIVE MODE ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>IKEv1 Фаза 1 — Aggressive Mode (3 повідомлення)</h2>
+    <div class="divider"></div>
+    <div style="display:flex;gap:24px;width:100%;max-width:960px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox blue" style="width:110px;padding:10px 6px;">Ініціатор</div>
+        <div style="width:2px;flex:1;background:rgba(0,212,255,0.3);min-height:160px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;padding-top:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">1→</div>
+          <div class="card" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl">SA + KE + Nonce + ID</span> — усе в одному повідомленні (відкрито)</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">←2</div>
+          <div class="card" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl2">SA + KE + Nonce + ID + AUTH</span> — відповідь + автентифікація (частково відкрито)</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">3→</div>
+          <div class="card good" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl3">AUTH</span> — автентифікація ініціатора (відкрито)</p></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox yellow" style="width:110px;padding:10px 6px;">Відповідач</div>
+        <div style="width:2px;flex:1;background:rgba(255,170,0,0.3);min-height:160px;"></div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:860px;margin-top:14px;">
+      <div class="col">
+        <div class="card good" style="padding:14px;">
+          <h3 style="font-size:1.05rem;color:#50dc64;">Перевага</h3>
+          <p style="font-size:0.92rem;">Швидше з'єднання — 3 замість 6 повідомлень. Корисний для ідентифікації за FQDN (динамічна IP).</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad" style="padding:14px;">
+          <h3 style="font-size:1.05rem;color:#ff8080;">Вразливість</h3>
+          <p style="font-size:0.92rem;">ID ініціатора та його хеш PSK передаються <span class="hl2">відкрито</span> → вразливість до офлайн-атак перебором на PSK.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 19 — IKEv1 QUICK MODE ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>IKEv1 Фаза 2 — Quick Mode (3 повідомлення)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:16px;">Quick Mode виконується <span class="hl">всередині захищеного IKE SA</span>, встановленого у Фазі 1. Його мета — узгодити параметри IPsec SA (AH або ESP) для захисту реального трафіку.</p>
+    <div style="display:flex;gap:24px;width:100%;max-width:960px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox blue" style="width:110px;padding:10px 6px;">Ініціатор</div>
+        <div style="width:2px;flex:1;background:rgba(0,212,255,0.3);min-height:150px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;padding-top:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">1→</div>
+          <div class="card accent" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl">Hash + SA + Nonce [+ KE] [+ ID]</span> — пропозиція IPsec SA, нові nonce для PFS<br/><small style="color:#90a0b8;">🔒 зашифровано ключами IKE SA</small></p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">←2</div>
+          <div class="card accent" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl2">Hash + SA + Nonce [+ KE] [+ ID]</span> — відповідь з вибраними параметрами<br/><small style="color:#90a0b8;">🔒 зашифровано</small></p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:28px;max-width:28px;padding:4px;font-size:0.8rem;font-weight:700;">3→</div>
+          <div class="card good" style="flex:1;padding:12px 16px;margin-bottom:0;"><p style="font-size:0.92rem;margin:0;"><span class="hl3">Hash</span> — підтвердження (commit confirmation)<br/><small style="color:#90a0b8;">🔒 зашифровано · IPsec SA встановлено!</small></p></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:120px;flex-shrink:0;">
+        <div class="dbox yellow" style="width:110px;padding:10px 6px;">Відповідач</div>
+        <div style="width:2px;flex:1;background:rgba(255,170,0,0.3);min-height:150px;"></div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:0.88rem;color:#90a0b8;max-width:760px;"><span class="hl">PFS (Perfect Forward Secrecy)</span>: опційний обмін DH у Quick Mode забезпечує незалежність ключів сесії від довгострокового ключа.</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 20 — IKEv2 OVERVIEW ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>IKEv2 — Сучасна заміна IKEv1</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:14px;">IKEv2 (RFC 7296) значно спрощує процес встановлення з'єднання та усуває недоліки IKEv1. Базове з'єднання потребує лише <span class="hl">4 повідомлення (2 обміни)</span>.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Переваги IKEv2</h3>
+          <ul style="max-width:100%;">
+            <li>Менше повідомлень (4 vs 9+ у IKEv1)</li>
+            <li>Вбудована підтримка EAP (мобільні клієнти)</li>
+            <li>NAT-T інтегровано в стандарт</li>
+            <li>MOBIKE — переміщення між мережами</li>
+            <li>Надійніша повторна автентифікація</li>
+            <li>Чітке розмежування IKE SA та Child SA</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Обміни IKEv2</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">IKE_SA_INIT</span> — DH-обмін та параметри IKE SA</li>
+            <li><span class="hl">IKE_AUTH</span> — автентифікація та перша Child SA</li>
+            <li><span class="hl">CREATE_CHILD_SA</span> — нові або оновлені Child SA</li>
+            <li><span class="hl">INFORMATIONAL</span> — DELETE, NOTIFY, рекеінг</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 21 — IKEv2 IKE_SA_INIT + IKE_AUTH ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>IKEv2 — Встановлення з'єднання (4 повідомлення)</h2>
+    <div class="divider"></div>
+    <div style="display:flex;gap:20px;width:100%;max-width:1000px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:100px;flex-shrink:0;">
+        <div class="dbox blue" style="width:90px;padding:8px 4px;font-size:0.9rem;">Ініціатор</div>
+        <div style="width:2px;flex:1;background:rgba(0,212,255,0.3);min-height:280px;"></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;padding-top:6px;">
+        <div style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:6px;padding:6px 10px;font-size:0.8rem;color:#7beeff;">Обмін 1: IKE_SA_INIT (відкрито)</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:26px;max-width:26px;padding:3px;font-size:0.75rem;font-weight:700;">1→</div>
+          <div class="card" style="flex:1;padding:10px 12px;margin-bottom:0;font-size:0.88rem;"><span class="hl">HDR, SAi1, KEi, Ni</span> — IKE SA пропозиції, DH public key ініціатора, nonce</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:26px;max-width:26px;padding:3px;font-size:0.75rem;font-weight:700;">←2</div>
+          <div class="card" style="flex:1;padding:10px 12px;margin-bottom:0;font-size:0.88rem;"><span class="hl2">HDR, SAr1, KEr, Nr [, CERTREQ]</span> — вибрані алгоритми, DH відповідача, nonce<br/><small style="color:#90a0b8;">→ Обидві сторони обчислюють SKEYSEED → похідні ключі SK_*</small></div>
+        </div>
+        <div style="background:rgba(80,220,100,0.08);border:1px solid rgba(80,220,100,0.3);border-radius:6px;padding:6px 10px;font-size:0.8rem;color:#80ee94;margin-top:4px;">Обмін 2: IKE_AUTH (🔒 зашифровано та автентифіковано)</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox blue" style="min-width:26px;max-width:26px;padding:3px;font-size:0.75rem;font-weight:700;">3→</div>
+          <div class="card good" style="flex:1;padding:10px 12px;margin-bottom:0;font-size:0.88rem;"><span class="hl3">HDR, SK{IDi, [CERT,] AUTH, SAi2, TSi, TSr}</span> — ID, підпис/PSK, пропозиція Child SA, селектори трафіку</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="dbox yellow" style="min-width:26px;max-width:26px;padding:3px;font-size:0.75rem;font-weight:700;">←4</div>
+          <div class="card good" style="flex:1;padding:10px 12px;margin-bottom:0;font-size:0.88rem;"><span class="hl3">HDR, SK{IDr, [CERT,] AUTH, SAr2, TSi, TSr}</span> — автентифікація відповідача + Child SA встановлено!</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:100px;flex-shrink:0;">
+        <div class="dbox yellow" style="width:90px;padding:8px 4px;font-size:0.9rem;">Відповідач</div>
+        <div style="width:2px;flex:1;background:rgba(255,170,0,0.3);min-height:280px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 22 — IKEv2 CHILD SA ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>IKEv2 — CREATE_CHILD_SA та рекеінг</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>CREATE_CHILD_SA</h3>
+          <p style="margin-bottom:10px;">Після встановлення IKE SA та першої Child SA через IKE_AUTH, нові IPsec SA (Child SA) або поновлення виконуються обміном CREATE_CHILD_SA:</p>
+          <pre style="font-size:0.8rem;padding:10px 14px;">→ HDR, SK{ SA, Ni [,KEi] [,TSi,TSr] }
+← HDR, SK{ SA, Nr [,KEr] [,TSi,TSr] }</pre>
+          <p style="margin-top:8px;font-size:0.9rem;">Два повідомлення. З опційним DH (KEi/KEr) забезпечується PFS.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Рекеінг (Rekeying)</h3>
+          <p style="margin-bottom:10px;">Автоматичне оновлення ключів по закінченні lifetime SA (за часом або обсягом):</p>
+          <ul style="max-width:100%;">
+            <li>IKE SA рекеінг — новий IKE_SA_INIT</li>
+            <li>Child SA рекеінг — CREATE_CHILD_SA</li>
+            <li>Новий SA встановлюється до видалення старого</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>INFORMATIONAL обмін</h3>
+          <p style="font-size:0.92rem;">Видалення SA (DELETE), повідомлення про помилки (NOTIFY), оновлення адрес (MOBIKE).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 23 — IKEv1 vs IKEv2 ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>IKEv1 vs IKEv2: Порівняння</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Критерій</th>
+          <th>IKEv1</th>
+          <th>IKEv2</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RFC</td><td>2409 (1998)</td><td>7296 (2014)</td></tr>
+        <tr><td>Повідомлень (базове з'єднання)</td><td>9 (MM+QM) або 6 (AM+QM)</td><td><span class="hl3">4</span></td></tr>
+        <tr><td>Підтримка EAP</td><td><span class="badge badge-red">Ні (лише розширення)</span></td><td><span class="badge badge-green">Вбудована</span></td></tr>
+        <tr><td>NAT-T</td><td>Розширення RFC 3947</td><td><span class="badge badge-green">Вбудовано</span></td></tr>
+        <tr><td>MOBIKE (мобільність)</td><td><span class="badge badge-red">Ні</span></td><td><span class="badge badge-green">Вбудовано (RFC 4555)</span></td></tr>
+        <tr><td>Надійність при втраті пакетів</td><td>Обмежена</td><td>Вбудований механізм повтору</td></tr>
+        <tr><td>Aggressive Mode (вразливість)</td><td><span class="badge badge-red">Є</span></td><td><span class="badge badge-green">Відсутній</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 24 — NAT TRAVERSAL ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>NAT-Traversal (NAT-T)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:14px;">AH несумісний з NAT, оскільки NAT змінює IP-заголовок (SRC IP), що ламає ICV. ESP без NAT-T теж проблемний: NAT не вміє обробляти ESP-пакети (відсутній порт).</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Проблема: ESP + NAT</h3>
+          <div class="frame" style="margin:8px 0;">
+            <div class="frame-field ff-blue" style="flex:1.5;">New IP<br/><small>NAT-addr</small></div>
+            <div class="frame-field ff-purple" style="flex:1;">ESP Hdr</div>
+            <div class="frame-field ff-green" style="flex:2;">🔒 Дані</div>
+            <div class="frame-field ff-red" style="flex:1;">ICV</div>
+          </div>
+          <p style="font-size:0.88rem;">NAT-пристрій не може відстежувати стан ESP-пакетів (немає порту). Неможливе перенаправлення між кількома клієнтами за одним NAT-IP.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Рішення: NAT-T (RFC 3948)</h3>
+          <div class="frame" style="margin:8px 0;">
+            <div class="frame-field ff-blue" style="flex:1.5;">New IP<br/><small>NAT-addr</small></div>
+            <div class="frame-field ff-yellow" style="flex:1;">UDP<br/><small>4500</small></div>
+            <div class="frame-field ff-purple" style="flex:1;">ESP Hdr</div>
+            <div class="frame-field ff-green" style="flex:1.5;">🔒 Дані</div>
+            <div class="frame-field ff-red" style="flex:1;">ICV</div>
+          </div>
+          <p style="font-size:0.88rem;">ESP-пакет обгортається в UDP (порт 4500). NAT коректно обробляє UDP. IKE автоматично виявляє наявність NAT під час IKE_SA_INIT.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 25 — АЛГОРИТМИ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Криптографічні алгоритми IPsec</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Категорія</th>
+          <th>Рекомендовані (Suite B)</th>
+          <th>Застарілі (уникати)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Шифрування</td>
+          <td>AES-GCM-128/256, AES-CBC-256, ChaCha20-Poly1305</td>
+          <td>3DES, DES, RC4, AES-CBC-128 (deprecated)</td>
+        </tr>
+        <tr>
+          <td>Автентифікація / HMAC</td>
+          <td>HMAC-SHA2-256, HMAC-SHA2-384, AES-XCBC-96</td>
+          <td>HMAC-MD5, HMAC-SHA1</td>
+        </tr>
+        <tr>
+          <td>Обмін ключами (DH)</td>
+          <td>ECDH P-256 / P-384 (Group 19/20), DH Group 14 (2048 біт)</td>
+          <td>DH Group 1 (768 біт), Group 2 (1024 біт)</td>
+        </tr>
+        <tr>
+          <td>Автентифікація IKE</td>
+          <td>RSA-2048+, ECDSA P-256/384, EdDSA</td>
+          <td>PSK з коротким паролем</td>
+        </tr>
+        <tr>
+          <td>PRF (для ключів)</td>
+          <td>PRF-HMAC-SHA2-256, PRF-AES-128-XCBC</td>
+          <td>PRF-HMAC-MD5, PRF-HMAC-SHA1</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card warn" style="max-width:860px;margin-top:14px;">
+      <p><span class="hl2">AEAD-алгоритми</span> (AES-GCM, ChaCha20-Poly1305) надають одночасно шифрування та автентифікацію — окремий HMAC не потрібен.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 26 — USE CASES ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Сценарії застосування IPsec</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Site-to-Site VPN</h3>
+          <p>IPsec між двома VPN-шлюзами (Tunnel Mode, ESP). З'єднує корпоративні офіси через Інтернет. Трафік між офісами автоматично захищений. Типові рішення: Cisco ASA, FortiGate, pfSense/strongSwan.</p>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Remote Access VPN</h3>
+          <p>IKEv2+EAP або IKEv2+CERT для мобільних користувачів. Клієнти: Windows (вбудований), iOS/macOS (IKEv2), Android (strongSwan).</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Host-to-Host</h3>
+          <p>Transport Mode ESP між двома серверами в дата-центрі. Захист трафіку мікросервісів без зміни застосунків. Використовується в Kubernetes (мережеві плагіни).</p>
+        </div>
+        <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+          <h3 style="color:#b07bff;">IPv6 + IPsec</h3>
+          <p>У IPv6 IPsec є обов'язковою частиною стека (RFC 6434). Всі IPv6-пристрої мають підтримувати IPsec, хоча його використання опціональне.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 27 — ЗВЕДЕННЯ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Ключові поняття лекції</h2>
+    <div class="divider"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1000px;">
+      <span class="badge badge-blue" style="font-size:0.95rem;padding:7px 16px;">IPsec (RFC 4301)</span>
+      <span class="badge badge-purple" style="font-size:0.95rem;padding:7px 16px;">Security Association (SA)</span>
+      <span class="badge badge-green" style="font-size:0.95rem;padding:7px 16px;">SPD (правила)</span>
+      <span class="badge badge-yellow" style="font-size:0.95rem;padding:7px 16px;">SAD (активні SA)</span>
+      <span class="badge badge-blue" style="font-size:0.95rem;padding:7px 16px;">SPI (ідентифікатор SA)</span>
+      <span class="badge badge-red" style="font-size:0.95rem;padding:7px 16px;">AH — цілісність (IP 51)</span>
+      <span class="badge badge-purple" style="font-size:0.95rem;padding:7px 16px;">ESP — шифрування (IP 50)</span>
+      <span class="badge badge-green" style="font-size:0.95rem;padding:7px 16px;">Transport Mode</span>
+      <span class="badge badge-blue" style="font-size:0.95rem;padding:7px 16px;">Tunnel Mode</span>
+      <span class="badge badge-yellow" style="font-size:0.95rem;padding:7px 16px;">IKEv1 Фаза 1 / 2</span>
+      <span class="badge badge-red" style="font-size:0.95rem;padding:7px 16px;">Main / Aggressive Mode</span>
+      <span class="badge badge-green" style="font-size:0.95rem;padding:7px 16px;">Quick Mode</span>
+      <span class="badge badge-blue" style="font-size:0.95rem;padding:7px 16px;">IKEv2 IKE_SA_INIT</span>
+      <span class="badge badge-purple" style="font-size:0.95rem;padding:7px 16px;">IKEv2 IKE_AUTH</span>
+      <span class="badge badge-yellow" style="font-size:0.95rem;padding:7px 16px;">NAT-Traversal (NAT-T)</span>
+      <span class="badge badge-red" style="font-size:0.95rem;padding:7px 16px;">PFS (DH у QM/Child SA)</span>
+      <span class="badge badge-green" style="font-size:0.95rem;padding:7px 16px;">AES-GCM / ESP+HMAC</span>
+      <span class="badge badge-blue" style="font-size:0.95rem;padding:7px 16px;">Replay Protection</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 28 — КОНТРОЛЬНІ ПИТАННЯ ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Контрольні питання</h2>
+    <div class="divider"></div>
+    <ul style="max-width:880px;">
+      <li>Які три властивості безпеки забезпечує IPsec? Який протокол (AH чи ESP) надає кожну з них?</li>
+      <li>Що таке Security Association? З яких параметрів складається запис у SAD?</li>
+      <li>Чим відрізняється SPD від SAD? Які три дії може задати SPD для трафіку?</li>
+      <li>Намалюйте формат заголовка AH і поясніть призначення кожного поля.</li>
+      <li>Чому AH несумісний з NAT? Як ESP вирішує цю проблему через NAT-T?</li>
+      <li>Порівняйте Transport Mode та Tunnel Mode: що захищається, коли застосовується кожен?</li>
+      <li>Опишіть 6 повідомлень IKEv1 Main Mode. На якому кроці встановлюється шифрування?</li>
+      <li>Чому Aggressive Mode вразливий? Яка конкретна загроза виникає при використанні PSK?</li>
+      <li>Скільки повідомлень потрібно IKEv2 для встановлення IPsec SA? Назвіть ці обміни.</li>
+      <li>Що таке PFS (Perfect Forward Secrecy) і як він реалізується в IKEv1 та IKEv2?</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════ SLIDE 29 — КІНЕЦЬ ═══════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 9: Протоколи IPsec</p>
+    <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <span class="tag">AH (RFC 4302)</span>
+      <span class="tag">ESP (RFC 4303)</span>
+      <span class="tag">IKEv1 (RFC 2409)</span>
+      <span class="tag">IKEv2 (RFC 7296)</span>
+      <span class="tag">SAD / SPD</span>
+      <span class="tag">NAT-Traversal</span>
+    </div>
+    <p style="margin-top:28px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 10 — Практичне налаштування IPsec (strongSwan / Cisco)</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">‹</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">›</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
