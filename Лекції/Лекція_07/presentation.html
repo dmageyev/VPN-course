@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 7 — Сучасний протокол WireGuard та концепція Zero Trust (ZTNA)</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title  { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark   { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal   { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green  { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red    { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy   { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end    { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+    .bg-ztna   { background: linear-gradient(160deg, #1a0d1a 0%, #2b0d3e 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 14px 16px 14px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue   { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green  { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red    { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow { border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple { border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 1000px; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px 14px; text-align: left; }
+    td { padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 14px 18px;
+      font-family: 'Courier New', monospace; font-size: 0.85rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+    .hl4 { color: #ff8080; font-weight: 600; }
+    .hl5 { color: #b07bff; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+
+    /* ===== Handshake step ===== */
+    .hs-step {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: rgba(255,255,255,0.04); border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 10px; border-left: 3px solid #00d4ff;
+    }
+    .hs-num {
+      min-width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 0.95rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Section header slide ===== */
+    .section-label {
+      font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+      color: #7b2ff7; margin-bottom: 12px; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+<!-- ═══════════════════════════ SLIDE 1 — TITLE ══════════════════════════════ -->
+<div class="slide bg-title active">
+  <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+  <h1>Лекція 7</h1>
+  <div class="divider"></div>
+  <h1 style="font-size:1.9rem;margin-top:8px;">Сучасний протокол WireGuard<br/>та концепція Zero Trust (ZTNA)</h1>
+  <p class="subtitle">WireGuard · Noise Protocol · Cryptokey Routing · ZTNA</p>
+  <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 2 — ПЛАН ЛЕКЦІЇ ════════════════════════ -->
+<div class="slide bg-dark">
+  <h2>План лекції</h2>
+  <ol class="plan-list">
+    <li>WireGuard: філософія мінімалізму та висока продуктивність</li>
+    <li>Архітектура: Kernel-space vs User-space</li>
+    <li>Криптографічний стек WireGuard</li>
+    <li>Noise Protocol Framework</li>
+    <li>Формат пакетів і кадрів WireGuard</li>
+    <li>Фази та етапи встановлення з'єднання (Handshake)</li>
+    <li>Cryptokey Routing та AllowedIPs</li>
+    <li>Криза класичного VPN → концепція Zero Trust (ZTNA)</li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 3 — ЩО ТАКЕ WIREGUARD ═════════════════ -->
+<div class="slide bg-teal">
+  <h2>WireGuard — що це?</h2>
+  <div class="divider"></div>
+  <p style="max-width:820px;margin-bottom:24px;">
+    <span class="hl">WireGuard</span> — сучасний VPN-протокол з відкритим вихідним кодом,
+    розроблений Джейсоном Доненфельдом у 2016 році. Вбудований у ядро Linux з версії
+    <span class="hl">5.6 (2020)</span>, підтримується на Windows, macOS, Android та iOS.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Ключові переваги</h3>
+        <ul style="max-width:100%;">
+          <li>~<span class="hl">4 000 рядків</span> коду (проти 400 000 у OpenVPN)</li>
+          <li>Висока швидкість передачі та мала затримка</li>
+          <li>Проста конфігурація (як SSH-ключі)</li>
+          <li>Стійкість до атак у публічних мережах</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Позиціонування</h3>
+        <ul style="max-width:100%;">
+          <li>Заміна <span class="hl2">IPsec</span> для більшості сценаріїв</li>
+          <li>Альтернатива <span class="hl2">OpenVPN</span> з кращою продуктивністю</li>
+          <li>Платформа для побудови mesh-мереж (Tailscale, Netmaker)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 4 — МІНІМАЛІЗМ ════════════════════════ -->
+<div class="slide bg-dark">
+  <h2>Філософія мінімалізму</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:26px;">
+    WireGuard свідомо відмовляється від гнучкості на користь <span class="hl">безпеки та простоти</span>.
+    Менший код → менша поверхня атаки → легший аудит.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Параметр</th><th>WireGuard</th><th>OpenVPN</th><th>IPsec (strongSwan)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Рядків коду (approx.)</td><td><span class="hl3">~4 000</span></td><td><span class="hl4">~400 000</span></td><td><span class="hl4">~300 000</span></td></tr>
+      <tr><td>Вибір алгоритмів</td><td>Фіксований набір</td><td>Сотні комбінацій</td><td>Гнучко + IKE</td></tr>
+      <tr><td>Конфігурація</td><td>Мінімальна</td><td>Складна (CA/PKI)</td><td>Дуже складна</td></tr>
+      <tr><td>Аудит безпеки</td><td>Простий</td><td>Складний</td><td>Дуже складний</td></tr>
+      <tr><td>Вбудовано у ядро Linux</td><td>✅ з v5.6</td><td>❌ (user-space)</td><td>✅ (але складний)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 5 — KERNEL-SPACE ═══════════════════════ -->
+<div class="slide bg-purple">
+  <h2>Kernel-space vs User-space</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;align-items:flex-start;">
+    <div class="col">
+      <div class="card bad">
+        <h3 style="color:#ff8080;">OpenVPN — User-space</h3>
+        <div class="diagram" style="flex-direction:column;gap:4px;margin:10px 0;">
+          <div class="dbox" style="width:200px;font-size:0.8rem;">Мережевий трафік</div>
+          <div class="arrow">↓</div>
+          <div class="dbox yellow" style="width:200px;font-size:0.8rem;">Ядро ОС</div>
+          <div class="arrow">↕ <span style="font-size:0.75rem;color:#ff8080;">syscall (повільно)</span></div>
+          <div class="dbox red" style="width:200px;font-size:0.8rem;">User-space процес</div>
+          <div class="arrow">↕ <span style="font-size:0.75rem;color:#ff8080;">context switch</span></div>
+          <div class="dbox yellow" style="width:200px;font-size:0.8rem;">Ядро ОС</div>
+          <div class="arrow">↓</div>
+          <div class="dbox" style="width:200px;font-size:0.8rem;">Мережевий інтерфейс</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3 style="color:#50dc64;">WireGuard — Kernel-space</h3>
+        <div class="diagram" style="flex-direction:column;gap:4px;margin:10px 0;">
+          <div class="dbox" style="width:200px;font-size:0.8rem;">Мережевий трафік</div>
+          <div class="arrow">↓</div>
+          <div class="dbox green" style="width:200px;font-size:0.8rem;">Ядро ОС</div>
+          <div class="arrow">↓ <span style="font-size:0.75rem;color:#50dc64;">без перемикань!</span></div>
+          <div class="dbox green" style="width:200px;font-size:0.8rem;">wg0 (WireGuard module)</div>
+          <div class="arrow">↓</div>
+          <div class="dbox" style="width:200px;font-size:0.8rem;">Мережевий інтерфейс</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card accent" style="max-width:900px;text-align:center;">
+    <p>Kernel-space дає <span class="hl">у 3–5 разів вищу</span> пропускну здатність та нижчу затримку (латентність)</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 6 — КРИПТОСТЕК ОГЛЯД ══════════════════ -->
+<div class="slide bg-dark">
+  <h2>Криптографічний стек WireGuard</h2>
+  <div class="divider"></div>
+  <p style="max-width:820px;margin-bottom:22px;">
+    WireGuard використовує <span class="hl">фіксований, сучасний</span> набір криптографічних примітивів.
+    Ніяких «переговорів» щодо алгоритмів — одна безпечна конфігурація.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Функція</th><th>Алгоритм</th><th>Опис</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Шифрування даних</td><td><span class="hl">ChaCha20</span></td><td>Потоковий шифр, RFC 8439</td></tr>
+      <tr><td>Аутентифікація (MAC)</td><td><span class="hl">Poly1305</span></td><td>MAC-алгоритм, RFC 8439</td></tr>
+      <tr><td>AEAD-схема</td><td><span class="hl">ChaCha20-Poly1305</span></td><td>Encrypt-then-MAC</td></tr>
+      <tr><td>Обмін ключами (DH)</td><td><span class="hl">Curve25519</span></td><td>ECDH на еліптичній кривій</td></tr>
+      <tr><td>Хешування</td><td><span class="hl">BLAKE2s</span></td><td>Швидкий крипт. хеш (256 біт)</td></tr>
+      <tr><td>KDF (виведення ключів)</td><td><span class="hl">HKDF</span></td><td>На основі BLAKE2s (RFC 5869)</td></tr>
+      <tr><td>Захист від DoS</td><td><span class="hl">SipHash-2-4</span></td><td>Хеш для cookies</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 7 — ChaCha20 ═══════════════════════════ -->
+<div class="slide bg-teal">
+  <h2>ChaCha20 та Poly1305</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>ChaCha20 — потоковий шифр</h3>
+        <ul style="max-width:100%;">
+          <li>Розроблений Дж. Бернштейном (2008)</li>
+          <li>256-бітний ключ, 96-бітний nonce</li>
+          <li>Базується на ARX-операціях (ADD, ROTATE, XOR)</li>
+          <li><span class="hl3">Переваги:</span> швидший за AES без апаратного прискорення</li>
+          <li>Резистентний до timing-атак (рівночасові операції)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+        <h3 style="color:#b07bff;">Poly1305 — MAC</h3>
+        <ul style="max-width:100%;">
+          <li>Одноразовий аутентифікатор повідомлень</li>
+          <li>Генерує 128-бітний тег аутентифікації</li>
+          <li>Разом з ChaCha20 → <span class="hl">AEAD</span>-шифрування</li>
+          <li>Захищає від підробки і модифікації пакетів</li>
+        </ul>
+      </div>
+      <div class="card warn">
+        <h3>AEAD = Шифрування + MAC</h3>
+        <p>Authenticate-Encrypt-Authenticate:<br/>
+        <span class="hl2">C = ChaCha20(K, N, P)</span><br/>
+        <span class="hl2">T = Poly1305(K', C || AAD)</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 8 — Curve25519 ════════════════════════ -->
+<div class="slide bg-dark">
+  <h2>Curve25519 та BLAKE2s</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Curve25519 — ECDH</h3>
+        <ul style="max-width:100%;">
+          <li>Еліптична крива Монтгомері: <span class="hl">y² = x³ + 486662x² + x</span></li>
+          <li>Розроблена Д. Бернштейном (2006)</li>
+          <li>256-бітні ключі ≈ безпека RSA-3072</li>
+          <li>Обмін ключами Діффі-Хеллмана (DH)</li>
+          <li>Базис: <span class="hl">публічний ключ = приватний × G</span></li>
+          <li>Нечутлива до атак малих підгруп</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3 style="color:#50dc64;">BLAKE2s — хешування</h3>
+        <ul style="max-width:100%;">
+          <li>Оптимізований для 32-бітних платформ</li>
+          <li>Вихід: до 256 бітів</li>
+          <li><span class="hl3">Швидший за SHA-256</span> і MD5</li>
+          <li>Використовується у HMAC/HKDF для виведення сесійних ключів</li>
+          <li>Захист hash-таблиць: <span class="hl3">SipHash-2-4</span> (проти HashDoS)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="max-width:900px;border-color:rgba(0,212,255,0.3);text-align:center;">
+    <p>Усі ці алгоритми розраховані для <span class="hl">128-бітного рівня безпеки</span> — достатньо навіть проти квантових атак типу Grover (ефективно 64 біти)</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 9 — NOISE PROTOCOL ════════════════════ -->
+<div class="slide bg-purple">
+  <h2>Noise Protocol Framework</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:20px;">
+    WireGuard будує хендшейк на базі <span class="hl">Noise Protocol Framework</span> (Trevor Perrin, 2016) —
+    формальної специфікації для побудови безпечних протоколів обміну ключами.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Паттерн: Noise_IKpsk2</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl">I</span> — статичний ключ ініціатора (відомий заздалегідь)</li>
+          <li><span class="hl">K</span> — статичний ключ респондера відомий ініціатору</li>
+          <li><span class="hl">psk2</span> — Pre-Shared Key (опціональний, зміцнення)</li>
+          <li>Ефемерні ключі генеруються на кожен хендшейк</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Властивості протоколу</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl2">Perfect Forward Secrecy (PFS)</span> — кожна сесія має унікальні ключі</li>
+          <li><span class="hl2">Identity Hiding</span> — статичний ключ ініціатора зашифрований</li>
+          <li><span class="hl2">Key Compromise Impersonation (KCI) resistance</span></li>
+          <li>Формальна верифікація (ProVerif / Tamarin)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 10 — ФОРМАТ ПАКЕТУ ════════════════════ -->
+<div class="slide bg-navy">
+  <h2>Формат пакетів WireGuard</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:16px;">WireGuard визначає <span class="hl">чотири типи повідомлень</span>. Усі передаються через <span class="hl">UDP</span>.</p>
+  <table>
+    <thead>
+      <tr><th>Тип</th><th>Код</th><th>Призначення</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Handshake Initiation</td><td><span class="hl">1</span></td><td>Ініціатор → Респондер (початок хендшейку)</td></tr>
+      <tr><td>Handshake Response</td><td><span class="hl">2</span></td><td>Респондер → Ініціатор (завершення хендшейку)</td></tr>
+      <tr><td>Cookie Reply</td><td><span class="hl">3</span></td><td>Захист від DoS (cookie challenge)</td></tr>
+      <tr><td>Transport Data</td><td><span class="hl">4</span></td><td>Зашифровані дані (основний трафік)</td></tr>
+    </tbody>
+  </table>
+  <div class="card accent" style="max-width:900px;margin-top:16px;text-align:left;">
+    <h3 style="margin-bottom:8px;">Encapsulation у мережевому стеку</h3>
+    <div class="diagram" style="flex-wrap:nowrap;gap:4px;justify-content:flex-start;margin:0;">
+      <div class="dbox blue" style="font-size:0.8rem;min-width:90px;">Ethernet<br/>Header</div>
+      <div class="arrow">→</div>
+      <div class="dbox" style="font-size:0.8rem;min-width:80px;">IP<br/>Header</div>
+      <div class="arrow">→</div>
+      <div class="dbox yellow" style="font-size:0.8rem;min-width:80px;">UDP<br/>Header</div>
+      <div class="arrow">→</div>
+      <div class="dbox green" style="font-size:0.8rem;min-width:110px;">WireGuard<br/>Header (type)</div>
+      <div class="arrow">→</div>
+      <div class="dbox purple" style="font-size:0.8rem;min-width:120px;">Encrypted<br/>Payload</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 11 — HANDSHAKE INITIATION ═════════════ -->
+<div class="slide bg-dark">
+  <h2>Формат: Handshake Initiation (тип 1)</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Поле</th><th>Розмір</th><th>Значення</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>message_type</td><td>1 байт</td><td>0x01</td></tr>
+      <tr><td>reserved</td><td>3 байти</td><td>0x000000</td></tr>
+      <tr><td>sender_index</td><td>4 байти</td><td>Локальний індекс сесії ініціатора</td></tr>
+      <tr><td>unencrypted_ephemeral</td><td>32 байти</td><td>Відкрита частина ефемерного ключа E_i</td></tr>
+      <tr><td>encrypted_static</td><td>48 байт</td><td>AEAD(статичний ключ S_i public + MAC)</td></tr>
+      <tr><td>encrypted_timestamp</td><td>28 байт</td><td>AEAD(TAI64N timestamp + MAC)</td></tr>
+      <tr><td>mac1</td><td>16 байт</td><td>MAC усього повідомлення (захист)</td></tr>
+      <tr><td>mac2</td><td>16 байт</td><td>Cookie MAC (якщо є DoS-виклик)</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:14px;font-size:0.9rem;color:#90a0b8;">Загальний розмір: <span class="hl">148 байт</span></p>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 12 — HANDSHAKE RESPONSE ═══════════════ -->
+<div class="slide bg-teal">
+  <h2>Формат: Handshake Response (тип 2)</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Поле</th><th>Розмір</th><th>Значення</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>message_type</td><td>1 байт</td><td>0x02</td></tr>
+      <tr><td>reserved</td><td>3 байти</td><td>0x000000</td></tr>
+      <tr><td>sender_index</td><td>4 байти</td><td>Локальний індекс сесії респондера</td></tr>
+      <tr><td>receiver_index</td><td>4 байти</td><td>Індекс ініціатора з повідомлення 1</td></tr>
+      <tr><td>unencrypted_ephemeral</td><td>32 байти</td><td>Відкрита частина ефемерного ключа E_r</td></tr>
+      <tr><td>encrypted_nothing</td><td>16 байт</td><td>AEAD(∅) — порожнє зашифроване поле + MAC</td></tr>
+      <tr><td>mac1</td><td>16 байт</td><td>MAC усього повідомлення</td></tr>
+      <tr><td>mac2</td><td>16 байт</td><td>Cookie MAC</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:14px;font-size:0.9rem;color:#90a0b8;">Загальний розмір: <span class="hl">92 байти</span></p>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 13 — TRANSPORT DATA ═══════════════════ -->
+<div class="slide bg-purple">
+  <h2>Формат: Transport Data (тип 4)</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Поле</th><th>Розмір</th><th>Значення</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>message_type</td><td>1 байт</td><td>0x04</td></tr>
+      <tr><td>reserved</td><td>3 байти</td><td>0x000000</td></tr>
+      <tr><td>receiver_index</td><td>4 байти</td><td>Індекс отримувача (з хендшейку)</td></tr>
+      <tr><td>counter</td><td>8 байт</td><td>Монотонний лічильник (захист від Replay)</td></tr>
+      <tr><td>encrypted_encapsulated_packet</td><td>змінна</td><td>ChaCha20-Poly1305(IP-пакет) + 16-байтний MAC</td></tr>
+    </tbody>
+  </table>
+  <div class="cols" style="max-width:1000px;margin-top:18px;">
+    <div class="col">
+      <div class="card good" style="margin-bottom:0;">
+        <h3 style="color:#50dc64;">Захист від Replay</h3>
+        <p>64-бітний лічильник + sliding window (2048 пакетів)</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card accent" style="margin-bottom:0;">
+        <h3>Padding</h3>
+        <p>IP-пакет вирівнюється до кратного 16 байтам для ефективності</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 14 — HANDSHAKE OVERVIEW ═══════════════ -->
+<div class="slide bg-dark">
+  <h2>Handshake: загальна схема</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:18px;">
+    Хендшейк WireGuard складається з <span class="hl">2 повідомлень</span> і встановлює двосторонні сесійні ключі.
+    Весь процес займає <span class="hl">1 RTT</span> (round-trip time).
+  </p>
+  <div class="diagram" style="flex-direction:column;gap:0;max-width:900px;width:100%;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <div class="dbox blue" style="min-width:160px;font-size:0.9rem;padding:12px;">Ініціатор<br/>(Initiator)</div>
+      <div class="dbox green" style="min-width:160px;font-size:0.9rem;padding:12px;">Респондер<br/>(Responder)</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;">
+      <div style="width:160px;text-align:right;font-size:0.85rem;color:#00d4ff;">1. Handshake Init →</div>
+      <div style="flex:1;height:2px;background:linear-gradient(90deg,#00d4ff,rgba(0,212,255,0.2));position:relative;">
+        <div style="position:absolute;right:0;border-right:8px solid #00d4ff;border-top:5px solid transparent;border-bottom:5px solid transparent;top:-4px;"></div>
+      </div>
+      <div style="width:160px;text-align:left;font-size:0.8rem;color:#90a0b8;">(тип=1, 148 байт)</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;">
+      <div style="width:160px;text-align:right;font-size:0.8rem;color:#90a0b8;">(тип=2, 92 байти)</div>
+      <div style="flex:1;height:2px;background:linear-gradient(270deg,#50dc64,rgba(80,220,100,0.2));"></div>
+      <div style="width:160px;text-align:left;font-size:0.85rem;color:#50dc64;">← 2. Handshake Response</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;">
+      <div style="width:160px;text-align:right;font-size:0.85rem;color:#ffcc55;">3. Transport Data →</div>
+      <div style="flex:1;height:2px;background:linear-gradient(90deg,#ffaa00,rgba(255,170,0,0.2));"></div>
+      <div style="width:160px;text-align:left;font-size:0.8rem;color:#90a0b8;">(тип=4, змінна)</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+      <div style="width:160px;text-align:right;font-size:0.8rem;color:#90a0b8;">(тип=4, змінна)</div>
+      <div style="flex:1;height:2px;background:linear-gradient(270deg,#ffaa00,rgba(255,170,0,0.2));"></div>
+      <div style="width:160px;text-align:left;font-size:0.85rem;color:#ffcc55;">← 4. Transport Data</div>
+    </div>
+  </div>
+  <div class="card accent" style="max-width:900px;margin-top:16px;text-align:center;">
+    <p>Після хендшейку: <span class="hl">2 незалежних ключі</span> — один для кожного напряму (TX / RX)</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 15 — HANDSHAKE PHASE 1 ════════════════ -->
+<div class="slide bg-teal">
+  <h2>Фаза 1: Handshake Initiation</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:16px;">Ініціатор <span class="hl">I</span> знає публічний статичний ключ респондера <span class="hl">S_r</span>.</p>
+  <div class="wide" style="max-width:900px;">
+    <div class="hs-step">
+      <div class="hs-num">1</div>
+      <div>
+        <strong style="color:#7beeff;">Генерація ефемерного ключа</strong>
+        <p style="font-size:0.95rem;">E_i = Curve25519.generate() — унікальна пара ключів для цього хендшейку</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">2</div>
+      <div>
+        <strong style="color:#7beeff;">Ланцюг хешування (chaining key)</strong>
+        <p style="font-size:0.95rem;">C₀ = BLAKE2s(protocol_name)<br/>H₀ = BLAKE2s(C₀ || identifier)<br/>H₁ = BLAKE2s(H₀ || S_r_pub)</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">3</div>
+      <div>
+        <strong style="color:#7beeff;">DH-операції та виведення ключів (HKDF)</strong>
+        <p style="font-size:0.95rem;">(C₁, k₁) = HKDF(C₀, DH(E_i, S_r_pub))<br/>encrypted_static = ChaCha20-Poly1305(k₁, S_i_pub)<br/>(C₂, k₂) = HKDF(C₁, DH(S_i, S_r_pub))<br/>encrypted_timestamp = ChaCha20-Poly1305(k₂, timestamp)</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">4</div>
+      <div>
+        <strong style="color:#7beeff;">MAC-захист і відправка</strong>
+        <p style="font-size:0.95rem;">mac1 = MAC(BLAKE2s(S_r_pub), message) — аутентифікація адресата</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 16 — HANDSHAKE PHASE 2 ════════════════ -->
+<div class="slide bg-dark">
+  <h2>Фаза 2: Handshake Response</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:16px;">Респондер <span class="hl">R</span> перевіряє повідомлення 1 і генерує відповідь.</p>
+  <div class="wide" style="max-width:900px;">
+    <div class="hs-step">
+      <div class="hs-num">1</div>
+      <div>
+        <strong style="color:#7beeff;">Верифікація Initiation</strong>
+        <p style="font-size:0.95rem;">R відновлює ланцюг C та H, дешифрує encrypted_static та перевіряє mac1 й timestamp</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">2</div>
+      <div>
+        <strong style="color:#7beeff;">Генерація ефемерного ключа E_r</strong>
+        <p style="font-size:0.95rem;">E_r = Curve25519.generate() — новий ефемерний ключ респондера</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">3</div>
+      <div>
+        <strong style="color:#7beeff;">Три додаткові DH-операції</strong>
+        <p style="font-size:0.95rem;">(C₃, _) = HKDF(C₂, DH(E_r, E_i_pub))<br/>(C₄, _) = HKDF(C₃, DH(E_r, S_i_pub))<br/>(C₅, τ, k₃) = HKDF(C₄, PSK) — Pre-Shared Key (або нулі)</p>
+      </div>
+    </div>
+    <div class="hs-step">
+      <div class="hs-num">4</div>
+      <div>
+        <strong style="color:#7beeff;">Виведення сесійних ключів</strong>
+        <p style="font-size:0.95rem;">T_send = BLAKE2s(C₅ || "0x01") — ключ для TX<br/>T_recv = BLAKE2s(C₅ || "0x02") — ключ для RX</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 17 — SESSION KEYS ═════════════════════ -->
+<div class="slide bg-navy">
+  <h2>Встановлення транспортних ключів</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Властивості сесійних ключів</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl">PFS</span> — компрометація довгострокових ключів не розкриває минулі сесії</li>
+          <li><span class="hl">2 ключі на сесію</span> — окремі для TX і RX</li>
+          <li>ChaCha20-Poly1305 з 64-бітним лічильником</li>
+          <li>Ключі оновлюються кожні <span class="hl">180 секунд</span> (REKEY_AFTER_TIME)</li>
+          <li>Або кожні <span class="hl">2⁶⁰ пакетів</span> (REKEY_AFTER_MESSAGES)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Таймери та стан</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl2">REKEY_AFTER_TIME</span>: 180 сек — оновлення ключа</li>
+          <li><span class="hl2">REJECT_AFTER_TIME</span>: 180 сек — відхилення старих</li>
+          <li><span class="hl2">REKEY_TIMEOUT</span>: 5 сек — retry хендшейку</li>
+          <li><span class="hl2">KEEPALIVE_TIMEOUT</span>: 10 сек — keepalive</li>
+          <li>Стан сесії: <span class="hl2">stateless</span> — WireGuard не зберігає "активних з'єднань"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="card good" style="max-width:900px;text-align:center;">
+    <p>5 DH-операцій у хендшейку забезпечують <span class="hl3">взаємну аутентифікацію</span>, <span class="hl3">PFS</span> та <span class="hl3">приховування ідентичності</span></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 18 — CRYPTOKEY ROUTING ════════════════ -->
+<div class="slide bg-purple">
+  <h2>Cryptokey Routing</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:22px;">
+    <span class="hl">Cryptokey Routing</span> — унікальний механізм WireGuard, де
+    <span class="hl">маршрутизація і аутентифікація об'єднані</span>: ключ визначає дозволені IP-адреси.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Таблиця Cryptokey Routing</h3>
+        <pre style="font-size:0.8rem;max-width:100%;">[Peer: Alice]
+PublicKey = &lt;alice_pub_key&gt;
+AllowedIPs = 10.0.0.2/32
+
+[Peer: Bob]
+PublicKey = &lt;bob_pub_key&gt;
+AllowedIPs = 10.0.0.3/32, 192.168.1.0/24
+
+[Peer: Gateway]
+PublicKey = &lt;gw_pub_key&gt;
+AllowedIPs = 0.0.0.0/0</pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Логіка маршрутизації</h3>
+        <p style="margin-bottom:10px;"><strong>При відправці (TX):</strong></p>
+        <p style="font-size:0.9rem;">Пошук пакету за destination IP → знаходимо peer → шифруємо його ключем</p>
+        <br/>
+        <p style="margin-bottom:10px;"><strong>При отриманні (RX):</strong></p>
+        <p style="font-size:0.9rem;">Дешифруємо ключем peer → перевіряємо source IP ∈ AllowedIPs → якщо ні — відкидаємо</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 19 — WIREGUARD CONFIG ═════════════════ -->
+<div class="slide bg-dark">
+  <h2>Конфігурація WireGuard</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Серверна конфігурація (wg0.conf)</h3>
+        <pre style="font-size:0.8rem;max-width:100%;">[Interface]
+Address    = 10.0.0.1/24
+ListenPort = 51820
+PrivateKey = &lt;server_private_key&gt;
+PostUp     = iptables -A FORWARD -i wg0 -j ACCEPT
+PostDown   = iptables -D FORWARD -i wg0 -j ACCEPT
+
+[Peer]
+# Client Alice
+PublicKey  = &lt;alice_public_key&gt;
+AllowedIPs = 10.0.0.2/32</pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="border-color:rgba(80,220,100,0.4);background:rgba(80,220,100,0.07);">
+        <h3 style="color:#50dc64;">Клієнтська конфігурація</h3>
+        <pre style="font-size:0.8rem;max-width:100%;">[Interface]
+Address    = 10.0.0.2/32
+PrivateKey = &lt;alice_private_key&gt;
+DNS        = 1.1.1.1
+
+[Peer]
+# Server
+PublicKey    = &lt;server_public_key&gt;
+Endpoint     = vpn.example.com:51820
+AllowedIPs   = 0.0.0.0/0
+PersistentKeepalive = 25</pre>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:0.9rem;color:#90a0b8;margin-top:10px;">Активація: <span class="hl">wg-quick up wg0</span> | Статус: <span class="hl">wg show</span></p>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 20 — STEALTH ══════════════════════════ -->
+<div class="slide bg-teal">
+  <h2>«Невидимість» WireGuard</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:22px;">
+    WireGuard <span class="hl">не відповідає</span> на пакети, що не пройшли криптографічну перевірку.
+    Для зовнішнього сканера порт виглядає <span class="hl2">закритим</span>, навіть якщо WireGuard активний.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card bad">
+        <h3 style="color:#ff8080;">Традиційний VPN (IPsec/OpenVPN)</h3>
+        <ul style="max-width:100%;">
+          <li>Відповідає на probe-пакети</li>
+          <li>Порт виявляється при скануванні</li>
+          <li>Можлива ідентифікація типу VPN</li>
+          <li>Вразливий до DDoS на фазі хендшейку</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3 style="color:#50dc64;">WireGuard — Stealth mode</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl3">Silence is security</span> — нульова реакція на чужі пакети</li>
+          <li>Порт-сканери бачать порт як "filtered"</li>
+          <li>Ускладнює fingerprinting VPN</li>
+          <li><span class="hl3">Cookie mechanism</span> — захист від DoS через SipHash cookies</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 21 — WIREGUARD ПОРІВНЯННЯ ═════════════ -->
+<div class="slide bg-dark">
+  <h2>WireGuard vs IPsec vs OpenVPN</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Критерій</th><th>WireGuard</th><th>IPsec/IKEv2</th><th>OpenVPN</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Продуктивність</td><td><span class="hl3">~10 Gbps</span></td><td>~6 Gbps</td><td>~1-2 Gbps</td></tr>
+      <tr><td>Затримка</td><td><span class="hl3">Мінімальна</span></td><td>Середня</td><td>Висока</td></tr>
+      <tr><td>Handshake час</td><td><span class="hl3">1 RTT</span></td><td>4+ RTT</td><td>4+ RTT</td></tr>
+      <tr><td>Криптографія</td><td>Фіксована (безпечна)</td><td>Гнучка (ризик)</td><td>Гнучка (ризик)</td></tr>
+      <tr><td>Роуминг (NAT)</td><td><span class="hl3">Автоматичний</span></td><td>MOBIKE</td><td>Обмежений</td></tr>
+      <tr><td>Конфігурація</td><td><span class="hl3">Проста</span></td><td>Складна</td><td>Середня</td></tr>
+      <tr><td>Вбудов. у ядро</td><td><span class="hl3">✅ Linux 5.6+</span></td><td>✅</td><td>❌</td></tr>
+      <tr><td>UDP-порт</td><td>51820 (змін.)</td><td>500, 4500</td><td>1194 (UDP/TCP)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 22 — СЕКЦІЯ ZTNA ══════════════════════ -->
+<div class="slide bg-ztna">
+  <div class="section-label">Частина II</div>
+  <div style="font-size:3.5rem;margin-bottom:10px;">🛡️</div>
+  <h1 style="font-size:2.4rem;">Криза класичного VPN</h1>
+  <div class="divider"></div>
+  <h1 style="font-size:1.8rem;color:#b07bff;">та концепція Zero Trust (ZTNA)</h1>
+  <p class="subtitle" style="color:#7beeff;margin-top:20px;">Never Trust, Always Verify</p>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 23 — ПРОБЛЕМА VPN ═════════════════════ -->
+<div class="slide bg-red">
+  <h2 style="color:#ff8080;">Проблеми класичного VPN</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card bad">
+        <h3 style="color:#ff8080;">Модель "Замок і ров"</h3>
+        <ul style="max-width:100%;">
+          <li>Після аутентифікації — <span class="hl4">повний доступ до сегменту мережі</span></li>
+          <li>Всі пристрої всередині периметру "довірені"</li>
+          <li>Компрометація 1 акаунту → доступ до всього</li>
+        </ul>
+      </div>
+      <div class="card bad" style="margin-top:0;">
+        <h3 style="color:#ff8080;">Lateral Movement</h3>
+        <ul style="max-width:100%;">
+          <li>Зловмисник переміщується горизонтально всередині мережі</li>
+          <li>Важко виявити — трафік є "легітимним"</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Сучасні виклики</h3>
+        <ul style="max-width:100%;">
+          <li>Хмарні ресурси поза периметром</li>
+          <li>BYOD і особисті пристрої</li>
+          <li>Атаки на ланцюжки поставок (Supply Chain)</li>
+          <li>Ransomware через VPN-сесії</li>
+          <li>Витоки даних від привілейованих користувачів</li>
+        </ul>
+      </div>
+      <div class="card bad" style="margin-top:0;text-align:center;">
+        <p><span class="hl4">97%</span> організацій зазнали порушень безпеки, незважаючи на VPN<br/><span style="font-size:0.8rem;color:#90a0b8;">(VPN Risk Report, Cybersecurity Insiders, 2023)</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 24 — ZERO TRUST ВВЕДЕННЯ ══════════════ -->
+<div class="slide bg-ztna">
+  <h2 style="color:#b07bff;">Концепція Zero Trust</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:22px;">
+    <span class="hl5">Zero Trust</span> — архітектурна концепція безпеки, розроблена Джоном Кіндервагом у Forrester (2010).
+    Девіз: <span class="hl">"Never Trust, Always Verify"</span> — ніколи не довіряй, завжди перевіряй.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+        <h3 style="color:#b07bff;">3 Основні принципи</h3>
+        <ul style="max-width:100%;">
+          <li>Не існує <span class="hl5">периметра довіри</span></li>
+          <li><span class="hl5">Least Privilege</span> — мінімально необхідний доступ</li>
+          <li><span class="hl5">Мікросегментація</span> — ізоляція кожного ресурсу</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3 style="color:#50dc64;">Що перевіряється?</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl3">Ідентифікація користувача</span> (MFA)</li>
+          <li><span class="hl3">Стан пристрою</span> (endpoint health check)</li>
+          <li><span class="hl3">Контекст:</span> час, місце, поведінка</li>
+          <li><span class="hl3">Безперервна верифікація</span> — не лише при вході</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 25 — ZTNA ══════════════════════════════ -->
+<div class="slide bg-dark">
+  <h2>Zero Trust Network Access (ZTNA)</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:18px;">
+    <span class="hl">ZTNA</span> — реалізація Zero Trust для мережевого доступу.
+    Замість тунелю до мережі → <span class="hl">прямий захищений доступ до конкретного застосунку</span>.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card bad">
+        <h3 style="color:#ff8080;">Класичний VPN</h3>
+        <div class="diagram" style="flex-direction:column;gap:4px;margin:8px 0;">
+          <div class="dbox" style="font-size:0.8rem;">Користувач</div>
+          <div class="arrow">↓ аутентифікація</div>
+          <div class="dbox red" style="font-size:0.8rem;">VPN-тунель до мережі</div>
+          <div class="arrow">↓</div>
+          <div class="dbox red" style="font-size:0.8rem;min-width:180px;">Доступ: вся мережа ⚠️</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card good">
+        <h3 style="color:#50dc64;">ZTNA</h3>
+        <div class="diagram" style="flex-direction:column;gap:4px;margin:8px 0;">
+          <div class="dbox" style="font-size:0.8rem;">Користувач</div>
+          <div class="arrow">↓ ідентифікація + перевірка пристрою</div>
+          <div class="dbox green" style="font-size:0.8rem;">Access Broker (Connector)</div>
+          <div class="arrow">↓ мікросегментація</div>
+          <div class="dbox green" style="font-size:0.8rem;min-width:180px;">Доступ: лише App A ✅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 26 — ZTNA АРХІТЕКТУРА ═════════════════ -->
+<div class="slide bg-ztna">
+  <h2 style="color:#b07bff;">Архітектура ZTNA</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+        <h3 style="color:#b07bff;">Компоненти</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl5">Identity Provider (IdP)</span> — Okta, Azure AD, Google Workspace</li>
+          <li><span class="hl5">Policy Engine</span> — обчислює дозволи на доступ</li>
+          <li><span class="hl5">Policy Administrator</span> — управляє сесіями і ключами</li>
+          <li><span class="hl5">Policy Enforcement Point (PEP)</span> — застосовує рішення</li>
+          <li><span class="hl5">Access Broker/Connector</span> — проксі перед застосунком</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>Мікросегментація</h3>
+        <ul style="max-width:100%;">
+          <li>Кожен застосунок ізольований</li>
+          <li>Ресурси <span class="hl2">приховані від публічного Інтернету</span></li>
+          <li>Зловмисник не може знайти ціль через сканування</li>
+        </ul>
+      </div>
+      <div class="card good" style="margin-top:0;">
+        <h3 style="color:#50dc64;">Continuous Verification</h3>
+        <ul style="max-width:100%;">
+          <li>Перевірка не лише при вході, але й під час сесії</li>
+          <li>Anomaly detection (UEBA)</li>
+          <li>Автоматичне завершення сесії при аномалії</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 27 — ZTNA МОДЕЛІ ══════════════════════ -->
+<div class="slide bg-dark">
+  <h2>Моделі розгортання ZTNA</h2>
+  <div class="divider"></div>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Client-initiated ZTNA</h3>
+        <ul style="max-width:100%;">
+          <li>На пристрої встановлений <span class="hl">ZTNA-агент</span></li>
+          <li>Агент аутентифікує користувача і пристрій</li>
+          <li>Встановлює зашифрований тунель до PEP</li>
+          <li>Приклади: <span class="hl">Zscaler ZPA, Cloudflare Access, Tailscale</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+        <h3 style="color:#b07bff;">Service-initiated ZTNA</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl5">Без агента</span> на пристрої</li>
+          <li>Застосунок сам підключається до хмарного брокера</li>
+          <li>Доступ через браузер або clientless</li>
+          <li>Приклади: <span class="hl5">Appgate SDP, Akamai EAA</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <table style="max-width:900px;margin-top:18px;">
+    <thead>
+      <tr><th>Критерій</th><th>Client-initiated</th><th>Service-initiated</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Управління пристроєм</td><td><span class="hl3">Повний контроль</span></td><td>Обмежений</td></tr>
+      <tr><td>Підтримка BYOD</td><td>Складно</td><td><span class="hl3">Легко</span></td></tr>
+      <tr><td>Перевірка health пристрою</td><td><span class="hl3">Так</span></td><td>Обмежено</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 28 — ZTNA VS VPN ══════════════════════ -->
+<div class="slide bg-navy">
+  <h2>ZTNA vs Класичний VPN</h2>
+  <div class="divider"></div>
+  <table>
+    <thead>
+      <tr><th>Параметр</th><th>Класичний VPN</th><th>ZTNA</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Модель довіри</td><td><span class="hl4">Implicit trust (після входу)</span></td><td><span class="hl3">Never trust, always verify</span></td></tr>
+      <tr><td>Одиниця доступу</td><td><span class="hl4">Сегмент мережі</span></td><td><span class="hl3">Конкретний застосунок</span></td></tr>
+      <tr><td>Видимість ресурсів</td><td><span class="hl4">Широка (всі ресурси мережі)</span></td><td><span class="hl3">Лише дозволені застосунки</span></td></tr>
+      <tr><td>Lateral movement</td><td><span class="hl4">Легко можливий</span></td><td><span class="hl3">Мікросегментація блокує</span></td></tr>
+      <tr><td>Перевірка пристрою</td><td>Опціональна</td><td><span class="hl3">Обов'язкова</span></td></tr>
+      <tr><td>Продуктивність</td><td>Centralized backhauling</td><td><span class="hl3">Direct-to-cloud</span></td></tr>
+      <tr><td>Хмарна готовність</td><td>Обмежена</td><td><span class="hl3">Cloud-native</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 29 — WIREGUARD + ZTNA ═════════════════ -->
+<div class="slide bg-teal">
+  <h2>WireGuard як основа ZTNA-рішень</h2>
+  <div class="divider"></div>
+  <p style="max-width:860px;margin-bottom:22px;">
+    Завдяки своїй простоті та продуктивності WireGuard став базовим транспортом для багатьох сучасних ZTNA-платформ.
+  </p>
+  <div class="cols" style="max-width:1050px;">
+    <div class="col">
+      <div class="card accent">
+        <h3>Приклади платформ</h3>
+        <ul style="max-width:100%;">
+          <li><span class="hl">Tailscale</span> — mesh VPN на WireGuard + Magic DNS + ACL</li>
+          <li><span class="hl">Netmaker</span> — automated WireGuard management + ZTNA</li>
+          <li><span class="hl">Headscale</span> — self-hosted Tailscale control plane</li>
+          <li><span class="hl">Firezone</span> — WireGuard + ZTNA access management</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card warn">
+        <h3>WireGuard + ZTNA = ?</h3>
+        <ul style="max-width:100%;">
+          <li>WireGuard надає <span class="hl2">транспорт</span> (швидкий, захищений)</li>
+          <li>Cryptokey Routing → база для <span class="hl2">мікросегментації</span></li>
+          <li>Identity Provider (IdP) інтегрується поверх</li>
+          <li>Policy Engine керує AllowedIPs динамічно</li>
+          <li>Результат: <span class="hl2">Zero Trust Mesh Network</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SLIDE 30 — ПІДСУМКИ ══════════════════════════ -->
+<div class="slide bg-end">
+  <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
+  <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+  <div class="divider"></div>
+  <p class="subtitle">Лекція 7: WireGuard та Zero Trust (ZTNA)</p>
+  <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:920px;">
+    <span class="tag">WireGuard</span>
+    <span class="tag">ChaCha20-Poly1305</span>
+    <span class="tag">Curve25519</span>
+    <span class="tag">BLAKE2s</span>
+    <span class="tag">Noise Protocol</span>
+    <span class="tag">Cryptokey Routing</span>
+    <span class="tag">PFS</span>
+    <span class="tag">Zero Trust</span>
+    <span class="tag">ZTNA</span>
+    <span class="tag">Мікросегментація</span>
+    <span class="tag">Never Trust Always Verify</span>
+  </div>
+  <div class="card accent" style="max-width:820px;margin-top:18px;text-align:left;">
+    <h3 style="margin-bottom:8px;">Головні висновки</h3>
+    <ul style="max-width:100%;">
+      <li>✅ <span class="hl3">WireGuard</span> — мінімалістичний, швидкий, безпечний VPN-протокол (1 RTT handshake)</li>
+      <li>✅ <span class="hl3">Фіксований криптостек</span> — ChaCha20/Poly1305, Curve25519, BLAKE2s, Noise</li>
+      <li>✅ <span class="hl3">Cryptokey Routing</span> — маршрутизація = аутентифікація</li>
+      <li>⚠️ <span class="hl2">Класичний VPN</span> — недостатній для сучасних загроз (lateral movement)</li>
+      <li>✅ <span class="hl3">ZTNA</span> — "Never Trust, Always Verify", доступ лише до конкретних застосунків</li>
+    </ul>
+  </div>
+  <p style="margin-top:16px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 8 — Огляд хмарних VPN-рішень</p>
+</div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">&#8249;</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">&#8250;</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
