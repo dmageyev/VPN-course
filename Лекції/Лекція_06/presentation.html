@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 6 — SSL/TLS VPN та архітектура OpenVPN</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    .bg-title  { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark   { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal   { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green  { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red    { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy   { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end    { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    .slide::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff); }
+
+    #progress-bar { position: fixed; bottom: 0; left: 0; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); transition: width 0.3s ease; z-index: 100; }
+    #slide-counter { position: fixed; bottom: 12px; right: 20px; font-size: 13px; color: rgba(255,255,255,0.4); z-index: 100; }
+
+    .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 100; user-select: none; }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta     { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag      { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35); color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left; }
+    .card.accent { border-color: rgba(0,212,255,0.4);  background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4);  background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li { counter-increment: plan; padding: 14px 16px 14px 70px; position: relative; background: rgba(255,255,255,0.04); border-radius: 8px; margin-bottom: 10px; font-size: 1.05rem; color: #cdd8e8; border-left: 3px solid #7b2ff7; }
+    .plan-list li::before { content: counter(plan); position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00d4ff, #7b2ff7); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px 18px; font-size: 0.95rem; text-align: center; min-width: 110px; }
+    .dbox.blue   { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green  { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red    { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow { border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple { border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    table { width: 100%; max-width: 900px; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    pre { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #a8ffb8; text-align: left; width: 100%; max-width: 800px; overflow-x: auto; white-space: pre-wrap; }
+
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+  </style>
+</head>
+<body>
+<div class="slideshow" id="slideshow">
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 1 — TITLE
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 6</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:2rem;margin-top:8px;">SSL/TLS VPN та архітектура OpenVPN</h1>
+    <p class="subtitle">TLS Handshake · Формати кадрів · OpenVPN · PKI · MFA</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 2 — ПЛАН
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Історія та еволюція SSL/TLS: від SSL 2.0 до TLS 1.3</li>
+      <li>Формат кадру TLS Record Protocol та підпротоколи</li>
+      <li>Фази TLS Handshake — TLS 1.2 та TLS 1.3</li>
+      <li>Набори шифрів (Cipher Suites) та обмін ключами (ECDHE, PFS)</li>
+      <li>PKI та сертифікати X.509 у SSL VPN</li>
+      <li>Типи SSL VPN: Clientless vs Client-based</li>
+      <li>Архітектура OpenVPN: Control Channel та Data Channel</li>
+      <li>Формат пакету OpenVPN, режими UDP/TCP, MFA</li>
+    </ol>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 3 — HISTORY
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Історія та еволюція SSL/TLS</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr><th>Версія</th><th>Рік</th><th>Статус</th><th>Ключові зміни</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl2">SSL 2.0</span></td><td>1995</td><td><span class="badge badge-red">Небезпечний</span></td><td>Перша публічна версія Netscape; численні вразливості</td></tr>
+        <tr><td><span class="hl2">SSL 3.0</span></td><td>1996</td><td><span class="badge badge-red">Застарілий (POODLE)</span></td><td>Суттєва переробка; вразливість POODLE 2014</td></tr>
+        <tr><td><span class="hl">TLS 1.0</span></td><td>1999</td><td><span class="badge badge-red">Застарілий</span></td><td>RFC 2246; BEAST-атака; заборонений PCI DSS 2018</td></tr>
+        <tr><td><span class="hl">TLS 1.1</span></td><td>2006</td><td><span class="badge badge-red">Застарілий</span></td><td>RFC 4346; захист від BEAST; відключений браузерами 2020</td></tr>
+        <tr><td><span class="hl3">TLS 1.2</span></td><td>2008</td><td><span class="badge badge-yellow">Підтримується</span></td><td>RFC 5246; AEAD/GCM, SHA-256, ECDHE; широко використовується</td></tr>
+        <tr><td><span class="hl3">TLS 1.3</span></td><td>2018</td><td><span class="badge badge-green">Рекомендований</span></td><td>RFC 8446; 1-RTT, 0-RTT, вилучено RSA KeyEx та RC4</td></tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:860px;margin-top:18px;text-align:center;">
+      <p><span class="hl">Назва «SSL» збереглась як маркетинговий термін</span> — технічно всі сучасні реалізації використовують протокол <span class="hl">TLS</span>.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 4 — TLS IN OSI
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Місце TLS у стеку TCP/IP</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1000px;align-items:center;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:4px;align-items:center;">
+          <div class="dbox green"  style="width:260px;">Рівень застосунків<br/><small>HTTP, SMTP, FTP…</small></div>
+          <div class="dbox blue"   style="width:260px;border-width:2px;font-weight:700;">TLS / SSL</div>
+          <div class="dbox yellow" style="width:260px;">Транспортний рівень (TCP)</div>
+          <div class="dbox"        style="width:260px;">Мережевий рівень (IP)</div>
+          <div class="dbox"        style="width:260px;">Канальний рівень (Ethernet)</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Підпротоколи TLS</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Record Protocol</span> — базовий транспорт; фрагментація, стиснення, шифрування</li>
+            <li><span class="hl">Handshake Protocol</span> — узгодження параметрів, аутентифікація</li>
+            <li><span class="hl">Change Cipher Spec</span> — сигнал переходу до нових ключів</li>
+            <li><span class="hl">Alert Protocol</span> — повідомлення про помилки та закриття</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <p>TLS розташований <span class="hl2">між TCP і застосунком</span> — захищає будь-який TCP-трафік без змін на нижніх рівнях.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 5 — TLS RECORD FORMAT
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Формат кадру TLS Record Protocol</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Кожне повідомлення TLS обгортається у <span class="hl">TLS Record</span> — базову одиницю передачі даних у протоколі.</p>
+    <div class="diagram" style="flex-direction:column;align-items:center;gap:8px;margin-bottom:18px;">
+      <div style="display:flex;gap:4px;align-items:stretch;">
+        <div class="dbox blue"   style="min-width:110px;font-size:0.85rem;padding:14px 8px;"><b>Content Type</b><br/><small>1 байт</small></div>
+        <div class="dbox purple" style="min-width:130px;font-size:0.85rem;padding:14px 8px;"><b>Version</b><br/><small>2 байти</small><br/><small>Major.Minor</small></div>
+        <div class="dbox yellow" style="min-width:110px;font-size:0.85rem;padding:14px 8px;"><b>Length</b><br/><small>2 байти</small><br/><small>макс 16 383 Б</small></div>
+        <div class="dbox green"  style="min-width:220px;font-size:0.85rem;padding:14px 8px;flex:1;"><b>Fragment (Payload)</b><br/><small>до 2¹⁴ байт</small><br/><small>зашифровано + MAC/Tag</small></div>
+      </div>
+      <div style="font-size:0.8rem;color:#90a0b8;">← 5 байтів заголовку ──────────── дані (зашифровані у TLS 1.2/1.3) ─────────────→</div>
+    </div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Content Type (типи вмісту)</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">0x14 (20)</span> — Change Cipher Spec</li>
+            <li><span class="hl">0x15 (21)</span> — Alert</li>
+            <li><span class="hl">0x16 (22)</span> — Handshake</li>
+            <li><span class="hl">0x17 (23)</span> — Application Data</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Version Field</h3>
+          <ul style="max-width:100%;">
+            <li>TLS 1.0 → <span class="hl2">0x03 0x01</span></li>
+            <li>TLS 1.1 → <span class="hl2">0x03 0x02</span></li>
+            <li>TLS 1.2 → <span class="hl2">0x03 0x03</span></li>
+            <li>TLS 1.3 → <span class="hl3">0x03 0x03</span> у Record / <span class="hl3">0x03 0x04</span> у Handshake</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 6 — HANDSHAKE MESSAGE FORMAT
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Формат Handshake-повідомлення TLS</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:18px;">Кожне Handshake-повідомлення передається всередині <span class="hl">TLS Record</span> (Content Type = 0x16). Структура вкладена.</p>
+    <div class="diagram" style="flex-direction:column;align-items:center;gap:8px;margin-bottom:18px;">
+      <div style="font-size:0.85rem;color:#90a0b8;margin-bottom:4px;">TLS Record (зовнішній контейнер)</div>
+      <div style="display:flex;gap:3px;align-items:stretch;border:1px solid rgba(0,212,255,0.4);border-radius:8px;padding:8px;background:rgba(0,212,255,0.05);">
+        <div class="dbox blue"   style="min-width:80px;font-size:0.78rem;padding:10px 6px;">Type<br/>1 Б<br/><small>0x16</small></div>
+        <div class="dbox purple" style="min-width:90px;font-size:0.78rem;padding:10px 6px;">Version<br/>2 Б</div>
+        <div class="dbox yellow" style="min-width:90px;font-size:0.78rem;padding:10px 6px;">Length<br/>2 Б</div>
+        <div style="display:flex;gap:3px;align-items:stretch;border:1px solid rgba(80,220,100,0.4);border-radius:6px;padding:6px;background:rgba(80,220,100,0.05);">
+          <div style="font-size:0.7rem;color:#50dc64;writing-mode:vertical-rl;padding:0 3px;">Handshake</div>
+          <div class="dbox green" style="min-width:90px;font-size:0.78rem;padding:10px 6px;">Msg Type<br/>1 Б</div>
+          <div class="dbox green" style="min-width:90px;font-size:0.78rem;padding:10px 6px;">Length<br/>3 Б</div>
+          <div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:10px 6px;flex:1;">Handshake Body<br/>(змінна довжина)</div>
+        </div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Типи Handshake (Msg Type)</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">0x01</span> — ClientHello</li>
+            <li><span class="hl">0x02</span> — ServerHello</li>
+            <li><span class="hl">0x0B</span> — Certificate</li>
+            <li><span class="hl">0x10</span> — ClientKeyExchange</li>
+            <li><span class="hl">0x14</span> — Finished</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>ClientHello: основні поля</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">client_version</span> — максимальна підтримувана версія TLS</li>
+            <li><span class="hl">random</span> — 32 байти (4 Б timestamp + 28 Б random)</li>
+            <li><span class="hl">cipher_suites</span> — список підтримуваних алгоритмів</li>
+            <li><span class="hl">extensions</span> — SNI, ALPN, key_share (TLS 1.3)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 7 — TLS 1.2 HANDSHAKE
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>TLS 1.2 Handshake — фази та повідомлення</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;align-items:flex-start;">
+      <div class="col" style="flex:1.1;">
+        <div style="font-size:0.8rem;color:#90a0b8;margin-bottom:6px;display:flex;gap:130px;"><span>Клієнт</span><span>Сервер</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:160px;font-size:0.78rem;padding:6px;">→ ClientHello</div><div style="font-size:0.73rem;color:#90a0b8;">версія, random, Cipher Suites</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← ServerHello</div><div style="font-size:0.73rem;color:#90a0b8;">обраний Cipher Suite, random</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← Certificate</div><div style="font-size:0.73rem;color:#90a0b8;">X.509 сертифікат сервера</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← ServerKeyExchange</div><div style="font-size:0.73rem;color:#90a0b8;">ECDH/DH параметри</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← ServerHelloDone</div><div style="font-size:0.73rem;color:#90a0b8;">сервер завершив</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:160px;font-size:0.78rem;padding:6px;">→ ClientKeyExchange</div><div style="font-size:0.73rem;color:#90a0b8;">Pre-Master Secret</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:160px;font-size:0.78rem;padding:6px;">→ ChangeCipherSpec</div><div style="font-size:0.73rem;color:#90a0b8;">клієнт переходить до шифрування</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:160px;font-size:0.78rem;padding:6px;">→ Finished</div><div style="font-size:0.73rem;color:#90a0b8;">хеш усіх Handshake-повідомлень</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← ChangeCipherSpec</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:160px;font-size:0.78rem;padding:6px;">← Finished</div><div style="font-size:0.73rem;color:#50dc64;">з'єднання встановлено!</div></div>
+        </div>
+      </div>
+      <div class="col" style="flex:0.9;">
+        <div class="card accent">
+          <h3>Фаза 1 — Negotiation</h3>
+          <p>ClientHello + ServerHello: вибір версії TLS, cipher suite, обмін random-значеннями.</p>
+        </div>
+        <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+          <h3 style="color:#b07bff;">Фаза 2 — Authentication</h3>
+          <p>Сервер надсилає сертифікат X.509. Клієнт перевіряє ланцюжок до довіреного CA.</p>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Фаза 3 — Key Exchange</h3>
+          <p>Pre-Master Secret → Master Secret → 4 ключі (enc + MAC для кожного напряму).</p>
+        </div>
+        <div class="card warn">
+          <h3>Фаза 4 — Finished</h3>
+          <p>Верифікація цілісності Handshake. <span class="hl2">2 RTT</span> до початку передачі даних.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 8 — TLS 1.3 HANDSHAKE
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>TLS 1.3 Handshake — 1-RTT та покращення</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;align-items:flex-start;">
+      <div class="col" style="flex:1.1;">
+        <div style="font-size:0.8rem;color:#90a0b8;margin-bottom:6px;display:flex;gap:120px;"><span>Клієнт</span><span>Сервер</span></div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:200px;font-size:0.78rem;padding:8px;">→ ClientHello<br/><small>key_share, supported_versions</small></div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:8px;">← ServerHello<br/><small>key_share, обраний Cipher</small></div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:8px;">← EncryptedExtensions 🔒</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:8px;">← Certificate 🔒</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:8px;">← CertificateVerify 🔒</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox green" style="min-width:200px;font-size:0.78rem;padding:8px;">← Finished 🔒</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:200px;font-size:0.78rem;padding:8px;">→ Finished 🔒</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="dbox blue" style="min-width:200px;font-size:0.78rem;padding:8px;">→ Application Data 🔒</div><div style="font-size:0.73rem;color:#50dc64;">з'єднання!</div></div>
+        </div>
+      </div>
+      <div class="col" style="flex:0.9;">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Ключові покращення TLS 1.3</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl3">1-RTT</span> замість 2-RTT — вдвічі швидше</li>
+            <li><span class="hl3">0-RTT (Early Data)</span> — відновлення без затримки</li>
+            <li>Сертифікат і розширення <span class="hl">зашифровані</span></li>
+            <li>Обов'язковий <span class="hl">Forward Secrecy</span> (ECDHE)</li>
+            <li>Вилучено: RSA KeyEx, DH статичний, RC4, 3DES, MD5</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>0-RTT застереження</h3>
+          <p>Early Data вразливе до <span class="hl2">replay-атак</span>. Не підходить для не-ідемпотентних операцій (POST, платежі).</p>
+        </div>
+        <div class="card accent" style="margin-top:0;">
+          <h3>TLS 1.3 Cipher Suites</h3>
+          <p>Лише 5 дозволених: <span class="hl">AES-128-GCM-SHA256, AES-256-GCM-SHA384, ChaCha20-Poly1305-SHA256</span> та ін. Обмін ключами — завжди ECDHE.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 9 — CIPHER SUITES
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Набори шифрів (Cipher Suites)</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:18px;"><span class="hl">Cipher Suite</span> — рядок, що описує повний набір алгоритмів для одного TLS-з'єднання.</p>
+    <div class="card accent" style="max-width:860px;margin-bottom:18px;">
+      <p style="font-family:monospace;font-size:1.05rem;color:#00d4ff;text-align:center;">TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384</p>
+      <div class="diagram" style="margin:10px 0 0 0;gap:4px;">
+        <div class="dbox blue"   style="font-size:0.78rem;min-width:80px;">Протокол<br/>TLS</div>
+        <div class="dbox purple" style="font-size:0.78rem;min-width:100px;">Key Exchange<br/>ECDHE</div>
+        <div class="dbox yellow" style="font-size:0.78rem;min-width:80px;">Auth<br/>RSA</div>
+        <div class="dbox green"  style="font-size:0.78rem;min-width:130px;">Шифрування<br/>AES-256-GCM</div>
+        <div class="dbox red"    style="font-size:0.78rem;min-width:90px;">MAC/PRF<br/>SHA-384</div>
+      </div>
+    </div>
+    <table style="max-width:900px;">
+      <thead>
+        <tr><th>Cipher Suite</th><th>Key Exchange</th><th>Шифрування</th><th>Рекомендація</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>TLS_AES_256_GCM_SHA384</td><td>ECDHE (обов.)</td><td>AES-256-GCM</td><td><span class="badge badge-green">TLS 1.3 ✓</span></td></tr>
+        <tr><td>TLS_CHACHA20_POLY1305_SHA256</td><td>ECDHE</td><td>ChaCha20-Poly1305</td><td><span class="badge badge-green">TLS 1.3 ✓</span></td></tr>
+        <tr><td>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</td><td>ECDHE</td><td>AES-128-GCM</td><td><span class="badge badge-yellow">TLS 1.2 ✓</span></td></tr>
+        <tr><td>TLS_RSA_WITH_AES_256_CBC_SHA</td><td>RSA (статичний)</td><td>AES-256-CBC</td><td><span class="badge badge-red">Застарілий</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 10 — KEY EXCHANGE
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Механізми обміну ключами</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">RSA Key Exchange (застарілий)</h3>
+          <p>Клієнт шифрує Pre-Master Secret відкритим ключем сервера. <span class="hl2">Немає Forward Secrecy</span> — компрометація приватного ключа розкриває всі минулі сесії.</p>
+        </div>
+        <div class="card accent" style="margin-top:0;">
+          <h3>Diffie-Hellman (DH)</h3>
+          <p>Сторони обмінюються g<sup>a</sup> mod p та g<sup>b</sup> mod p → спільний секрет g<sup>ab</sup> mod p. Статичний DH також не забезпечує PFS.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">ECDHE — рекомендований</h3>
+          <p><span class="hl3">Ephemeral Elliptic Curve DH</span> — тимчасові ключі для кожної сесії. Забезпечує <span class="hl">Perfect Forward Secrecy</span>: компрометація довгострокових ключів не розкриває минулі сесії.</p>
+          <ul style="max-width:100%;margin-top:8px;">
+            <li>Крива P-256 (secp256r1) — стандартна</li>
+            <li>X25519 — рекомендована в TLS 1.3</li>
+            <li>Менший розмір ключів ніж RSA</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Master Secret</h3>
+          <p>Pre-Master Secret + random клієнта + random сервера → PRF → <span class="hl">Master Secret (48 байт)</span> → 4 симетричні ключі (enc + MAC × 2 напрями).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 11 — PKI / CERTIFICATES
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>PKI та сертифікати X.509</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;align-items:flex-start;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:4px;align-items:center;">
+          <div class="dbox yellow" style="width:230px;font-size:0.85rem;">Root CA<br/><small>Самопідписаний сертифікат</small></div>
+          <div class="arrow">↓ підписує</div>
+          <div class="dbox blue" style="width:230px;font-size:0.85rem;">Intermediate CA<br/><small>Проміжний центр</small></div>
+          <div class="arrow">↓ підписує</div>
+          <div class="dbox green" style="width:230px;font-size:0.85rem;">Server Certificate<br/><small>vpn.example.com</small></div>
+          <div class="arrow">↓ + приватний ключ</div>
+          <div class="dbox purple" style="width:230px;font-size:0.85rem;">TLS-з'єднання<br/><small>аутентифікація сервера</small></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Сертифікат X.509: ключові поля</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Subject</span> — CN, O, OU, C (власник)</li>
+            <li><span class="hl">Issuer</span> — хто підписав</li>
+            <li><span class="hl">Public Key</span> — RSA або ECDSA</li>
+            <li><span class="hl">Validity</span> — Not Before / Not After</li>
+            <li><span class="hl">SAN</span> — Subject Alternative Names (домени, IP)</li>
+            <li><span class="hl">Signature</span> — підпис CA</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Відкликання сертифікатів</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">CRL</span> — Certificate Revocation List (файл)</li>
+            <li><span class="hl2">OCSP</span> — Online Certificate Status Protocol</li>
+            <li><span class="hl2">OCSP Stapling</span> — відповідь OCSP вбудована у Handshake</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 12 — SSL VPN TYPES
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Типи SSL VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>🌐 Clientless SSL VPN</h3>
+          <ul style="max-width:100%;">
+            <li>Доступ через <span class="hl">звичайний браузер</span></li>
+            <li>Не потребує встановлення ПЗ</li>
+            <li>Захищений веб-портал + реверс-проксі</li>
+            <li>Обмежений лише веб-застосунками</li>
+            <li>Приклади: Cisco AnyConnect WebVPN, Pulse</li>
+          </ul>
+        </div>
+        <div class="diagram" style="margin-top:10px;flex-direction:column;gap:4px;">
+          <div class="dbox green" style="width:210px;font-size:0.8rem;">Браузер → HTTPS 443</div>
+          <div class="arrow">↓</div>
+          <div class="dbox blue" style="width:210px;font-size:0.8rem;">SSL VPN Gateway / Портал</div>
+          <div class="arrow">↓ проксі</div>
+          <div class="dbox yellow" style="width:210px;font-size:0.8rem;">Внутрішні веб-ресурси</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3>💻 Client-based SSL VPN</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl3">Повноцінний L3 тунель</span></li>
+            <li>Потребує VPN-клієнта (агента)</li>
+            <li>Підтримує будь-які протоколи та застосунки</li>
+            <li>Встановлює TUN/TAP-інтерфейс в ОС</li>
+            <li>Приклади: <span class="hl">OpenVPN</span>, Cisco AnyConnect, GlobalProtect</li>
+          </ul>
+        </div>
+        <div class="diagram" style="margin-top:10px;flex-direction:column;gap:4px;">
+          <div class="dbox green" style="width:210px;font-size:0.8rem;">VPN-клієнт (tun0)</div>
+          <div class="arrow">↓ TLS тунель</div>
+          <div class="dbox blue" style="width:210px;font-size:0.8rem;">OpenVPN Server</div>
+          <div class="arrow">↓</div>
+          <div class="dbox yellow" style="width:210px;font-size:0.8rem;">Корпоративна мережа</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 13 — SSL VPN VS IPSEC
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>SSL VPN проти IPsec VPN</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr><th>Критерій</th><th>SSL/TLS VPN</th><th>IPsec VPN</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Порт / протокол</td><td><span class="hl3">TCP/UDP 443</span> (HTTPS)</td><td>UDP 500, 4500 + ESP (IP 50)</td></tr>
+        <tr><td>Рівень стеку</td><td>Прикладний (L7) / Транспортний</td><td>Мережевий (L3)</td></tr>
+        <tr><td>Клієнт</td><td>Браузер або легкий агент</td><td>Вбудовано в ОС або спец. клієнт</td></tr>
+        <tr><td>NAT traversal</td><td><span class="badge badge-green">Нативно (TCP/UDP)</span></td><td>NAT-T (UDP encap) — складніше</td></tr>
+        <tr><td>Firewall bypass</td><td><span class="badge badge-green">Простий (порт 443)</span></td><td><span class="badge badge-red">Часто блокується</span></td></tr>
+        <tr><td>Продуктивність</td><td>Нижча (user-space)</td><td><span class="badge badge-green">Вища (ядро ОС)</span></td></tr>
+        <tr><td>Розгортання</td><td><span class="badge badge-green">Просте, без змін FW</span></td><td>Складніше, зміни FW/NAT</td></tr>
+        <tr><td>Типовий сценарій</td><td>Remote Access, BYOD</td><td>Site-to-Site, корпоративний</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 14 — OPENVPN ARCHITECTURE
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Архітектура OpenVPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;align-items:flex-start;">
+      <div class="col" style="flex:1.2;">
+        <div class="diagram" style="flex-direction:column;gap:5px;align-items:center;">
+          <div style="font-size:0.85rem;color:#90a0b8;margin-bottom:4px;">Простір користувача (User-space)</div>
+          <div style="border:1px solid rgba(0,212,255,0.4);border-radius:10px;padding:12px;background:rgba(0,212,255,0.04);width:290px;">
+            <div class="dbox blue" style="width:100%;font-size:0.82rem;margin-bottom:8px;">OpenVPN процес (демон)</div>
+            <div style="display:flex;gap:6px;">
+              <div class="dbox purple" style="flex:1;font-size:0.78rem;">Control Channel<br/><small>TLS</small></div>
+              <div class="dbox green"  style="flex:1;font-size:0.78rem;">Data Channel<br/><small>AEAD</small></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:30px;margin-top:2px;">
+            <div class="arrow">↕ /dev/tun</div>
+            <div class="arrow">↕ UDP/TCP socket</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div class="dbox yellow" style="width:140px;font-size:0.82rem;">Ядро ОС<br/><small>TUN/TAP driver</small></div>
+            <div class="dbox yellow" style="width:140px;font-size:0.82rem;">Ядро ОС<br/><small>Мережевий стек</small></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px;">
+            <div class="dbox" style="width:140px;font-size:0.82rem;">tun0 / tap0<br/><small>10.8.0.x</small></div>
+            <div class="dbox" style="width:140px;font-size:0.82rem;">eth0<br/><small>реальний IP</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Ключові особливості OpenVPN</h3>
+          <ul style="max-width:100%;">
+            <li>Працює у <span class="hl">User-space</span> (не в ядрі)</li>
+            <li>Використовує <span class="hl">OpenSSL</span> або mbed TLS</li>
+            <li>Підтримує <span class="hl">TUN</span> (L3) та <span class="hl">TAP</span> (L2)</li>
+            <li>Транспорт: <span class="hl">UDP 1194</span> (default) або TCP 443</li>
+            <li>Кросплатформений: Linux, Windows, macOS, iOS, Android</li>
+            <li>Open Source (GNU GPL v2)</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Два незалежних канали</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Control Channel</span> — TLS, управління, обмін ключами</li>
+            <li><span class="hl2">Data Channel</span> — зашифровані дані користувача</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 15 — CONTROL vs DATA CHANNEL
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Control Channel vs Data Channel</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>🔑 Control Channel</h3>
+          <ul style="max-width:100%;">
+            <li>Базується на <span class="hl">TLS</span></li>
+            <li>Взаємна аутентифікація (PKI, сертифікати X.509)</li>
+            <li>Обмін та оновлення ключів Data Channel</li>
+            <li>Передача конфігурації: IP, маршрути, DNS</li>
+            <li>Heartbeat / keepalive пакети</li>
+            <li>Захищено tls-auth або tls-crypt (HMAC)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3>📦 Data Channel</h3>
+          <ul style="max-width:100%;">
+            <li>Передача зашифрованих даних користувача</li>
+            <li>Алгоритми: <span class="hl3">AES-256-GCM</span>, ChaCha20-Poly1305</li>
+            <li>Автоматичне оновлення ключів (rekeying) кожні <span class="hl3">3600 с</span></li>
+            <li>HMAC аутентифікація пакетів (якщо не AEAD)</li>
+            <li>Compression — опціонально (знижує безпеку!)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card accent" style="max-width:860px;margin-top:14px;text-align:center;">
+      <p>Ключі Data Channel генеруються через Control Channel і <span class="hl">регулярно оновлюються</span> — забезпечується <span class="hl">Forward Secrecy</span> навіть для потоку даних.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 16 — OPENVPN PACKET FORMAT
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Формат пакету OpenVPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:16px;">Пакет OpenVPN — обгортка навколо оригінального IP-пакету. Структура залежить від типу каналу.</p>
+    <div style="max-width:940px;width:100%;">
+      <div style="font-size:0.85rem;color:#50dc64;margin-bottom:6px;text-align:left;padding-left:4px;">Data Channel пакет (UDP):</div>
+      <div class="diagram" style="gap:3px;margin-bottom:14px;justify-content:flex-start;">
+        <div class="dbox blue"   style="min-width:80px;font-size:0.78rem;padding:10px 6px;"><b>Outer<br/>UDP/IP</b><br/><small>заголовок</small></div>
+        <div class="dbox purple" style="min-width:90px;font-size:0.78rem;padding:10px 6px;"><b>Op-code</b><br/><small>1 байт</small><br/><small>тип + key ID</small></div>
+        <div class="dbox yellow" style="min-width:90px;font-size:0.78rem;padding:10px 6px;"><b>Packet ID</b><br/><small>4–8 байт</small><br/><small>replay захист</small></div>
+        <div class="dbox red"    style="min-width:90px;font-size:0.78rem;padding:10px 6px;"><b>HMAC</b><br/><small>16–20 байт</small><br/><small>(tls-auth)</small></div>
+        <div class="dbox green"  style="min-width:170px;font-size:0.78rem;padding:10px 6px;flex:1;"><b>Encrypted Payload</b><br/><small>IV + зашифрований IP-пакет + Auth Tag</small></div>
+      </div>
+      <div style="font-size:0.85rem;color:#00d4ff;margin-bottom:6px;text-align:left;padding-left:4px;">Control Channel пакет (TLS Handshake всередині OpenVPN):</div>
+      <div class="diagram" style="gap:3px;justify-content:flex-start;">
+        <div class="dbox blue"   style="min-width:80px;font-size:0.78rem;padding:10px 6px;"><b>UDP/IP</b></div>
+        <div class="dbox purple" style="min-width:90px;font-size:0.78rem;padding:10px 6px;"><b>Op-code</b><br/><small>1 байт</small></div>
+        <div class="dbox yellow" style="min-width:80px;font-size:0.78rem;padding:10px 6px;"><b>Session ID</b><br/><small>8 байт</small></div>
+        <div class="dbox red"    style="min-width:80px;font-size:0.78rem;padding:10px 6px;"><b>HMAC</b><br/><small>опц.</small></div>
+        <div class="dbox"        style="min-width:80px;font-size:0.78rem;padding:10px 6px;"><b>Packet ID</b><br/><small>4 байт</small></div>
+        <div class="dbox green"  style="min-width:160px;font-size:0.78rem;padding:10px 6px;flex:1;"><b>TLS Record</b><br/><small>Handshake / AppData</small></div>
+      </div>
+    </div>
+    <div class="card warn" style="max-width:900px;margin-top:14px;">
+      <p><span class="hl2">Op-code</span>: P_CONTROL_V1 (0x20), P_DATA_V1 (0x60), P_DATA_V2 (0x90). <span class="hl2">Key ID</span> (3 біти в Op-code) — ідентифікатор активного ключа Data Channel.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 17 — OPENVPN CONNECTION PHASES
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Фази встановлення з'єднання OpenVPN</h2>
+    <div class="divider"></div>
+    <div class="wide" style="max-width:1060px;">
+      <div class="cols">
+        <div class="col">
+          <div class="card accent">
+            <h3>🔹 Фаза 1: Транспортне з'єднання</h3>
+            <p>Клієнт встановлює UDP (1194) або TCP (443) з'єднання з сервером. Лише транспортний рівень — даних ще немає.</p>
+          </div>
+          <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);">
+            <h3 style="color:#b07bff;">🔹 Фаза 2: TLS Handshake (Control Channel)</h3>
+            <p>Взаємна аутентифікація через X.509. Обмін ключами ECDHE. Якщо налаштовано <span class="hl">tls-crypt</span> — шифрування Control Channel від початку.</p>
+          </div>
+          <div class="card good">
+            <h3 style="color:#50dc64;">🔹 Фаза 3: Узгодження параметрів</h3>
+            <p>Через Control Channel: ключі Data Channel, IP-адреси, маршрути (<code>push</code>), DNS, компресія.</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card warn">
+            <h3>🔹 Фаза 4: Налаштування інтерфейсу</h3>
+            <p>OpenVPN створює <span class="hl2">tun0</span> / <span class="hl2">tap0</span>. Призначає IP (push від сервера). Додає маршрути в таблицю маршрутизації ОС.</p>
+          </div>
+          <div class="card bad">
+            <h3 style="color:#ff8080;">🔹 Фаза 5: Передача даних</h3>
+            <p>Трафік: tun0 → OpenVPN шифрує (Data Channel) → UDP/TCP → сервер розшифровує → інжектує у tun0 → корпоративна мережа.</p>
+          </div>
+          <div class="card accent" style="margin-top:0;">
+            <h3>🔹 Фаза 6: Rekeying</h3>
+            <p>Кожні <span class="hl">3600 с</span> Control Channel оновлює ключі Data Channel без переривання трафіку.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 18 — UDP VS TCP
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>OpenVPN: UDP проти TCP</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">🚀 UDP (порт 1194) — рекомендований</h3>
+          <ul style="max-width:100%;">
+            <li>Нижча затримка, вища пропускна здатність</li>
+            <li>Без підтвердження доставки — менші накладні витрати</li>
+            <li>VPN сам керує надійністю поверх UDP</li>
+            <li>Уникає проблеми <span class="hl3">TCP-over-TCP meltdown</span></li>
+            <li>Ідеально для відео/голосу/ігор у тунелі</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>🛡️ TCP (порт 443) — обхід обмежень</h3>
+          <ul style="max-width:100%;">
+            <li>Імітує HTTPS-трафік → <span class="hl2">обхід DPI-фільтрів</span></li>
+            <li>Гарантована доставка пакетів</li>
+            <li>Підходить при блокуванні UDP провайдером</li>
+            <li>Проблема: TCP всередині TCP при втратах пакетів</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card bad" style="max-width:900px;margin-top:14px;">
+      <h3 style="color:#ff8080;">TCP-over-TCP Meltdown</h3>
+      <p>Якщо зовнішній TCP-пакет втрачається → обидва TCP-стеки (зовнішній і внутрішній) починають ретрансмісію з exponential backoff → <span class="hl2">лавиноподібне падіння продуктивності</span>. При 5% втрат TCP-режим може бути у 10× повільнішим за UDP.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 19 — AUTHENTICATION & MFA
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Аутентифікація в OpenVPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>PKI (сертифікати X.509)</h3>
+          <ul style="max-width:100%;">
+            <li>Кожен клієнт — унікальний сертифікат</li>
+            <li>Сервер перевіряє ланцюжок до Root CA</li>
+            <li>Відкликання: CRL або OCSP</li>
+            <li>Генерація: <code>easy-rsa</code> або <code>openssl</code></li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);margin-top:0;">
+          <h3 style="color:#b07bff;">Username / Password</h3>
+          <p>Додаткова аутентифікація поверх PKI. Перевіряється через PAM, RADIUS або LDAP плагін.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">MFA / OTP — багатофакторна</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl3">Фактор 1</span>: сертифікат X.509 (щось є)</li>
+            <li><span class="hl3">Фактор 2</span>: TOTP-код (Google Authenticator, Authy)</li>
+            <li><span class="hl3">Фактор 3</span>: пароль або апаратний токен (YubiKey)</li>
+            <li>OTP передається у полі пароля через PAM-плагін</li>
+            <li>TOTP: RFC 6238; 6-значний код, оновлюється кожні 30 с</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>tls-auth / tls-crypt</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">tls-auth</span>: HMAC-підпис Control пакетів — захист від DoS та сканування</li>
+            <li><span class="hl2">tls-crypt</span>: шифрування + HMAC Control Channel — прихованість від DPI</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 20 — OPENVPN CONFIG
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Конфігурація OpenVPN: server та client</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <h3 style="margin-bottom:8px;color:#00d4ff;">server.conf</h3>
+        <pre>port 1194
+proto udp
+dev tun
+ca   ca.crt
+cert server.crt
+key  server.key
+dh   dh2048.pem
+tls-crypt tc.key
+cipher AES-256-GCM
+auth SHA256
+server 10.8.0.0 255.255.255.0
+push "redirect-gateway def1"
+push "dhcp-option DNS 10.8.0.1"
+keepalive 10 120
+user nobody
+group nogroup
+persist-key
+persist-tun</pre>
+      </div>
+      <div class="col">
+        <h3 style="margin-bottom:8px;color:#50dc64;">client.conf</h3>
+        <pre>client
+dev tun
+proto udp
+remote vpn.example.com 1194
+resolv-retry infinite
+nobind
+ca   ca.crt
+cert client.crt
+key  client.key
+tls-crypt tc.key
+cipher AES-256-GCM
+auth SHA256
+# MFA через OTP:
+auth-user-pass
+verb 3</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 21 — AEAD
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>AEAD: сучасне шифрування даних</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:18px;"><span class="hl">AEAD (Authenticated Encryption with Associated Data)</span> — одночасно шифрує та аутентифікує дані. Замінює окремий HMAC + CBC.</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">AES-256-GCM</h3>
+          <ul style="max-width:100%;">
+            <li>AES у режимі Galois/Counter Mode</li>
+            <li>128-бітний Authentication Tag вбудований</li>
+            <li>Апаратне прискорення (AES-NI на x86)</li>
+            <li>Рекомендований для серверів з AES-NI</li>
+            <li>TLS 1.3 та OpenVPN 2.4+</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>ChaCha20-Poly1305</h3>
+          <ul style="max-width:100%;">
+            <li>ChaCha20 (stream cipher) + Poly1305 (MAC)</li>
+            <li>Швидший на пристроях <span class="hl">без AES-NI</span> (мобільні, IoT)</li>
+            <li>Рівна безпека з AES-256-GCM</li>
+            <li>Автор: Д. Бернштейн (DJB)</li>
+            <li>TLS 1.3 та OpenVPN 2.5+</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="diagram" style="margin-top:18px;gap:8px;">
+      <div class="dbox green"  style="font-size:0.85rem;">Plaintext</div>
+      <div class="arrow">+</div>
+      <div class="dbox blue"   style="font-size:0.85rem;">Key + Nonce</div>
+      <div class="arrow">→ AEAD →</div>
+      <div class="dbox purple" style="font-size:0.85rem;">Ciphertext</div>
+      <div class="arrow">+</div>
+      <div class="dbox yellow" style="font-size:0.85rem;">Auth Tag (128 біт)</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 22 — TLS-AUTH VS TLS-CRYPT
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>tls-auth та tls-crypt: детальне порівняння</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>tls-auth (HMAC firewall)</h3>
+          <p style="margin-bottom:10px;">Симетричний PSK-ключ. <span class="hl">HMAC-підпис</span> кожного Control-пакету. Пакет без правильного HMAC відкидається <span class="hl">до початку TLS Handshake</span>.</p>
+          <ul style="max-width:100%;">
+            <li>Захист від DoS-атак на TLS стек</li>
+            <li>Захист від port scanning</li>
+            <li>Сервер: <code>tls-auth ta.key 0</code></li>
+            <li>Клієнт: <code>tls-auth ta.key 1</code></li>
+            <li>Не шифрує Control Channel</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">tls-crypt (шифрування + HMAC)</h3>
+          <p style="margin-bottom:10px;">Розширення tls-auth: <span class="hl3">HMAC + шифрування</span> всього Control Channel. Весь TLS Handshake прихований від стороннього спостерігача.</p>
+          <ul style="max-width:100%;">
+            <li>Усі переваги tls-auth плюс:</li>
+            <li>Конфіденційність Handshake (від DPI)</li>
+            <li>Захист від offline-аналізу трафіку</li>
+            <li>OpenVPN 2.4+ — рекомендований</li>
+            <li>Єдиний ключ для сервера і клієнта</li>
+          </ul>
+          <pre style="margin-top:8px;font-size:0.8rem;">openvpn --genkey tls-crypt tc.key</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 23 — SECURITY ISSUES
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Вразливості та захисні заходи OpenVPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Відомі вразливості</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">SWEET32</span> — атака на Blowfish/BF-CBC (64-бітний блок)</li>
+            <li><span class="hl2">VORACLE</span> — compression oracle при увімкненому LZO/LZ4</li>
+            <li>Слабкий <code>tls-version-min</code> → downgrade до TLS 1.0</li>
+            <li>Компрометація CA → підроблені клієнтські сертифікати</li>
+            <li>Відсутність tls-auth → DoS на TLS стек</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Рекомендовані налаштування</h3>
+          <ul style="max-width:100%;">
+            <li><code>cipher AES-256-GCM</code> — замість BF-CBC</li>
+            <li><code>tls-version-min 1.2</code> — заборонити старі версії</li>
+            <li><code>comp-lzo no</code> — вимкнути стиснення</li>
+            <li><code>tls-crypt tc.key</code> — захист Control Channel</li>
+            <li>Регулярне оновлення CRL / OCSP Stapling</li>
+            <li><code>verify-client-cert require</code> — обов. сертифікат клієнта</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 24 — PERFORMANCE COMPARISON
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Порівняння продуктивності VPN-протоколів</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr><th>Протокол</th><th>Пропускна здатність</th><th>Затримка</th><th>CPU</th><th>Реалізація</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl">WireGuard</span></td>
+          <td><span class="badge badge-green">~950 Мбіт/с</span></td>
+          <td><span class="badge badge-green">Мінімальна</span></td>
+          <td><span class="badge badge-green">Низьке</span></td>
+          <td>Ядро ОС</td>
+        </tr>
+        <tr>
+          <td><span class="hl3">OpenVPN (UDP)</span></td>
+          <td><span class="badge badge-yellow">~200–400 Мбіт/с</span></td>
+          <td><span class="badge badge-yellow">Середня</span></td>
+          <td><span class="badge badge-yellow">Середнє</span></td>
+          <td>User-space</td>
+        </tr>
+        <tr>
+          <td>OpenVPN (TCP)</td>
+          <td><span class="badge badge-red">~100–200 Мбіт/с</span></td>
+          <td><span class="badge badge-red">Висока</span></td>
+          <td><span class="badge badge-yellow">Середнє</span></td>
+          <td>User-space</td>
+        </tr>
+        <tr>
+          <td>IPsec/IKEv2</td>
+          <td><span class="badge badge-green">~800 Мбіт/с</span></td>
+          <td><span class="badge badge-green">Низька</span></td>
+          <td><span class="badge badge-green">Низьке</span></td>
+          <td>Ядро ОС</td>
+        </tr>
+        <tr>
+          <td>L2TP/IPsec</td>
+          <td><span class="badge badge-red">~100–150 Мбіт/с</span></td>
+          <td><span class="badge badge-red">Висока</span></td>
+          <td><span class="badge badge-red">Високе</span></td>
+          <td>Ядро ОС</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top:16px;font-size:0.9rem;color:#90a0b8;max-width:860px;">* Орієнтовні значення; AES-NI суттєво прискорює OpenVPN. User-space — додаткові context switch порівняно з kernel-space реалізаціями.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 25 — KEY CONCEPTS
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Ключові поняття лекції</h2>
+    <div class="divider"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1000px;">
+      <span class="badge badge-blue"   style="font-size:1rem;padding:8px 18px;">TLS 1.3</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">TLS Record Protocol</span>
+      <span class="badge badge-green"  style="font-size:1rem;padding:8px 18px;">TLS Handshake</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">Cipher Suite</span>
+      <span class="badge badge-blue"   style="font-size:1rem;padding:8px 18px;">ECDHE + PFS</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">AES-256-GCM</span>
+      <span class="badge badge-green"  style="font-size:1rem;padding:8px 18px;">PKI / X.509</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">Clientless SSL VPN</span>
+      <span class="badge badge-blue"   style="font-size:1rem;padding:8px 18px;">Client-based SSL VPN</span>
+      <span class="badge badge-red"    style="font-size:1rem;padding:8px 18px;">OpenVPN Architecture</span>
+      <span class="badge badge-green"  style="font-size:1rem;padding:8px 18px;">Control Channel</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">Data Channel</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">tls-crypt</span>
+      <span class="badge badge-blue"   style="font-size:1rem;padding:8px 18px;">Rekeying / PFS</span>
+      <span class="badge badge-red"    style="font-size:1rem;padding:8px 18px;">TCP-over-TCP</span>
+      <span class="badge badge-green"  style="font-size:1rem;padding:8px 18px;">MFA / OTP / TOTP</span>
+      <span class="badge badge-purple" style="font-size:1rem;padding:8px 18px;">AEAD</span>
+      <span class="badge badge-yellow" style="font-size:1rem;padding:8px 18px;">ChaCha20-Poly1305</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 26 — CONTROL QUESTIONS
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Контрольні питання</h2>
+    <div class="divider"></div>
+    <ul style="max-width:860px;">
+      <li>Чим TLS 1.3 відрізняється від TLS 1.2? Назвіть три ключових покращення.</li>
+      <li>Опишіть структуру TLS Record. Що означає Content Type = 0x16?</li>
+      <li>Скільки RTT потрібно для TLS 1.2 Handshake? А для TLS 1.3?</li>
+      <li>Яка різниця між Clientless та Client-based SSL VPN?</li>
+      <li>Чому ECDHE забезпечує Forward Secrecy, а статичний RSA — ні?</li>
+      <li>Опишіть 6 фаз встановлення з'єднання OpenVPN.</li>
+      <li>Що таке Control Channel та Data Channel? Як вони взаємодіють?</li>
+      <li>Чому UDP кращий за TCP для OpenVPN? Що таке TCP-over-TCP meltdown?</li>
+      <li>Яка різниця між tls-auth та tls-crypt?</li>
+      <li>Як MFA посилює безпеку OpenVPN порівняно з лише PKI?</li>
+    </ul>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SLIDE 27 — END
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 6: SSL/TLS VPN та архітектура OpenVPN</p>
+    <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <span class="tag">TLS 1.3 Handshake</span>
+      <span class="tag">TLS Record Format</span>
+      <span class="tag">Cipher Suites</span>
+      <span class="tag">PKI / X.509</span>
+      <span class="tag">OpenVPN</span>
+      <span class="tag">Control/Data Channel</span>
+      <span class="tag">tls-crypt</span>
+      <span class="tag">MFA / OTP</span>
+      <span class="tag">AES-256-GCM</span>
+    </div>
+    <p style="margin-top:28px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 7 — Сучасний протокол WireGuard та концепція Zero Trust (ZTNA)</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">&#8249;</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">&#8250;</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   function(e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
