@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 10 — Асиметричне шифрування, цифрові підписи, PKI</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; overflow-y: auto; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title  { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark   { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal   { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green  { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red    { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy   { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end    { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+      flex-shrink: 0;
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta     { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag      { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4);   background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4);   background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4);  background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);   background: rgba(255,80,80,0.07); }
+    .card.purple { border-color: rgba(176,123,255,0.4); background: rgba(176,123,255,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 10px 16px 10px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.98rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 0.95rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue   { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green  { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red    { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow { border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple { border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 960px; border-collapse: collapse; font-size: 0.92rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 11px 14px; text-align: left; }
+    td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 14px 18px;
+      font-family: 'Courier New', monospace; font-size: 0.82rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 820px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider      { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+
+    /* ===== Step flow ===== */
+    .steps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 860px; text-align: left; }
+    .step {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px 16px;
+      border-left: 3px solid #00d4ff;
+    }
+    .step-num {
+      min-width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step p { margin: 0; font-size: 0.98rem; }
+
+    /* ===== Blockquote ===== */
+    blockquote {
+      border-left: 3px solid #00d4ff; padding: 10px 18px;
+      background: rgba(0,212,255,0.07); border-radius: 0 8px 8px 0;
+      margin: 14px 0; font-size: 0.98rem; color: #cdd8e8; text-align: left;
+      max-width: 860px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════ SLIDE 1 — TITLE ═══════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 10</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:1.9rem;margin-top:8px;">Асиметричне шифрування, цифрові підписи,<br>PKI та центри сертифікації</h1>
+    <p class="subtitle">RSA · ECC · Diffie-Hellman · Цифровий підпис · X.509 · PKI · CRL · OCSP</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════ SLIDE 2 — ПЛАН ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <div class="cols" style="max-width:900px;gap:20px;">
+      <div class="col">
+        <div class="card accent" style="margin-bottom:14px;">
+          <h3>Частина I — Асиметрична криптографія</h3>
+          <ul style="max-width:100%;">
+            <li>Симетрична vs асиметрична криптографія</li>
+            <li>RSA, ECC та Diffie-Hellman</li>
+            <li>Порівняння алгоритмів та PFS</li>
+          </ul>
+        </div>
+        <div class="card purple">
+          <h3>Частина II — Цифровий підпис</h3>
+          <ul style="max-width:100%;">
+            <li>Концепція та властивості</li>
+            <li>Механізм підписання та перевірки</li>
+            <li>Алгоритми та невідреченість</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn" style="margin-bottom:14px;">
+          <h3>Частина III — PKI та X.509</h3>
+          <ul style="max-width:100%;">
+            <li>Архітектура PKI: CA, RA, VA</li>
+            <li>Ієрархія довіри Root → End-Entity</li>
+            <li>Структура сертифіката X.509 v3</li>
+            <li>Перевірка ланцюжка сертифікатів</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3>Частина IV — Управління та застосування</h3>
+          <ul style="max-width:100%;">
+            <li>Lifecycle, CSR, типи сертифікатів</li>
+            <li>Відкликання: CRL та OCSP</li>
+            <li>Застосування PKI (TLS, VPN, S/MIME)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 3 — СИМЕТРИЧНА VS АСИМЕТРИЧНА ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Симетрична vs Асиметрична криптографія</h2>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Симетрична</h3>
+          <ul style="max-width:100%;">
+            <li>Один спільний ключ K</li>
+            <li><span class="hl3">Дуже висока</span> швидкість</li>
+            <li>Ключів: <span class="hl">1</span> на пару</li>
+            <li>Довжина: 128–256 біт</li>
+            <li><span class="hl2">Проблема:</span> як безпечно передати K?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>Асиметрична</h3>
+          <ul style="max-width:100%;">
+            <li>Пара ключів: public + private</li>
+            <li>Повільніша, але усуває проблему розподілу</li>
+            <li>Ключів: <span class="hl">2</span> (public + private)</li>
+            <li>Довжина: 2048–4096 біт (RSA)</li>
+            <li><span class="hl3">Рішення:</span> public key поширюється відкрито</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <table style="margin-top:8px;">
+      <tr><th>Критерій</th><th>Симетрична</th><th>Асиметрична</th></tr>
+      <tr><td>Ключів</td><td>1</td><td>2 (пара)</td></tr>
+      <tr><td>Швидкість</td><td class="hl3">Дуже висока</td><td>Повільна</td></tr>
+      <tr><td>Розподіл ключів</td><td>Складний</td><td class="hl3">Простий</td></tr>
+      <tr><td>Застосування</td><td>Масове шифрування</td><td>Обмін ключами, підпис</td></tr>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 4 — ПРИНЦИП АСИМЕТРИЧНОЇ КРИПТОГРАФІЇ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Принцип асиметричної криптографії</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Пара ключів</span> — фундамент усієї системи: один ключ шифрує, інший — дешифрує</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>🔓 Відкритий ключ (Public Key)</h3>
+          <ul style="max-width:100%;">
+            <li>Поширюється вільно</li>
+            <li>Зашифрувати → тільки власник дешифрує</li>
+            <li>Перевірити підпис</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>🔐 Закритий ключ (Private Key)</h3>
+          <ul style="max-width:100%;">
+            <li>Зберігається в таємниці</li>
+            <li>Дешифрувати те, що зашифровано public key</li>
+            <li>Підписати дані</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <table style="margin-top:12px;">
+      <tr><th>Операція</th><th>Що використовується</th><th>Призначення</th></tr>
+      <tr><td>Шифрування</td><td>Public key одержувача</td><td>Конфіденційність</td></tr>
+      <tr><td>Дешифрування</td><td>Private key одержувача</td><td>Розкриття даних</td></tr>
+      <tr><td>Підписання</td><td>Private key підписанта</td><td>Автентичність</td></tr>
+      <tr><td>Верифікація</td><td>Public key підписанта</td><td>Перевірка підпису</td></tr>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 5 — RSA ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>RSA (Rivest–Shamir–Adleman, 1977)</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">Принцип безпеки:</span> складність <span class="hl2">факторизації</span> великих цілих чисел</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <pre style="font-size:0.8rem;">Генерація ключів (спрощено):
+ ① Обираємо два великих простих p та q
+ ② n = p × q  (відкрита частина: модуль)
+ ③ Обчислюємо показники e та d
+ ④ Public Key  = (n, e)
+ ⑤ Private Key = (n, d)
+
+ Шифрування:   C = M^e mod n
+ Дешифрування: M = C^d mod n</pre>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Розмір ключа</th><th>Стійкість</th><th>Рекомендація</th></tr>
+          <tr><td>1024 біт</td><td>~80 біт</td><td><span style="color:#ff8080;">❌ Застарілий</span></td></tr>
+          <tr><td>2048 біт</td><td>~112 біт</td><td><span class="hl3">✅ Мінімум (~2030)</span></td></tr>
+          <tr><td>3072 біт</td><td>~128 біт</td><td><span class="hl3">✅ Рекомендований</span></td></tr>
+          <tr><td>4096 біт</td><td>~140 біт</td><td><span class="hl3">✅ Довгострокове</span></td></tr>
+        </table>
+        <div class="card accent" style="margin-top:12px;">
+          <h3>Застосування</h3>
+          <ul style="max-width:100%;">
+            <li>TLS/HTTPS: шифрування або підпис у Key Exchange</li>
+            <li>Цифровий підпис документів та коду</li>
+            <li>S/MIME, PGP — захист e-mail</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 6 — ECC ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>ECC — Elliptic Curve Cryptography</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">Принцип безпеки:</span> задача <span class="hl2">дискретного логарифму</span> на еліптичній кривій (ECDLP)</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <table>
+          <tr><th>Рівень стійкості</th><th>RSA (біт)</th><th>ECC (біт)</th></tr>
+          <tr><td>112 біт</td><td>2048</td><td><span class="hl3">224</span></td></tr>
+          <tr><td>128 біт</td><td>3072</td><td><span class="hl3">256</span></td></tr>
+          <tr><td>192 біт</td><td>7680</td><td><span class="hl3">384</span></td></tr>
+          <tr><td>256 біт</td><td>15360</td><td><span class="hl3">512</span></td></tr>
+        </table>
+        <div class="card accent" style="margin-top:12px;">
+          <h3>Популярні криві</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">P-256 (secp256r1)</span> — NIST, TLS, HTTPS</li>
+            <li><span class="hl">P-384</span> — підвищена безпека (NSA Suite B)</li>
+            <li><span class="hl">Curve25519</span> — Tor, Signal, OpenSSH</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>Переваги ECC</h3>
+          <ul style="max-width:100%;">
+            <li>Менший ключ → менше CPU і пам'яті</li>
+            <li>Менший трафік</li>
+            <li>Ідеальний для IoT та мобільних пристроїв</li>
+            <li>Швидше, ніж RSA при однаковому рівні безпеки</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Геометрична інтуїція</h3>
+          <p style="font-size:0.9rem;">Знаючи точку P і результат Q = k×P, знайти k — обчислювально неможливо (ECDLP)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 7 — DIFFIE-HELLMAN ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Diffie-Hellman (DH)</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">Мета:</span> виробити <span class="hl2">спільний секрет</span> через незахищений канал, не передаючи його безпосередньо</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <pre style="font-size:0.8rem;">  Alice                    Bob
+  ──────                   ──────
+  Генерує a (private)      Генерує b (private)
+  A = g^a mod p            B = g^b mod p
+       ─────────A──────────▶
+       ◀────────B────────────
+  S = B^a mod p            S = A^b mod p
+  └──────────── S = g^(ab) mod p ────────┘
+
+  Підслуховувач бачить: g, p, A, B
+  → знайти S неможливо</pre>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Варіант</th><th>Опис</th><th>Особливість</th></tr>
+          <tr><td><span class="hl">DH</span></td><td>Класичний</td><td>Стандарт (RFC 3526)</td></tr>
+          <tr><td><span class="hl">ECDH</span></td><td>На ел. кривих</td><td>Менші ключі</td></tr>
+          <tr><td><span class="hl">DHE</span></td><td>Ephemeral DH</td><td class="hl3">PFS</td></tr>
+          <tr><td><span class="hl">ECDHE</span></td><td>Ephemeral ECDH</td><td class="hl3">PFS + ефективність</td></tr>
+        </table>
+        <blockquote style="margin-top:12px;">
+          <span class="hl">PFS (Perfect Forward Secrecy):</span> нові ключі для кожної сесії → компрометація довгострокового ключа <strong>не розкриває</strong> минулий трафік
+        </blockquote>
+        <div class="card bad" style="margin-top:10px;">
+          <p>⚠️ DH <strong>не забезпечує автентифікацію!</strong> → використовується разом із цифровим підписом або сертифікатами</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 8 — ПОРІВНЯННЯ RSA / ECC / DH ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Порівняння: RSA / ECC / DH</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>Критерій</th><th>RSA</th><th>ECC</th><th>DH / ECDH</th></tr>
+      <tr><td>Математична основа</td><td>Факторизація</td><td>ECDLP</td><td>DLP / ECDLP</td></tr>
+      <tr><td>Розмір ключа</td><td>Великий (2048+)</td><td class="hl3">Малий (256+)</td><td>Залежить</td></tr>
+      <tr><td>Швидкість</td><td>Повільніший</td><td class="hl3">Швидший</td><td>Швидкий</td></tr>
+      <tr><td>Шифрування даних</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Цифровий підпис</td><td>✅ RSA-PSS</td><td>✅ ECDSA</td><td>❌</td></tr>
+      <tr><td>Обмін ключами</td><td>✅ RSA KeyEx</td><td>✅ ECDH</td><td class="hl3">✅ (основна мета)</td></tr>
+      <tr><td>PFS</td><td>❌ (без DHE)</td><td>❌ (без ECDHE)</td><td class="hl3">✅ DHE/ECDHE</td></tr>
+      <tr><td>Застосування в TLS 1.3</td><td>Підпис</td><td>Підпис (ECDSA)</td><td>ECDHE обмін</td></tr>
+    </table>
+    <blockquote style="margin-top:12px;max-width:900px;">
+      <span class="hl">Типова комбінація в TLS 1.3:</span> ECDHE (обмін ключами) + ECDSA або RSA (автентифікація) + AES-GCM (шифрування даних)
+    </blockquote>
+  </div>
+
+  <!-- ═══════════ SLIDE 9 — ЦИФРОВИЙ ПІДПИС ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Цифровий підпис</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">Цифровий підпис</span> — криптографічний аналог власноручного підпису, що прив'язує дані до ідентичності підписанта</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent" style="margin-bottom:14px;">
+          <h3>1. АВТЕНТИЧНІСТЬ</h3>
+          <p>"Саме Аліса підписала цей документ"</p>
+        </div>
+        <div class="card good">
+          <h3>2. ЦІЛІСНІСТЬ</h3>
+          <p>"Документ не змінено після підписання"</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple" style="margin-bottom:14px;">
+          <h3>3. НЕВІДРЕЧЕНІСТЬ</h3>
+          <p>"Аліса не може заявити 'я не підписувала'"</p>
+        </div>
+        <div class="card warn">
+          <h3>Що підписується насправді?</h3>
+          <p>Підписується не саме повідомлення, а його <span class="hl">криптографічний хеш</span> (дайджест) — фіксований розмір, будь-яка зміна → повністю інший хеш</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 10 — ФАЗА ПІДПИСАННЯ ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Фаза підписання</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:16px;max-width:900px;">
+      <div style="display:flex;gap:16px;justify-content:center;align-items:center;width:100%;">
+        <div class="dbox blue">Документ M<br/><small>"Оплата..."</small></div>
+        <span class="arrow">→</span>
+        <div class="dbox yellow">Хеш-функція<br/><small>SHA-256</small></div>
+        <span class="arrow">→</span>
+        <div class="dbox green">Хеш h(M)</div>
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;align-items:center;width:100%;">
+        <div class="dbox purple">Private Key<br/><small>Alice priv(A)</small></div>
+        <span class="arrow">+</span>
+        <div class="dbox green">Хеш h(M)</div>
+        <span class="arrow">→</span>
+        <div class="dbox yellow">RSA / ECDSA<br/><small>підписання</small></div>
+        <span class="arrow">→</span>
+        <div class="dbox red">Підпис S</div>
+      </div>
+    </div>
+    <div class="card accent" style="max-width:820px;margin-top:16px;">
+      <p><span class="hl">Надсилається:</span> Документ M + Підпис S + Сертифікат Alice</p>
+    </div>
+    <div class="card purple" style="max-width:820px;margin-top:8px;">
+      <p><span class="hl">Ключовий момент:</span> підпис S створюється <span class="hl2">закритим ключем Alice</span> → лише Alice могла його створити</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 11 — ФАЗА ПЕРЕВІРКИ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Фаза перевірки</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;">Перевіряльник (Bob) отримує: <span class="hl">Документ M</span> + <span class="hl">Підпис S</span></p>
+    <div class="steps" style="max-width:860px;">
+      <div class="step">
+        <div class="step-num">①</div>
+        <p>Обчислює хеш отриманого документа: <span class="hl">M → SHA-256 → h₁</span></p>
+      </div>
+      <div class="step">
+        <div class="step-num">②</div>
+        <p>Дешифрує підпис відкритим ключем Alice: <span class="hl">S + pub(A) → RSA/ECDSA → h₂</span></p>
+      </div>
+      <div class="step">
+        <div class="step-num">③</div>
+        <p>Порівнює: <span class="hl">h₁ == h₂?</span></p>
+      </div>
+    </div>
+    <div class="cols" style="max-width:860px;margin-top:16px;">
+      <div class="col">
+        <div class="card good">
+          <p><span class="hl3">✅ ТАК</span> → підпис дійсний, дані не змінено</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <p><span style="color:#ff8080;">❌ НІ</span> → підпис недійсний або дані змінено</p>
+        </div>
+      </div>
+    </div>
+    <blockquote style="max-width:860px;margin-top:12px;">
+      <span class="hl">Звідки Bob знає pub(A)?</span> → З цифрового сертифіката Alice, виданого довіреним центром сертифікації (CA)
+    </blockquote>
+  </div>
+
+  <!-- ═══════════ SLIDE 12 — АЛГОРИТМИ ПІДПИСУ ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Алгоритми цифрового підпису</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>Алгоритм</th><th>Основа</th><th>Хеш</th><th>Типовий розмір</th><th>Статус</th></tr>
+      <tr><td>RSA-PKCS#1 v1.5</td><td>RSA</td><td>SHA-1/256</td><td>2048–4096 біт</td><td><span style="color:#ff8080;">Застарілий</span></td></tr>
+      <tr><td><span class="hl">RSA-PSS</span></td><td>RSA + рандомізація</td><td>SHA-256/384</td><td>2048–4096 біт</td><td><span class="hl3">✅ PKCS#1 v2.1</span></td></tr>
+      <tr><td>DSA</td><td>DLP</td><td>SHA-1/256</td><td>1024–3072 біт</td><td><span style="color:#ff8080;">Застарілий</span></td></tr>
+      <tr><td><span class="hl">ECDSA</span></td><td>ECC</td><td>SHA-256/384</td><td>256–384 біт</td><td><span class="hl3">✅ FIPS 186</span></td></tr>
+      <tr><td><span class="hl">EdDSA</span></td><td>Ed25519/Ed448</td><td>SHA-512</td><td>256/448 біт</td><td><span class="hl3">✅ RFC 8032</span></td></tr>
+    </table>
+    <div class="card accent" style="max-width:900px;margin-top:16px;">
+      <h3>Рекомендовані сьогодні</h3>
+      <ul style="max-width:100%;">
+        <li><span class="hl">RSA-PSS</span> ≥ 2048 біт — сумісність з legacy-системами</li>
+        <li><span class="hl">ECDSA P-256</span> — широке застосування (TLS, HTTPS, підпис коду)</li>
+        <li><span class="hl">EdDSA (Ed25519)</span> — найновіший, найшвидший, стійкий до помилок реалізації</li>
+      </ul>
+    </div>
+    <blockquote style="max-width:900px;margin-top:8px;">TLS 1.3 підтримує лише RSA-PSS, ECDSA та EdDSA (старіші схеми виключені)</blockquote>
+  </div>
+
+  <!-- ═══════════ SLIDE 13 — НЕВІДРЕЧЕНІСТЬ ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Невідреченість (Non-repudiation)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Технічний аспект</h3>
+          <ul style="max-width:100%;">
+            <li>Підпис перевіряється public key Аліси</li>
+            <li>Public key прив'язаний до Аліси сертифікатом CA</li>
+            <li>CA перевірив особу Аліси при видачі</li>
+            <li>→ Аліса <strong>не може відмовитися</strong> від підпису</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:14px;">
+          <h3>Умови забезпечення</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Захист private key</span> — тільки власник (HSM, smart card)</li>
+            <li><span class="hl">Довіра до CA</span> — надійна перевірка ідентичності</li>
+            <li><span class="hl">Timestamp (TSA)</span> — фіксує момент підписання</li>
+            <li><span class="hl">Цілісність</span> — хеш зафіксований у підписі</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>Правовий аспект (EU eIDAS)</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Simple</span> — базовий рівень</li>
+            <li><span class="hl">Advanced</span> — підвищений рівень</li>
+            <li><span class="hl3">Qualified</span> — юридично еквівалентний власноручному</li>
+          </ul>
+        </div>
+        <div class="card good" style="margin-top:14px;">
+          <h3>Qualified вимагає:</h3>
+          <ul style="max-width:100%;">
+            <li>Кваліфікований CA (Trusted List)</li>
+            <li>Захищений пристрій підпису (QSCD)</li>
+            <li>Ідентифікація особи</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 14 — PKI ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>PKI — Public Key Infrastructure</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">PKI</span> — система, що вирішує фундаментальну проблему: <span class="hl2">як довіряти відкритому ключу?</span></p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card bad">
+          <h3>Проблема</h3>
+          <p>Bob отримує public_key_alice з інтернету. Як знати, що це справжній ключ Аліси, а не підробка зловмисника?</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Рішення — PKI</h3>
+          <ul style="max-width:100%;">
+            <li>Alice надає CSR → CA перевіряє особу</li>
+            <li>CA підписує public key Alice своїм private key</li>
+            <li>Bob перевіряє підпис CA (якому він довіряє)</li>
+            <li>→ Bob довіряє ключу Alice</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:1060px;margin-top:14px;">
+      <div class="col">
+        <div class="card good">
+          <h3>Прив'язка ключа до ідентичності</h3>
+          <p>Сертифікат = ключ + ідентичність + підпис CA</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>Розподіл довіри</h3>
+          <p>Ієрархія CA: один Root CA → багато Intermediate CA → кінцеві суб'єкти</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Управління lifecycle</h3>
+          <p>Видача, поновлення, відкликання сертифікатів</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 15 — АРХІТЕКТУРА PKI ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Архітектура PKI: компоненти</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:10px;align-items:stretch;">
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <div class="dbox blue" style="flex:1;">Заявник<br/><small>End-Entity</small></div>
+            <span class="arrow" style="align-self:center;">→</span>
+            <div class="dbox yellow" style="flex:1;">RA<br/><small>Registration Authority</small></div>
+          </div>
+          <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.85rem;">↓ Верифікація особи</div>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <div class="dbox purple" style="flex:1;">CA<br/><small>Certificate Authority</small></div>
+            <span class="arrow" style="align-self:center;">→</span>
+            <div class="dbox green" style="flex:1;">VA<br/><small>Validation Authority</small></div>
+          </div>
+          <div style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.85rem;">↓ Публікація CRL / OCSP</div>
+          <div class="dbox" style="text-align:center;">Repository<br/><small>Сертифікати та CRL</small></div>
+        </div>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Компонент</th><th>Функція</th></tr>
+          <tr><td><span class="hl">CA</span></td><td>Видає та підписує сертифікати</td></tr>
+          <tr><td><span class="hl">RA</span></td><td>Перевіряє особу заявника</td></tr>
+          <tr><td><span class="hl">VA</span></td><td>Відповідає на запити OCSP</td></tr>
+          <tr><td><span class="hl">Repository</span></td><td>Зберігає сертифікати та CRL</td></tr>
+          <tr><td><span class="hl">TSA</span></td><td>Штамп часу для підпису</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 16 — ІЄРАРХІЯ ДОВІРИ ═══════════ -->
+  <div class="slide bg-navy" style="padding-top:24px;padding-bottom:24px;">
+    <h2>Ієрархія довіри PKI</h2>
+    <div class="divider" style="margin:10px auto;"></div>
+    <div class="diagram" style="flex-direction:column;gap:8px;max-width:860px;">
+      <div class="dbox purple" style="width:360px;padding:10px 14px;">
+        <strong>Root CA</strong><br/>
+        <small>Самопідписаний · Зберігається ОФЛАЙН · Термін: 20–25 років · Вбудований в ОС/браузер</small>
+      </div>
+      <span class="arrow" style="font-size:1.4rem;">↓ підписує</span>
+      <div class="dbox yellow" style="width:360px;padding:10px 14px;">
+        <strong>Intermediate CA (Sub-CA)</strong><br/>
+        <small>Підписаний Root CA · Зберігається ОНЛАЙН · Термін: 5–10 р · Видає кінцеві сертифікати</small>
+      </div>
+      <span class="arrow" style="font-size:1.4rem;">↓ підписує</span>
+      <div style="display:flex;gap:16px;">
+        <div class="dbox blue" style="padding:8px 12px;">Server cert<br/><small>1–2 роки</small></div>
+        <div class="dbox green" style="padding:8px 12px;">User cert<br/><small>1–2 роки</small></div>
+        <div class="dbox" style="padding:8px 12px;">Code signing<br/><small>1–3 роки</small></div>
+      </div>
+    </div>
+    <div class="card accent" style="max-width:820px;margin-top:12px;padding:14px 20px;">
+      <h3 style="margin-bottom:8px;">Навіщо Intermediate CA?</h3>
+      <ul style="max-width:100%;">
+        <li>Root CA залишається <span class="hl">офлайн</span> → недосяжний для атак</li>
+        <li>При компрометації Intermediate CA: Root CA відкликає його → новий Intermediate CA</li>
+        <li>Root CA <span class="hl3">не потрібно переналаштовувати</span> на клієнтах</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 17 — ЦЕНТР СЕРТИФІКАЦІЇ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Центр сертифікації (CA)</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">CA — третя довірена сторона (TTP — Trusted Third Party)</span></p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <table>
+          <tr><th>Функція</th><th>Опис</th></tr>
+          <tr><td>Перевірка особи</td><td>Валідація заявника перед видачею</td></tr>
+          <tr><td>Видача сертифіката</td><td>Підписання відкритого ключа заявника</td></tr>
+          <tr><td>Управління</td><td>Зберігання, поновлення, відкликання</td></tr>
+          <tr><td>Публікація CRL</td><td>Список відкликаних сертифікатів</td></tr>
+          <tr><td>OCSP</td><td>Онлайн-відповіді про статус</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <div class="card accent" style="margin-bottom:14px;">
+          <h3>Типи CA</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Public CA</span>: DigiCert, Sectigo, Let's Encrypt</li>
+            <li><span class="hl">Private CA</span>: Microsoft AD CS, HashiCorp Vault</li>
+            <li><span class="hl">Government CA</span>: для eID та e-документів</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Відповідальність CA</h3>
+          <ul style="max-width:100%;">
+            <li>Дотримання CP та CPS</li>
+            <li>Аудит: WebTrust, ETSI EN 319 411</li>
+            <li>Участь у CA/Browser Forum</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 18 — X.509 СТРУКТУРА ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>Стандарт X.509 v3</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">X.509</span> — стандарт ITU-T (RFC 5280), що визначає формат сертифіката відкритого ключа</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <pre style="font-size:0.8rem;">TBSCertificate (підписується CA):
+ Version:          v3
+ Serial Number:    0x3A4F8B...
+ Signature Alg.:   SHA256withRSA
+ Issuer:           CN=DigiCert CA
+ Validity:
+   Not Before:     2024-01-01
+   Not After:      2025-01-01
+ Subject:          CN=example.com
+ SubjectPublicKey:
+   Algorithm: RSA / EC
+   Public Key: &lt;bits&gt;
+ Extensions:       ...
+
+Signature Algorithm: SHA256withRSA
+Signature Value:     &lt;підпис CA&gt;</pre>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Важливо</h3>
+          <p><span class="hl">Підпис CA</span> охоплює весь блок TBSCertificate → будь-яка зміна будь-якого поля робить підпис недійсним</p>
+        </div>
+        <div class="card purple" style="margin-top:14px;">
+          <h3>Три версії X.509</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">v1</span> — базова структура (1988)</li>
+            <li><span class="hl">v2</span> — додано UniqueID (рідко)</li>
+            <li><span class="hl3">v3</span> — розширення (Extensions) — стандарт сьогодні</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 19 — ПОЛЯ X.509 ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Поля сертифіката X.509</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>Поле</th><th>Опис</th><th>Приклад</th></tr>
+      <tr><td><span class="hl">Version</span></td><td>Версія стандарту</td><td><code>v3</code></td></tr>
+      <tr><td><span class="hl">Serial Number</span></td><td>Унікальний № у межах CA</td><td><code>3A:4F:8B:…</code></td></tr>
+      <tr><td><span class="hl">Signature Algorithm</span></td><td>Алгоритм підпису CA</td><td><code>SHA256withRSA</code></td></tr>
+      <tr><td><span class="hl">Issuer</span></td><td>Distinguished Name видавця</td><td><code>CN=DigiCert TLS RSA CA</code></td></tr>
+      <tr><td><span class="hl">Not Before / Not After</span></td><td>Термін дії</td><td><code>2024-03-01 – 2025-03-01</code></td></tr>
+      <tr><td><span class="hl">Subject</span></td><td>DN власника</td><td><code>CN=example.com, O=Corp</code></td></tr>
+      <tr><td><span class="hl">Public Key</span></td><td>Алгоритм + відкритий ключ</td><td><code>RSA 2048 / EC P-256</code></td></tr>
+      <tr><td><span class="hl">Extensions</span></td><td>Розширення v3</td><td>SAN, KeyUsage, AIA, CDP</td></tr>
+      <tr><td><span class="hl">Signature</span></td><td>Підпис CA</td><td><code>&lt;RSA/ECDSA signature&gt;</code></td></tr>
+    </table>
+    <blockquote style="max-width:900px;margin-top:12px;">
+      <span class="hl">Distinguished Name (DN):</span> CN (Common Name), O (Organization), OU (Org. Unit), C (Country ISO 3166), ST (State), L (Locality)
+    </blockquote>
+  </div>
+
+  <!-- ═══════════ SLIDE 20 — РОЗШИРЕННЯ X.509 v3 ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Розширення X.509 v3</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:12px;"><span class="hl">Критичні</span> — клієнт зобов'язаний обробити; якщо не вміє → відхилити сертифікат. <span class="hl2">Некритичні</span> — можна проігнорувати.</p>
+    <table>
+      <tr><th>Розширення</th><th>Critical?</th><th>Призначення</th></tr>
+      <tr><td><span class="hl">Basic Constraints</span></td><td>✅</td><td><code>cA: TRUE/FALSE</code> — чи є суб'єкт CA</td></tr>
+      <tr><td><span class="hl">Key Usage</span></td><td>✅</td><td><code>digitalSignature</code>, <code>keyEncipherment</code>, <code>keyCertSign</code></td></tr>
+      <tr><td><span class="hl">Extended Key Usage</span></td><td>Ні</td><td>TLS Server Auth, Client Auth, Code Signing, Email</td></tr>
+      <tr><td><span class="hl">Subject Alternative Name</span></td><td>✅</td><td><code>DNS:example.com</code>, <code>IP:1.2.3.4</code>, <code>email:…</code></td></tr>
+      <tr><td><span class="hl">Subject Key Identifier</span></td><td>Ні</td><td>Хеш відкритого ключа суб'єкта</td></tr>
+      <tr><td><span class="hl">Authority Key Identifier</span></td><td>Ні</td><td>Хеш ключа CA-видавця (для побудови ланцюжка)</td></tr>
+      <tr><td><span class="hl">CRL Distribution Points</span></td><td>Ні</td><td>URL для завантаження CRL</td></tr>
+      <tr><td><span class="hl">Authority Info Access</span></td><td>Ні</td><td>URL OCSP-респондера + URL сертифіката видавця</td></tr>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 21 — ПЕРЕВІРКА ЛАНЦЮЖКА ═══════════ -->
+  <div class="slide bg-teal" style="padding-top:22px;padding-bottom:22px;">
+    <h2 style="margin-bottom:14px;">Перевірка ланцюжка сертифікатів</h2>
+    <p style="margin-bottom:10px;">Клієнт отримує: <span class="hl">Сертифікат сервера</span> + <span class="hl">Intermediate CA сертифікат</span></p>
+    <div class="cols" style="max-width:960px;gap:12px;align-items:flex-start;">
+      <div class="col">
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">①</div>
+          <p style="font-size:0.95rem;">Підпис cert сервера ключем <span class="hl">Intermediate CA</span>?</p>
+        </div>
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">②</div>
+          <p style="font-size:0.95rem;">Підпис Intermediate CA ключем <span class="hl">Root CA</span>?</p>
+        </div>
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">③</div>
+          <p style="font-size:0.95rem;">Root CA є в <span class="hl">Trust Store</span>?</p>
+        </div>
+        <div class="step" style="padding:8px 12px;">
+          <div class="step-num">④</div>
+          <p style="font-size:0.95rem;">Терміни дії (<span class="hl">Not Before / Not After</span>) — для кожного cert</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">⑤</div>
+          <p style="font-size:0.95rem;">Статус відкликання (<span class="hl">CRL або OCSP</span>) — для кожного cert</p>
+        </div>
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">⑥</div>
+          <p style="font-size:0.95rem;">Перевірити <span class="hl">Key Usage</span> та <span class="hl">EKU</span></p>
+        </div>
+        <div class="step" style="padding:8px 12px;margin-bottom:6px;">
+          <div class="step-num">⑦</div>
+          <p style="font-size:0.95rem;">Відповідність <span class="hl">Subject / SAN ↔ hostname</span></p>
+        </div>
+        <div class="card good" style="margin-top:10px;padding:12px 16px;">
+          <p style="font-size:0.95rem;">Всі перевірки пройдено → <span class="hl3">✅ Сертифікат довірений</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 22 — LIFECYCLE ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Життєвий цикл сертифіката</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="steps">
+          <div class="step"><div class="step-num">①</div><p><span class="hl">Генерація:</span> пара ключів RSA/ECC</p></div>
+          <div class="step"><div class="step-num">②</div><p><span class="hl">CSR:</span> власник формує запит та надсилає до CA</p></div>
+          <div class="step"><div class="step-num">③</div><p><span class="hl">Перевірка:</span> CA/RA верифікує особу заявника</p></div>
+          <div class="step"><div class="step-num">④</div><p><span class="hl">Видача:</span> CA підписує та повертає сертифікат</p></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="steps">
+          <div class="step"><div class="step-num">⑤</div><p><span class="hl">Встановлення:</span> сервер/клієнт встановлює сертифікат</p></div>
+          <div class="step"><div class="step-num">⑥</div><p><span class="hl">Використання:</span> TLS, підпис, шифрування e-mail</p></div>
+          <div class="step"><div class="step-num">⑦</div><p><span class="hl">Поновлення:</span> за 30–60 днів до закінчення терміну</p></div>
+          <div class="step" style="border-left-color:#ff6464;">
+            <div class="step-num" style="background:linear-gradient(135deg,#ff6464,#b02020);">⑧</div>
+            <p><span style="color:#ff8080;">Відкликання:</span> компрометація ключа, зміна даних → CRL / OCSP</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card bad" style="max-width:900px;margin-top:14px;">
+      <h3>Причини відкликання</h3>
+      <p>Компрометація ключа · Зміна даних власника · Видача за помилкових обставин · Ліквідація організації</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 23 — CSR ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>CSR — Certificate Signing Request</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">CSR</span> — запит на підпис сертифіката, підписаний власним закритим ключем заявника</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div>
+            <div><p><span class="hl">Генерація пари ключів:</span></p>
+            <code style="font-size:0.82rem;color:#a8ffb8;">openssl genrsa -out server.key 2048</code></div>
+          </div>
+          <div class="step"><div class="step-num">2</div>
+            <div><p><span class="hl">Формування CSR:</span></p>
+            <code style="font-size:0.82rem;color:#a8ffb8;">openssl req -new -key server.key -out server.csr</code></div>
+          </div>
+          <div class="step"><div class="step-num">3</div><p>Надсилання CSR → CA (веб-інтерфейс або ACME)</p></div>
+          <div class="step"><div class="step-num">4</div>
+            <p><span class="hl">CA перевіряє:</span> DV (DNS/HTTP) · OV (документи) · EV (юридична особа)</p>
+          </div>
+          <div class="step"><div class="step-num">5</div><p>CA підписує та повертає <code>.crt</code> файл + ланцюжок Intermediate CA</p></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Що містить CSR?</h3>
+          <ul style="max-width:100%;">
+            <li>Public Key заявника</li>
+            <li>Subject (CN, O, C, ST, L)</li>
+            <li>Підпис self-signed (доказ володіння private key)</li>
+          </ul>
+        </div>
+        <div class="card bad" style="margin-top:14px;">
+          <h3>⚠️ Важливо</h3>
+          <p>CSR <strong>не містить</strong> закритого ключа. Private key <strong>ніколи</strong> не залишає систему власника.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 24 — ТИПИ СЕРТИФІКАТІВ ═══════════ -->
+  <div class="slide bg-teal" style="padding-top:22px;padding-bottom:22px;">
+    <h2 style="margin-bottom:14px;">Типи сертифікатів</h2>
+    <p style="margin-bottom:8px;font-weight:600;color:#7beeff;">За рівнем валідації:</p>
+    <table style="margin-bottom:10px;">
+      <tr><th>Тип</th><th>Перевіряється</th><th>Час видачі</th><th>Браузер</th></tr>
+      <tr><td><span class="hl">DV</span> (Domain Validation)</td><td>Контроль над доменом</td><td>Хвилини–години</td><td>🔒 Замок</td></tr>
+      <tr><td><span class="hl">OV</span> (Organization Validation)</td><td>Домен + організація</td><td>Дні</td><td>🔒 Замок + деталі</td></tr>
+      <tr><td><span class="hl">EV</span> (Extended Validation)</td><td>Повна юридична перевірка</td><td>Тижні</td><td>🔒 (раніше — зелений рядок)</td></tr>
+    </table>
+    <p style="margin-bottom:8px;font-weight:600;color:#7beeff;">За охопленням доменів:</p>
+    <table style="margin-bottom:10px;">
+      <tr><th>Тип</th><th>Охоплення</th><th>Приклад</th></tr>
+      <tr><td><span class="hl">Single Domain</span></td><td>Один FQDN</td><td><code>example.com</code></td></tr>
+      <tr><td><span class="hl">Wildcard</span></td><td>Усі піддомени одного рівня</td><td><code>*.example.com</code></td></tr>
+      <tr><td><span class="hl">SAN / Multi-Domain</span></td><td>Перелік різних доменів</td><td><code>example.com, example.net</code></td></tr>
+    </table>
+    <div class="card accent" style="max-width:900px;padding:12px 18px;">
+      <h3 style="margin-bottom:6px;">За призначенням (EKU)</h3>
+      <p>TLS Server Auth · TLS Client Auth · Code Signing · Email Protection (S/MIME) · Time Stamping</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 25 — CRL ═══════════ -->
+  <div class="slide bg-purple" style="padding-top:22px;padding-bottom:22px;">
+    <h2 style="margin-bottom:14px;">CRL — Certificate Revocation List</h2>
+    <p style="margin-bottom:12px;"><span class="hl">CRL</span> — підписаний CA список серійних номерів відкликаних сертифікатів</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <pre style="font-size:0.78rem;padding:10px 14px;">CRL (підписаний CA):
+  Issuer:      CN=DigiCert CA
+  This Update: 2024-03-27 10:00 UTC
+  Next Update: 2024-03-28 10:00 UTC
+  ─────────────────────────────
+  Serial: 0x1A2B3C  Revoked: 2024-03-20
+  Reason: keyCompromise
+  ─────────────────────────────
+  Serial: 0x4D5E6F  Revoked: 2024-03-25
+  Reason: cessationOfOperation
+  ─────────────────────────────
+  Signature: &lt;підпис CA&gt;</pre>
+      </div>
+      <div class="col">
+        <div class="card accent" style="padding:14px 18px;margin-bottom:10px;">
+          <h3 style="margin-bottom:8px;">Причини відкликання</h3>
+          <ul style="max-width:100%;">
+            <li><code>keyCompromise</code></li>
+            <li><code>cACompromise</code></li>
+            <li><code>affiliationChanged</code></li>
+            <li><code>superseded</code></li>
+            <li><code>cessationOfOperation</code></li>
+            <li><code>privilegeWithdrawn</code></li>
+          </ul>
+        </div>
+        <div class="card bad" style="padding:14px 18px;">
+          <h3 style="margin-bottom:8px;">Недоліки CRL</h3>
+          <ul style="max-width:100%;">
+            <li>Клієнт завантажує <strong>весь список</strong></li>
+            <li>Актуальність обмежена інтервалом публікації</li>
+            <li>CRL Caching → застарілі дані</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 26 — OCSP ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>OCSP — Online Certificate Status Protocol</h2>
+    <div class="divider"></div>
+    <p style="margin-bottom:16px;"><span class="hl">OCSP (RFC 6960)</span> — протокол запиту статусу <span class="hl2">одного конкретного</span> сертифіката</p>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <pre style="font-size:0.78rem;">Client → OCSP Responder:
+  OCSP Request:
+    SerialNumber:    0x1A2B3C
+    IssuerNameHash:  SHA1(IssuerName)
+    IssuerKeyHash:   SHA1(IssuerKey)
+
+OCSP Responder → Client:
+  OCSP Response:
+    Status:       "good"
+    ThisUpdate:   2024-03-27
+    NextUpdate:   2024-03-28
+    ResponderID:  CN=OCSP Responder
+    Signature:    &lt;підпис&gt;</pre>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-green">✅ good — дійсний</span>
+          <span class="badge badge-red">❌ revoked — відкликано</span>
+          <span class="badge badge-yellow">⚠️ unknown — невідомий</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>OCSP Stapling (RFC 6066)</h3>
+          <ul style="max-width:100%;">
+            <li>Сервер <span class="hl">заздалегідь</span> отримує OCSP-відповідь від VA</li>
+            <li>"Прикріплює" її до TLS Handshake</li>
+            <li>Клієнт не звертається до OCSP Responder окремо</li>
+            <li>Менша затримка + збереження приватності</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:14px;">
+          <h3>Soft-fail vs Hard-fail</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Soft-fail:</span> OCSP недоступний → прийнятий (ризик: OCSP-атака)</li>
+            <li><span class="hl3">Hard-fail:</span> OCSP недоступний → відхилено (вища безпека)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 27 — CRL vs OCSP ═══════════ -->
+  <div class="slide bg-teal">
+    <h2>CRL vs OCSP: порівняння</h2>
+    <div class="divider"></div>
+    <table>
+      <tr><th>Критерій</th><th>CRL</th><th>OCSP</th><th>OCSP Stapling</th></tr>
+      <tr><td>Механізм</td><td>Завантаження списку</td><td>Запит одного серт.</td><td>Відповідь від сервера</td></tr>
+      <tr><td>Розмір трафіку</td><td><span style="color:#ff8080;">Великий</span></td><td>Малий</td><td class="hl3">Мінімальний</td></tr>
+      <tr><td>Актуальність</td><td>До наступного CRL</td><td>Майже реального часу</td><td>За кешем (год.)</td></tr>
+      <tr><td>Навантаження на CA</td><td>Низьке</td><td><span style="color:#ff8080;">Може бути високим</span></td><td class="hl3">Знижує навантаження</td></tr>
+      <tr><td>Конфіденційність</td><td class="hl3">✅ (офлайн)</td><td>❌ CA бачить запити</td><td class="hl3">✅ прямого запиту немає</td></tr>
+      <tr><td>Підтримка</td><td>Усі клієнти</td><td>Сучасні клієнти</td><td>TLS 1.2+ з розширенням</td></tr>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 28 — ЗАСТОСУВАННЯ PKI ═══════════ -->
+  <div class="slide bg-navy">
+    <h2>Застосування PKI</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <table>
+          <tr><th>Сценарій</th><th>Роль PKI</th></tr>
+          <tr><td><span class="hl">HTTPS/TLS</span></td><td>Автентифікація сервера, узгодження ключів</td></tr>
+          <tr><td><span class="hl">mTLS</span></td><td>Взаємна автентифікація клієнта та сервера</td></tr>
+          <tr><td><span class="hl">VPN (IPsec/IKEv2)</span></td><td>Автентифікація вузлів замість PSK</td></tr>
+          <tr><td><span class="hl">SSL/TLS VPN</span></td><td>Сертифікати сервера та клієнтів</td></tr>
+          <tr><td><span class="hl">Підпис коду</span></td><td>Верифікація ПЗ та оновлень</td></tr>
+          <tr><td><span class="hl">S/MIME</span></td><td>Підпис та шифрування e-mail</td></tr>
+          <tr><td><span class="hl">SSH Certificates</span></td><td>Автентифікація без паролів</td></tr>
+          <tr><td><span class="hl">IoT / EST</span></td><td>Автоматична видача сертифікатів пристроям</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>TLS 1.3 Handshake (спрощено)</h3>
+          <pre style="font-size:0.78rem;max-width:100%;">Client              Server
+──────              ──────
+ClientHello ──────▶
+           ◀─────── ServerHello
+           ◀─────── Certificate (X.509)
+           ◀─────── CertificateVerify
+           ◀─────── Finished
+Finished ──────────▶
+══════ Зашифрований канал ══════</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 29 — КЛЮЧОВІ ТЕРМІНИ ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>Ключові терміни</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <table>
+          <tr><th>Термін</th><th>Визначення</th></tr>
+          <tr><td><span class="hl">RSA</span></td><td>Асиметричний алгоритм на основі факторизації (Rivest–Shamir–Adleman)</td></tr>
+          <tr><td><span class="hl">ECC</span></td><td>Криптографія на еліптичних кривих (Elliptic Curve Cryptography)</td></tr>
+          <tr><td><span class="hl">ECDLP</span></td><td>Задача дискретного логарифму на еліптичній кривій</td></tr>
+          <tr><td><span class="hl">DHE / ECDHE</span></td><td>Ephemeral Diffie-Hellman — забезпечує PFS</td></tr>
+          <tr><td><span class="hl">PFS</span></td><td>Perfect Forward Secrecy — компрометація ключа не розкриває минулий трафік</td></tr>
+          <tr><td><span class="hl">Цифровий підпис</span></td><td>Криптографічний механізм автентичності, цілісності та невідреченості</td></tr>
+          <tr><td><span class="hl">Невідреченість</span></td><td>Неможливість відмови від факту підписання (Non-repudiation)</td></tr>
+        </table>
+      </div>
+      <div class="col">
+        <table>
+          <tr><th>Термін</th><th>Визначення</th></tr>
+          <tr><td><span class="hl">PKI</span></td><td>Інфраструктура відкритих ключів (Public Key Infrastructure)</td></tr>
+          <tr><td><span class="hl">CA / RA / VA</span></td><td>Certificate / Registration / Validation Authority</td></tr>
+          <tr><td><span class="hl">X.509</span></td><td>Стандарт ITU-T/RFC 5280 для формату сертифіката</td></tr>
+          <tr><td><span class="hl">CSR</span></td><td>Certificate Signing Request — запит на видачу сертифіката</td></tr>
+          <tr><td><span class="hl">SAN</span></td><td>Subject Alternative Name — розширення X.509 для ідентифікаторів</td></tr>
+          <tr><td><span class="hl">CRL</span></td><td>Certificate Revocation List — список відкликаних сертифікатів</td></tr>
+          <tr><td><span class="hl">OCSP</span></td><td>Online Certificate Status Protocol — онлайн-перевірка статусу (RFC 6960)</td></tr>
+          <tr><td><span class="hl">OCSP Stapling</span></td><td>Механізм передачі OCSP-відповіді в TLS Handshake сервером</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 30 — КОНТРОЛЬНІ ПИТАННЯ ═══════════ -->
+  <div class="slide bg-dark">
+    <h2>Контрольні питання</h2>
+    <div class="divider"></div>
+    <ul style="max-width:960px;">
+      <li>У чому принципова відмінність симетричної та асиметричної криптографії? Чому їх комбінують?</li>
+      <li>Поясніть концепцію <span class="hl">PFS</span> та чому для неї використовують DHE/ECDHE замість статичного DH.</li>
+      <li>Які три властивості забезпечує цифровий підпис? Що таке <span class="hl">невідреченість</span> і як вона досягається технічно?</li>
+      <li>Опишіть процес перевірки цифрового підпису: які ключі використовуються на кожному кроці?</li>
+      <li>Навіщо PKI використовує ієрархію Root CA → Intermediate CA? Яка перевага зберігання Root CA <span class="hl">офлайн</span>?</li>
+      <li>Перерахуйте основні поля сертифіката X.509 v3 та поясніть призначення розширень <span class="hl">Key Usage</span> та <span class="hl">SAN</span>.</li>
+      <li>Що таке <span class="hl">CSR</span> і чому закритий ключ не повинен залишати систему власника?</li>
+      <li>Порівняйте <span class="hl">CRL</span> та <span class="hl">OCSP</span>: у яких сценаріях краще кожен? Що таке OCSP Stapling?</li>
+      <li>Назвіть три типи сертифікатів за рівнем валідації та поясніть різницю між DV, OV та EV.</li>
+      <li>Як PKI використовується в IPsec/IKEv2 для автентифікації вузлів VPN?</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════ SLIDE 31 — ПІДСУМОК ═══════════ -->
+  <div class="slide bg-end">
+    <h2 style="color:#50dc64;">Підсумок лекції</h2>
+    <div class="divider" style="background:linear-gradient(90deg,#50dc64,#00d4ff);"></div>
+    <div class="cols" style="max-width:1060px;">
+      <div class="col">
+        <div class="card good">
+          <h3>Криптографічні алгоритми</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl3">RSA</span> — факторизація, підпис та шифрування</li>
+            <li><span class="hl3">ECC / ECDH</span> — менші ключі, вища ефективність</li>
+            <li><span class="hl3">DHE / ECDHE</span> — Perfect Forward Secrecy</li>
+          </ul>
+        </div>
+        <div class="card accent" style="margin-top:14px;">
+          <h3>Цифровий підпис</h3>
+          <ul style="max-width:100%;">
+            <li>Автентичність + Цілісність + Невідреченість</li>
+            <li>Private key підписує → Public key верифікує</li>
+            <li>Підписується хеш, а не самі дані</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card purple">
+          <h3>PKI та сертифікати</h3>
+          <ul style="max-width:100%;">
+            <li>CA прив'язує ключ до ідентичності (X.509)</li>
+            <li>Ієрархія: Root → Intermediate → End-Entity</li>
+            <li>Lifecycle: CSR → видача → використання → відкликання</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:14px;">
+          <h3>Відкликання сертифікатів</h3>
+          <ul style="max-width:100%;">
+            <li>CRL — список від CA (офлайн, але може бути великим)</li>
+            <li>OCSP — онлайн запит статусу</li>
+            <li>OCSP Stapling — відповідь у TLS Handshake</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="meta" style="margin-top:20px;">Лекція 10 — Кінець · Курс: Віртуальні приватні мережі (VPN)</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation buttons -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)" aria-label="Назад">&#8249;</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)" aria-label="Вперед">&#8250;</button>
+
+<!-- Progress bar & counter -->
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    // Reset scroll position
+    slides[current].scrollTop = 0;
+    updateUI();
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  function updateUI() {
+    const pct = slides.length > 1 ? (current / (slides.length - 1)) * 100 : 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); changeSlide(1); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); changeSlide(-1); }
+  });
+
+  // Touch / swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  }, {passive: true});
+
+  updateUI();
+</script>
+</body>
+</html>
