@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 4 — Протоколи тунелювання</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title   { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark    { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal    { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple  { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green   { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red     { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy    { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end     { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 14px 16px 14px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue  { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red   { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow{ border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple{ border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 1000px; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 10px 14px; text-align: left; }
+    td { padding: 8px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 14px 18px;
+      font-family: 'Courier New', monospace; font-size: 0.85rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 4</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:2rem;margin-top:8px;">Протоколи тунелювання</h1>
+    <p class="subtitle">PPTP · L2TP · GRE · SSTP · IKEv2</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 2 — ПЛАН ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Поняття тунелювання та інкапсуляції</li>
+      <li>Класифікація протоколів тунелювання</li>
+      <li>PPTP: принцип роботи та вразливості</li>
+      <li>L2TP: архітектура та особливості</li>
+      <li>GRE: структура та застосування</li>
+      <li>SSTP: тунелювання через HTTPS</li>
+      <li>IKEv2: мобільне тунелювання та MOBIKE</li>
+      <li>Порівняльний аналіз та вибір протоколу</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 3 — ЩО ТАКЕ ТУНЕЛЮВАННЯ ════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Що таке тунелювання?</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:22px;"><span class="hl">Тунелювання</span> — технологія інкапсуляції пакетів одного мережевого протоколу всередині пакетів іншого. Зовнішній протокол є «обгорткою», а внутрішній — «пасажиром».</p>
+    <div class="diagram" style="flex-direction:column;gap:4px;">
+      <div style="display:flex;gap:4px;align-items:center;">
+        <div class="dbox blue" style="min-width:140px;font-size:0.85rem;">Зовнішній IP<br/>(транспорт)</div>
+        <div class="dbox purple" style="min-width:140px;font-size:0.85rem;">Заголовок тунелю<br/>(GRE / L2TP …)</div>
+        <div class="dbox green" style="min-width:140px;font-size:0.85rem;">Оригінальний IP<br/>(пасажир)</div>
+        <div class="dbox yellow" style="min-width:160px;font-size:0.85rem;">Корисне навантаження<br/>(payload)</div>
+      </div>
+      <div style="font-size:0.8rem;color:#90a0b8;margin-top:6px;">← зовнішній пакет (транспорт) ──────────────── оригінальний пакет ──────────────────→</div>
+    </div>
+    <div class="card accent" style="max-width:820px;margin-top:14px;text-align:center;">
+      <p><span class="hl">Мета:</span> передача приватного трафіку через публічну мережу зі збереженням оригінальної адресації</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 4 — КОМПОНЕНТИ ТУНЕЛЮ ══════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Компоненти тунелю</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Протокол-пасажир<br/>(Passenger Protocol)</h3>
+          <p>Вихідний пакет, що інкапсулюється.<br/>Приклади: IPv4, IPv6, Ethernet-фрейм</p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Протокол інкапсуляції<br/>(Encapsulating Protocol)</h3>
+          <p>Додає власний заголовок тунелю.<br/>Приклади: GRE, L2TP, IPsec ESP</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Транспортний протокол<br/>(Transport Protocol)</h3>
+          <p>Забезпечує доставку тунельного пакета.<br/>Приклади: IP, UDP, TCP</p>
+        </div>
+        <div class="card warn">
+          <h3>Ключові поняття</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Endpoint</span> — точка входу / виходу тунелю</li>
+            <li><span class="hl">Encapsulation</span> — загортання пакету</li>
+            <li><span class="hl">Decapsulation</span> — розгортання пакету</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 5 — OSI ════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Рівні тунелювання в моделі OSI</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;align-items:center;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:flex-start;">
+          <div class="dbox" style="width:240px;font-size:0.85rem;">7 Прикладний</div>
+          <div class="dbox" style="width:240px;font-size:0.85rem;">6 Представлення</div>
+          <div class="dbox blue" style="width:240px;font-size:0.85rem;">5 Сеансовий ← SSTP (TLS)</div>
+          <div class="dbox" style="width:240px;font-size:0.85rem;">4 Транспортний</div>
+          <div class="dbox purple" style="width:240px;font-size:0.85rem;">3 Мережевий ← GRE, IPsec, IKEv2</div>
+          <div class="dbox yellow" style="width:240px;font-size:0.85rem;">2 Канальний ← PPTP, L2TP</div>
+          <div class="dbox" style="width:240px;font-size:0.85rem;">1 Фізичний</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Рівень 2 (Data Link)</h3>
+          <p>Тунелювання Ethernet / PPP кадрів.<br/>Протоколи: <span class="hl">PPTP, L2TP, L2F</span></p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Рівень 3 (Network)</h3>
+          <p>Тунелювання IP-пакетів.<br/>Протоколи: <span class="hl">GRE, IPsec, IPIP</span></p>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Рівень 4+ (Transport/App)</h3>
+          <p>Тунелювання поверх TLS/HTTPS.<br/>Протоколи: <span class="hl">SSTP, OpenVPN TCP</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 6 — КЛАСИФІКАЦІЯ ══════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Класифікація протоколів тунелювання</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>За рівнем OSI</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">L2 тунелі:</span> PPTP, L2TP, L2F</li>
+            <li><span class="hl">L3 тунелі:</span> GRE, IPsec, IPIP</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>За наявністю шифрування</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Без шифрування:</span> GRE, L2TP (окремо)</li>
+            <li><span class="hl3">З вбудованим шифруванням:</span> PPTP (MPPE), SSTP (TLS), IKEv2/IPsec</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3>За призначенням</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Site-to-Site:</span> GRE/IPsec, IKEv2</li>
+            <li><span class="hl">Remote Access:</span> PPTP, L2TP/IPsec, SSTP, IKEv2</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">За підтримкою мобільності</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Статичні:</span> PPTP, L2TP, GRE, SSTP</li>
+            <li><span class="hl3">Мобільні (MOBIKE):</span> IKEv2/IPsec</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 7 — PPTP ХАРАКТЕРИСТИКА ═══════════════ -->
+  <div class="slide bg-teal">
+    <h2>PPTP — Point-to-Point Tunneling Protocol</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Загальна характеристика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Розробник:</span> Microsoft (1996)</li>
+            <li><span class="hl">Стандарт:</span> RFC 2637</li>
+            <li><span class="hl">Рівень OSI:</span> 2 (канальний)</li>
+            <li><span class="hl">Порти:</span> TCP 1723 (управління), IP 47 (GRE дані)</li>
+            <li><span class="hl">Шифрування:</span> MPPE (RC4, 40/128 біт)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Принцип роботи</h3>
+          <div class="diagram" style="flex-direction:column;gap:6px;align-items:flex-start;margin-left:10px;">
+            <div class="dbox blue" style="width:240px;font-size:0.85rem;">1. TCP з'єднання → порт 1723</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox purple" style="width:240px;font-size:0.85rem;">2. PPP кадри інкапсулюються в GRE</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox green" style="width:240px;font-size:0.85rem;">3. Дані шифруються MPPE</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox yellow" style="width:240px;font-size:0.85rem;">4. GRE пакети передаються через IP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 8 — PPTP СТРУКТУРА ПАКЕТУ ══════════════ -->
+  <div class="slide bg-dark">
+    <h2>PPTP: Структура пакету</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:4px;margin-bottom:20px;">
+      <div style="display:flex;gap:4px;align-items:stretch;max-width:900px;width:100%;">
+        <div class="dbox blue" style="flex:1;font-size:0.85rem;padding:12px 8px;">IP<br/>заголовок<br/><small>src/dst IP<br/>proto=47</small></div>
+        <div class="dbox purple" style="flex:1;font-size:0.85rem;padding:12px 8px;">GRE<br/>заголовок<br/><small>flags, type<br/>0x880B</small></div>
+        <div class="dbox yellow" style="flex:1;font-size:0.85rem;padding:12px 8px;">PPP<br/>заголовок<br/><small>protocol<br/>field</small></div>
+        <div class="dbox green" style="flex:2;font-size:0.85rem;padding:12px 8px;">Корисне навантаження<br/><small>MPPE зашифровано<br/>(RC4)</small></div>
+      </div>
+      <div style="font-size:0.8rem;color:#90a0b8;margin-top:4px;max-width:900px;width:100%;text-align:left;">← зовнішній IP (транспорт) ───── GRE (тунель) ─────── PPP + дані (пасажир) ──────────→</div>
+    </div>
+    <div class="cols" style="max-width:900px;">
+      <div class="col">
+        <div class="card warn">
+          <h3>Накладні витрати (Overhead)</h3>
+          <ul style="max-width:100%;">
+            <li>IP заголовок: 20 байт</li>
+            <li>GRE заголовок: 8–16 байт</li>
+            <li>PPP заголовок: 4–8 байт</li>
+            <li><span class="hl2">Разом: ~32–44 байти</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>MTU у тунелі</h3>
+          <p>При стандартному Ethernet MTU 1500 байт, ефективний MTU тунелю PPTP становить <span class="hl">~1456–1468 байт</span>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 9 — PPTP АВТЕНТИФІКАЦІЯ ════════════════ -->
+  <div class="slide bg-navy">
+    <h2>PPTP: Методи автентифікації</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Метод</th>
+          <th>Безпека</th>
+          <th>Особливості</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl">PAP</span></td>
+          <td><span class="badge badge-red">Критична</span></td>
+          <td>Пароль у відкритому вигляді — ніколи не використовувати!</td>
+        </tr>
+        <tr>
+          <td><span class="hl">CHAP</span></td>
+          <td><span class="badge badge-red">Низька</span></td>
+          <td>MD5-хеш, вразливий до словникових атак</td>
+        </tr>
+        <tr>
+          <td><span class="hl">MS-CHAPv1</span></td>
+          <td><span class="badge badge-red">Критична</span></td>
+          <td>Повністю зламаний; атаки за лічені хвилини</td>
+        </tr>
+        <tr>
+          <td><span class="hl">MS-CHAPv2</span></td>
+          <td><span class="badge badge-yellow">Низька</span></td>
+          <td>Ефективна складність ≈ 56-бітний DES; зламується офлайн</td>
+        </tr>
+        <tr>
+          <td><span class="hl">EAP-TLS</span></td>
+          <td><span class="badge badge-green">Висока</span></td>
+          <td>Сертифікати X.509; нетиповий для PPTP</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card bad" style="max-width:820px;margin-top:18px;text-align:center;">
+      <p><span class="hl2">Висновок:</span> PPTP не може забезпечити надійну автентифікацію — відсутній механізм автентифікації сервера</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 10 — PPTP ВРАЗЛИВОСТІ ══════════════════ -->
+  <div class="slide bg-red">
+    <h2>PPTP: Відомі вразливості</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">MS-CHAPv2 зламано (2012)</h3>
+          <p>Moxie Marlinspike довів, що атака на MS-CHAPv2 зводиться до брутфорсу 56-бітного DES. Сервіс <strong>CloudCracker</strong> розкривав хеш за ~24 год.</p>
+        </div>
+        <div class="card bad">
+          <h3 style="color:#ff8080;">MPPE RC4: Bit-Flipping</h3>
+          <p>RC4 без перевірки цілісності дозволяє зловмиснику змінювати біти зашифрованого трафіку без виявлення.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Відсутність PFS</h3>
+          <p>Немає <span class="hl">Perfect Forward Secrecy</span>: компрометація довгострокового ключа розкриває весь попередній трафік.</p>
+        </div>
+        <div class="card warn">
+          <h3>NAT проблеми</h3>
+          <p>GRE — не TCP/UDP, тому NAT-пристрої часто не підтримують кілька одночасних PPTP-з'єднань за одним NAT.</p>
+        </div>
+        <div class="card" style="border-color:rgba(255,80,80,0.4);background:rgba(255,80,80,0.07);margin-bottom:0;">
+          <h3 style="color:#ff8080;">Рекомендація</h3>
+          <p><span class="hl2">НЕ використовувати PPTP</span> для нових розгортань! Лише для legacy-систем без альтернатив.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 11 — L2TP ХАРАКТЕРИСТИКА ══════════════ -->
+  <div class="slide bg-teal">
+    <h2>L2TP — Layer 2 Tunneling Protocol</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Загальна характеристика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Розробники:</span> Cisco (L2F) + Microsoft (PPTP)</li>
+            <li><span class="hl">Стандарт:</span> RFC 2661 (v2), RFC 3931 (v3)</li>
+            <li><span class="hl">Рівень OSI:</span> 2 (канальний)</li>
+            <li><span class="hl">Транспорт:</span> UDP 1701 (всередині IPsec)</li>
+          </ul>
+        </div>
+        <div class="card bad">
+          <h3 style="color:#ff8080;">⚠️ Важливо!</h3>
+          <p>L2TP сам по собі <span class="hl2">не шифрує</span> трафік. Для безпеки завжди використовується як <span class="hl">L2TP/IPsec</span>.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Переваги над PPTP</h3>
+          <ul style="max-width:100%;">
+            <li>Подвійна інкапсуляція → надійний тунель</li>
+            <li>IPsec забезпечує AES-шифрування</li>
+            <li>Підтримка не-IP протоколів (через L2TPv3)</li>
+            <li>Широка платформна підтримка</li>
+            <li>Кілька сесій в одному тунелі</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 12 — L2TP АРХІТЕКТУРА ══════════════════ -->
+  <div class="slide bg-dark">
+    <h2>L2TP: Архітектурні компоненти</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="margin-bottom:20px;">
+      <div class="dbox green">Клієнт<br/><small>PPP-з'єднання</small></div>
+      <div class="arrow">──PPP──►</div>
+      <div class="dbox blue">LAC<br/><small>L2TP Access<br/>Concentrator</small></div>
+      <div class="arrow">──L2TP тунель──►</div>
+      <div class="dbox purple">LNS<br/><small>L2TP Network<br/>Server</small></div>
+      <div class="arrow">──►</div>
+      <div class="dbox yellow">Мережа<br/><small>корпоративна</small></div>
+    </div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>LAC (L2TP Access Concentrator)</h3>
+          <ul style="max-width:100%;">
+            <li>Приймає PPP-з'єднання від клієнта</li>
+            <li>Ініціює L2TP-тунель до LNS</li>
+            <li>Знаходиться на боці клієнта / ISP</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">LNS (L2TP Network Server)</h3>
+          <ul style="max-width:100%;">
+            <li>Завершує PPP-з'єднання</li>
+            <li>Підключає клієнта до цільової мережі</li>
+            <li>Знаходиться в корпоративній мережі</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p style="color:#90a0b8;font-size:0.9rem;margin-top:10px;">Один L2TP-тунель може містити <span class="hl">кілька незалежних сесій</span> одночасно</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 13 — L2TP СТРУКТУРА ПАКЕТУ ════════════ -->
+  <div class="slide bg-purple">
+    <h2>L2TP/IPsec: Структура пакету</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:4px;margin-bottom:20px;">
+      <div style="display:flex;gap:4px;align-items:stretch;max-width:960px;width:100%;">
+        <div class="dbox blue" style="flex:1;font-size:0.8rem;padding:10px 6px;">Зовнішній<br/>IP заголовок</div>
+        <div class="dbox yellow" style="flex:1;font-size:0.8rem;padding:10px 6px;">UDP<br/>port 1701</div>
+        <div class="dbox purple" style="flex:1;font-size:0.8rem;padding:10px 6px;">L2TP<br/>заголовок<br/><small>Tunnel ID<br/>Session ID</small></div>
+        <div class="dbox green" style="flex:1;font-size:0.8rem;padding:10px 6px;">PPP<br/>заголовок</div>
+        <div class="dbox red" style="flex:2;font-size:0.8rem;padding:10px 6px;">Корисне навантаження<br/><small>зашифровано IPsec ESP</small></div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card warn">
+          <h3>Накладні витрати</h3>
+          <ul style="max-width:100%;">
+            <li>IP: 20 байт</li>
+            <li>UDP: 8 байт</li>
+            <li>L2TP: 8–12 байт</li>
+            <li>PPP: 4–8 байт</li>
+            <li>IPsec ESP: 10–30 байт</li>
+            <li><span class="hl2">Разом: ~50–78 байт</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Порти при L2TP/IPsec</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">UDP 500</span> — IKE (погодження ключів)</li>
+            <li><span class="hl">UDP 4500</span> — NAT Traversal</li>
+            <li><span class="hl">IP 50</span> — ESP (без NAT-T)</li>
+            <li><span class="hl">UDP 1701</span> — L2TP (всередині IPsec)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 14 — L2TP РЕЖИМИ IPSEC ════════════════ -->
+  <div class="slide bg-dark">
+    <h2>L2TP/IPsec: Режими роботи IPsec</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Транспортний режим (Transport Mode)</h3>
+          <div class="diagram" style="flex-direction:column;gap:4px;margin:10px 0;">
+            <div style="display:flex;gap:3px;">
+              <div class="dbox blue" style="min-width:80px;font-size:0.75rem;padding:6px;">IP Hdr<br/><small>(відкритий)</small></div>
+              <div class="dbox red" style="flex:1;font-size:0.75rem;padding:6px;">ESP + L2TP + PPP + дані<br/><small>(зашифровано)</small></div>
+            </div>
+          </div>
+          <ul style="max-width:100%;">
+            <li>Шифрується payload (L2TP + дані)</li>
+            <li>Зовнішній IP відкритий</li>
+            <li>Типовий для Remote Access VPN</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Тунельний режим (Tunnel Mode)</h3>
+          <div class="diagram" style="flex-direction:column;gap:4px;margin:10px 0;">
+            <div style="display:flex;gap:3px;">
+              <div class="dbox blue" style="min-width:80px;font-size:0.75rem;padding:6px;">Outer IP<br/>(новий)</div>
+              <div class="dbox red" style="flex:1;font-size:0.75rem;padding:6px;">ESP + Original IP + L2TP + PPP + дані<br/><small>(все зашифровано)</small></div>
+            </div>
+          </div>
+          <ul style="max-width:100%;">
+            <li>Весь оригінальний пакет зашифровано</li>
+            <li>Більший overhead</li>
+            <li>Менш поширений для L2TP</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 15 — GRE ХАРАКТЕРИСТИКА ════════════════ -->
+  <div class="slide bg-teal">
+    <h2>GRE — Generic Routing Encapsulation</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Загальна характеристика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Розробник:</span> Cisco Systems</li>
+            <li><span class="hl">Стандарти:</span> RFC 1701, RFC 2784, RFC 2890</li>
+            <li><span class="hl">Рівень OSI:</span> 3 (мережевий)</li>
+            <li><span class="hl">IP-протокол:</span> № 47</li>
+            <li><span class="hl">Шифрування:</span> відсутнє (потрібен IPsec)</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Унікальна перевага</h3>
+          <p>GRE може тунелювати <span class="hl">multicast та broadcast</span> трафік — необхідно для динамічних протоколів маршрутизації (OSPF, EIGRP, PIM).</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Що може тунелювати GRE</h3>
+          <ul style="max-width:100%;">
+            <li>IPv4 у IPv4 (найпоширеніше)</li>
+            <li>IPv6 у IPv4 (6in4 tunneling)</li>
+            <li>IPv4 у IPv6 (4in6 tunneling)</li>
+            <li>MPLS у IP</li>
+            <li>Multicast / Broadcast трафік</li>
+            <li>Будь-який Layer 3 протокол</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 16 — GRE ЗАГОЛОВОК ════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>GRE: Структура заголовку (RFC 2784)</h2>
+    <div class="divider"></div>
+    <pre style="max-width:820px;margin-bottom:20px;"> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|C|R|K|S|   Reserved0   | Ver |      Protocol Type              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      Checksum (optional)      |       Reserved1 (optional)    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         Key (optional)                        |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+</pre>
+    <div class="cols" style="max-width:900px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Поля заголовку</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">C</span> — Checksum Present (1 біт)</li>
+            <li><span class="hl">R</span> — Reserved (1 біт, RFC 2784)</li>
+            <li><span class="hl">K</span> — Key Present (автентифікація тунелю)</li>
+            <li><span class="hl">S</span> — Sequence Number Present</li>
+            <li><span class="hl">Protocol Type</span> — EtherType пасажира</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Мінімальний заголовок</h3>
+          <p>Без опціональних полів (C=R=K=S=0) заголовок GRE займає лише <span class="hl">4 байти</span> — найменші накладні витрати серед тунельних протоколів L3.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 17 — GRE СЦЕНАРІЇ ═════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>GRE: Сценарії використання</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>1. GRE over IPsec</h3>
+          <div class="diagram" style="margin:10px 0;">
+            <div class="dbox blue" style="font-size:0.8rem;">Router A</div>
+            <div class="arrow">──GRE──►</div>
+            <div class="dbox red" style="font-size:0.8rem;">IPsec ESP</div>
+            <div class="arrow">──►</div>
+            <div class="dbox blue" style="font-size:0.8rem;">Router B</div>
+          </div>
+          <p style="font-size:0.9rem;">GRE транспортує multicast/OSPF, IPsec забезпечує шифрування.</p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">2. DMVPN (Cisco)</h3>
+          <p style="font-size:0.9rem;">Dynamic Multipoint VPN: GRE + IPsec + NHRP. Hub-and-Spoke з підтримкою spoke-to-spoke тунелів.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">3. 6in4 Tunneling</h3>
+          <p style="font-size:0.9rem;">Транспортування IPv6 через IPv4-інфраструктуру. Широко використовується при переходах на IPv6 без оновлення обладнання.</p>
+        </div>
+        <div class="card warn">
+          <h3>4. Маршрутизація з OSPF/EIGRP</h3>
+          <p style="font-size:0.9rem;">Динамічні протоколи маршрутизації потребують multicast. Лише GRE тунель дає змогу запустити OSPF між VPN-вузлами.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 18 — GRE ПЕРЕВАГИ/НЕДОЛІКИ ════════════ -->
+  <div class="slide bg-dark">
+    <h2>GRE: Переваги та недоліки</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">✅ Переваги</h3>
+          <ul style="max-width:100%;">
+            <li>Підтримка multicast (OSPF, EIGRP, PIM)</li>
+            <li>Мінімальні накладні витрати (4–16 байт)</li>
+            <li>Підтримка будь-якого Layer 3 протоколу</li>
+            <li>Простота налаштування</li>
+            <li>Статичні та динамічні тунелі</li>
+            <li>Підтримка 6in4 (IPv6 over IPv4)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">❌ Недоліки</h3>
+          <ul style="max-width:100%;">
+            <li>Відсутність вбудованого шифрування</li>
+            <li>Відсутність автентифікації (без IPsec)</li>
+            <li>IP-протокол 47 часто блокується фаєрволами</li>
+            <li>MTU-проблеми (необхідна фрагментація)</li>
+            <li>IP-спуфінг можливий без автентифікації</li>
+            <li>Не підтримує NAT-T нативно</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 19 — SSTP ХАРАКТЕРИСТИКА ═══════════════ -->
+  <div class="slide bg-teal">
+    <h2>SSTP — Secure Socket Tunneling Protocol</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Загальна характеристика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Розробник:</span> Microsoft</li>
+            <li><span class="hl">Підтримка:</span> Windows Vista SP1+</li>
+            <li><span class="hl">Транспорт:</span> HTTPS (TCP порт <span class="hl">443</span>)</li>
+            <li><span class="hl">Шифрування:</span> TLS 1.2/1.3 (AES-256-GCM)</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">🔑 Головна перевага</h3>
+          <p>Порт 443 відкритий майже скрізь → <span class="hl">проходить через корпоративні фаєрволи та проксі</span>, де інші протоколи заблоковані.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Принцип роботи</h3>
+          <div class="diagram" style="flex-direction:column;gap:6px;align-items:flex-start;">
+            <div class="dbox blue" style="width:240px;font-size:0.85rem;">1. TLS-з'єднання до сервера (TCP 443)</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox purple" style="width:240px;font-size:0.85rem;">2. HTTP CONNECT — погодження SSTP</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox green" style="width:240px;font-size:0.85rem;">3. PPP кадри інкапсулюються в SSTP</div>
+            <div class="arrow" style="margin-left:100px;">↓</div>
+            <div class="dbox yellow" style="width:240px;font-size:0.85rem;">4. SSTP пакети передаються через TLS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 20 — SSTP СТРУКТУРА ════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>SSTP: Структура пакету та безпека</h2>
+    <div class="divider"></div>
+    <div class="diagram" style="flex-direction:column;gap:4px;margin-bottom:20px;">
+      <div style="display:flex;gap:4px;align-items:stretch;max-width:900px;width:100%;">
+        <div class="dbox blue" style="flex:1;font-size:0.8rem;padding:10px 6px;">TCP<br/>port 443</div>
+        <div class="dbox purple" style="flex:2;font-size:0.8rem;padding:10px 6px;">TLS Record Layer<br/><small>AES-256-GCM / ChaCha20</small></div>
+        <div class="dbox yellow" style="flex:1;font-size:0.8rem;padding:10px 6px;">SSTP<br/>заголовок</div>
+        <div class="dbox green" style="flex:2;font-size:0.8rem;padding:10px 6px;">PPP-кадр<br/><small>(корисні дані)</small></div>
+      </div>
+    </div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Безпека</h3>
+          <ul style="max-width:100%;">
+            <li>TLS 1.2/1.3 (сучасне шифрування)</li>
+            <li>Автентифікація сервера: X.509 сертифікат</li>
+            <li>Автентифікація клієнта: EAP-TLS або MS-CHAPv2</li>
+            <li>PFS підтримується через TLS</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Обмеження</h3>
+          <ul style="max-width:100%;">
+            <li>Переважно екосистема Windows</li>
+            <li>Linux: підтримка через SoftEther / sstp-client</li>
+            <li>macOS / iOS: відсутня нативна підтримка</li>
+            <li>Власний протокол Microsoft (не відкритий стандарт)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 21 — IKEv2 ХАРАКТЕРИСТИКА ════════════ -->
+  <div class="slide bg-teal">
+    <h2>IKEv2 — Internet Key Exchange version 2</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Загальна характеристика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Розробники:</span> Microsoft + Cisco</li>
+            <li><span class="hl">Стандарт:</span> RFC 7296 (замінює IKEv1)</li>
+            <li><span class="hl">Транспорт:</span> UDP 500, UDP 4500 (NAT-T)</li>
+            <li><span class="hl">Шифрування:</span> IPsec ESP (AES-GCM, ChaCha20)</li>
+            <li><span class="hl">Рівень OSI:</span> 3 (мережевий)</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">MOBIKE (RFC 4555)</h3>
+          <p>Підтримка зміни IP-адреси без розриву тунелю — <span class="hl">ідеальний вибір для мобільних пристроїв</span>. Wi-Fi → LTE без reconnect!</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Ключові можливості</h3>
+          <ul style="max-width:100%;">
+            <li>EAP автентифікація клієнтів</li>
+            <li>Взаємна автентифікація (IKE_AUTH)</li>
+            <li>Підтримка PSK та X.509 сертифікатів</li>
+            <li>Швидке відновлення з'єднання</li>
+            <li>Dead Peer Detection (DPD)</li>
+            <li>IKEv2 Fragmentation (RFC 7383)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 22 — IKEv2 ВСТАНОВЛЕННЯ ════════════════ -->
+  <div class="slide bg-navy">
+    <h2>IKEv2: Процедура встановлення з'єднання</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;align-items:flex-start;">
+      <div class="col">
+        <pre style="font-size:0.85rem;">Ініціатор                Відповідач
+    │                         │
+    │  IKE_SA_INIT (req) ───► │  ← DH обмін,
+    │  IKE_SA_INIT (resp) ◄── │    генерація ключів
+    │                         │
+    │  IKE_AUTH (req)    ───► │  ← автентифікація,
+    │  IKE_AUTH (resp)   ◄─── │    IPsec SA готова
+    │                         │
+    │  CREATE_CHILD_SA   ◄──► │  ← додаткові SA
+    │  INFORMATIONAL     ◄──► │  ← keepalive/rekey
+    │                         │</pre>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Фаза 1: IKE_SA_INIT</h3>
+          <p>Обмін Diffie-Hellman параметрами. Генерація спільного секрету. Узгодження алгоритмів шифрування.</p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Фаза 2: IKE_AUTH</h3>
+          <p>Взаємна автентифікація (X.509 або PSK). Встановлення IPsec SA (Security Association). Узгодження ключів для ESP.</p>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Лише 2 обміни!</h3>
+          <p>IKEv2 вимагає лише 2 повідомлення на відміну від IKEv1 (6–9 повідомлень) — суттєво швидше з'єднання.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 23 — IKEv2 MOBIKE ════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>IKEv2/MOBIKE: Підтримка мобільних клієнтів</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Проблема без MOBIKE</h3>
+          <p>При зміні мережі (Wi-Fi → 4G) IP-адреса клієнта змінюється. Традиційні VPN <span class="hl2">втрачають з'єднання</span> і потребують повторного встановлення тунелю.</p>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Рішення з MOBIKE</h3>
+          <p>Клієнт надсилає <code>UPDATE_SA_ADDRESSES</code>. Сервер оновлює таблицю SA <span class="hl3">без повторного рукостискання</span>. З'єднання відновлюється за секунди.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Платформи з IKEv2/MOBIKE</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">iOS</span> — вбудований IKEv2 клієнт (Apple)</li>
+            <li><span class="hl">Android</span> — strongSwan, вбудований</li>
+            <li><span class="hl">macOS</span> — нативна підтримка</li>
+            <li><span class="hl">Windows 7+</span> — нативна підтримка</li>
+            <li><span class="hl">Linux</span> — strongSwan, libreswan</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Ідеальний сценарій</h3>
+          <p>Корпоративні мобільні VPN-рішення для співробітників, що переміщуються між мережами Wi-Fi та мобільним інтернетом.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 24 — ПОРІВНЯННЯ ТЕХНІЧНЕ ═══════════════ -->
+  <div class="slide bg-navy">
+    <h2>Порівняння: Технічні характеристики</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Характеристика</th>
+          <th>PPTP</th>
+          <th>L2TP/IPsec</th>
+          <th>GRE/IPsec</th>
+          <th>SSTP</th>
+          <th>IKEv2/IPsec</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Рівень OSI</td>
+          <td>L2</td>
+          <td>L2</td>
+          <td>L3</td>
+          <td>L2</td>
+          <td>L3</td>
+        </tr>
+        <tr>
+          <td>Шифрування</td>
+          <td><span class="badge badge-red">MPPE RC4</span></td>
+          <td><span class="badge badge-green">AES (IPsec)</span></td>
+          <td><span class="badge badge-green">AES (IPsec)</span></td>
+          <td><span class="badge badge-green">TLS/AES</span></td>
+          <td><span class="badge badge-green">AES-GCM</span></td>
+        </tr>
+        <tr>
+          <td>PFS</td>
+          <td><span class="badge badge-red">❌ Немає</span></td>
+          <td><span class="badge badge-green">✅ Є</span></td>
+          <td><span class="badge badge-green">✅ Є</span></td>
+          <td><span class="badge badge-green">✅ Є</span></td>
+          <td><span class="badge badge-green">✅ Є</span></td>
+        </tr>
+        <tr>
+          <td>Порт</td>
+          <td>TCP 1723</td>
+          <td>UDP 500/4500</td>
+          <td>IP 47</td>
+          <td>TCP 443</td>
+          <td>UDP 500/4500</td>
+        </tr>
+        <tr>
+          <td>NAT Traversal</td>
+          <td><span class="badge badge-yellow">⚠️ Обмежено</span></td>
+          <td><span class="badge badge-green">✅ Повна</span></td>
+          <td><span class="badge badge-red">❌ Немає</span></td>
+          <td><span class="badge badge-green">✅ Повна</span></td>
+          <td><span class="badge badge-green">✅ Повна</span></td>
+        </tr>
+        <tr>
+          <td>Мобільність</td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-green">✅ MOBIKE</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 25 — ПОРІВНЯННЯ ПРОДУКТИВНІСТЬ ══════════ -->
+  <div class="slide bg-dark">
+    <h2>Порівняння: Продуктивність та сумісність</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Характеристика</th>
+          <th>PPTP</th>
+          <th>L2TP/IPsec</th>
+          <th>GRE/IPsec</th>
+          <th>SSTP</th>
+          <th>IKEv2/IPsec</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Швидкість</td>
+          <td><span class="badge badge-green">⭐⭐⭐⭐⭐</span></td>
+          <td><span class="badge badge-yellow">⭐⭐⭐</span></td>
+          <td><span class="badge badge-green">⭐⭐⭐⭐</span></td>
+          <td><span class="badge badge-yellow">⭐⭐⭐</span></td>
+          <td><span class="badge badge-green">⭐⭐⭐⭐</span></td>
+        </tr>
+        <tr>
+          <td>Windows</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>macOS</td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td>✅</td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Linux</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>iOS / Android</td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td>✅</td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Фаєрвол-friendly</td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td><span class="badge badge-yellow">⚠️</span></td>
+          <td><span class="badge badge-red">❌</span></td>
+          <td><span class="badge badge-green">✅✅ TCP 443</span></td>
+          <td><span class="badge badge-green">✅</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 26 — ПОРІВНЯННЯ БЕЗПЕКА ════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Порівняння: Рівень безпеки</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">🔴 PPTP — Не використовувати!</h3>
+          <ul style="max-width:100%;">
+            <li>MS-CHAPv2: ефективно 56-бітна безпека</li>
+            <li>RC4 MPPE: вразливий до bit-flipping</li>
+            <li>Немає PFS, немає автентифікації сервера</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>🟡 GRE (без IPsec) — Лише в ізольованих мережах</h3>
+          <ul style="max-width:100%;">
+            <li>Відсутнє шифрування та автентифікація</li>
+            <li>Вразливий до IP-спуфінгу та ін'єкцій</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">🟢 L2TP/IPsec — Надійний, але застарілий</h3>
+          <ul style="max-width:100%;">
+            <li>AES-256 шифрування через IPsec</li>
+            <li>Слабкі PSK → словникові атаки (IKEv1)</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">🟢 SSTP — Надійний</h3>
+          <ul style="max-width:100%;">
+            <li>TLS 1.3, AES-256-GCM, PFS</li>
+            <li>Обмежена платформна підтримка</li>
+          </ul>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">🟢 IKEv2/IPsec — Рекомендований стандарт</h3>
+          <ul style="max-width:100%;">
+            <li>AES-256-GCM + PFS + X.509 автентифікація</li>
+            <li>MOBIKE, швидке відновлення</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 27 — КРИТЕРІЇ ВИБОРУ ══════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Критерії вибору протоколу</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Умова / Вимога</th>
+          <th>Рекомендований протокол</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Мобільні клієнти (iOS/Android, часта зміна мережі)</td>
+          <td><span class="badge badge-green">IKEv2/IPsec (MOBIKE)</span></td>
+        </tr>
+        <tr>
+          <td>Обхід жорстких фаєрволів (TCP 443)</td>
+          <td><span class="badge badge-blue">SSTP</span></td>
+        </tr>
+        <tr>
+          <td>Site-to-Site з маршрутизаторами Cisco + OSPF</td>
+          <td><span class="badge badge-purple">GRE/IPsec або DMVPN</span></td>
+        </tr>
+        <tr>
+          <td>Корпоративний Remote Access (максимальна безпека)</td>
+          <td><span class="badge badge-green">IKEv2/IPsec</span></td>
+        </tr>
+        <tr>
+          <td>Legacy-системи (Windows XP/2003 без оновлень)</td>
+          <td><span class="badge badge-yellow">L2TP/IPsec</span></td>
+        </tr>
+        <tr>
+          <td>Multicast трафік (відеоконференції, IPTV в корп. мережі)</td>
+          <td><span class="badge badge-purple">GRE/IPsec</span></td>
+        </tr>
+        <tr>
+          <td>Транспортування IPv6 через IPv4</td>
+          <td><span class="badge badge-blue">GRE (6in4)</span></td>
+        </tr>
+        <tr>
+          <td>Максимальна швидкість + апаратне AES</td>
+          <td><span class="badge badge-green">IKEv2/IPsec</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 28 — СЦЕНАРІЇ ЗАСТОСУВАННЯ ════════════ -->
+  <div class="slide bg-dark">
+    <h2>Реальні сценарії застосування</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Корпоративні мережі</h3>
+          <ul style="max-width:100%;">
+            <li>Site-to-Site між офісами → <span class="hl">GRE/IPsec, IKEv2/IPsec</span></li>
+            <li>Remote Access для співробітників → <span class="hl">IKEv2/IPsec</span></li>
+            <li>Cisco DMVPN (мережа філій) → <span class="hl">GRE + NHRP + IPsec</span></li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Мобільні рішення</h3>
+          <ul style="max-width:100%;">
+            <li>iOS VPN (Apple) → <span class="hl">IKEv2/IPsec</span> (вбудована)</li>
+            <li>Android корпоративний → <span class="hl">IKEv2/IPsec</span> (StrongSwan)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Публічні VPN-провайдери</h3>
+          <ul style="max-width:100%;">
+            <li>Сучасні (NordVPN, ExpressVPN) → IKEv2/IPsec (Лекція 05), WireGuard (Лекція 07)</li>
+            <li>Застарілі → L2TP/IPsec, PPTP (зникає)</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Специфічні умови</h3>
+          <ul style="max-width:100%;">
+            <li>Жорсткий корпоративний фаєрвол → <span class="hl">SSTP (TCP 443)</span></li>
+            <li>Державні організації та КІІ → <span class="hl">IKEv2/IPsec + X.509</span></li>
+            <li>Перехід IPv4 → IPv6 → <span class="hl">GRE 6in4</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 29 — ВЕКТОРИ АТАК ══════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Вектори атак на VPN-тунелі</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Атаки на PPTP</h3>
+          <ul style="max-width:100%;">
+            <li>Brute-force MS-CHAPv2 (CloudCracker, hashcat)</li>
+            <li>Man-in-the-Middle (немає автентифікації сервера)</li>
+            <li>Bit-flipping attack на RC4 (MPPE)</li>
+          </ul>
+        </div>
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Атаки на GRE</h3>
+          <ul style="max-width:100%;">
+            <li>IP-спуфінг (без автентифікації джерела)</li>
+            <li>Ін'єкція пакетів у незашифрований тунель</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Атаки на L2TP/IPsec</h3>
+          <ul style="max-width:100%;">
+            <li>Слабкі Pre-Shared Keys → словникові атаки</li>
+            <li>IKE Aggressive Mode → витік хешу PSK</li>
+            <li>Вразливості реалізацій (CVE-2022-23093)</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Загальні атаки на VPN</h3>
+          <ul style="max-width:100%;">
+            <li>Traffic analysis (аналіз метаданих)</li>
+            <li>Replay attacks (без sequence numbers)</li>
+            <li>DoS-атаки на UDP 500/4500 (IKEv2)</li>
+            <li>Downgrade attacks (примусовий IKEv1)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 30 — ПІДСУМКИ ══════════════════════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 4: Протоколи тунелювання</p>
+    <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:900px;">
+      <span class="tag">PPTP (застарілий)</span>
+      <span class="tag">L2TP/IPsec</span>
+      <span class="tag">GRE/IPsec</span>
+      <span class="tag">SSTP (TCP 443)</span>
+      <span class="tag">IKEv2/MOBIKE</span>
+      <span class="tag">PFS</span>
+      <span class="tag">AES-256-GCM</span>
+      <span class="tag">X.509 сертифікати</span>
+    </div>
+    <div class="card accent" style="max-width:760px;margin-top:20px;text-align:left;">
+      <h3 style="margin-bottom:8px;">Головні висновки</h3>
+      <ul style="max-width:100%;">
+        <li>❌ <span class="hl2">PPTP</span> — ніколи не використовувати для нових розгортань</li>
+        <li>✅ <span class="hl3">IKEv2/IPsec</span> — вибір за замовчуванням (мобільність + безпека)</li>
+        <li>✅ <span class="hl3">GRE/IPsec</span> — для маршрутизаторів з multicast</li>
+        <li>✅ <span class="hl3">SSTP</span> — коли порти UDP заблоковані</li>
+      </ul>
+    </div>
+    <p style="margin-top:20px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 5 — Протоколи IPsec</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">‹</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">›</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
