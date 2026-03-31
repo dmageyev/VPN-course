@@ -840,7 +840,78 @@ $ tcpdump -i tun0 "tcp[tcpflags] & tcp-syn != 0"</pre>
     </ul>
   </div>
 
-  <!-- ═══════════════════════════════ SLIDE 25 — КІНЕЦЬ ═══════════════════════════════ -->
+  <!-- ═══════════════════════════════ SLIDE 25 — DMVPN ══════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>DMVPN та динамічні топології</h2>
+    <div class="divider"></div>
+    <p style="max-width:780px;margin-bottom:20px;"><span class="hl">DMVPN</span> = mGRE + NHRP + IPsec. Spoke-вузли автоматично будують прямі тунелі без участі Hub.</p>
+    <table>
+      <thead><tr><th>Топологія</th><th>Переваги</th><th>Недоліки</th></tr></thead>
+      <tbody>
+        <tr><td>Hub-and-Spoke</td><td>Просто керується</td><td>Hub = SPOF, подвійна latency</td></tr>
+        <tr><td>Full Mesh</td><td>Оптимальна продуктивність</td><td>N*(N-1)/2 тунелів</td></tr>
+        <tr><td>DMVPN Phase 2</td><td>Spoke-to-Spoke на вимогу</td><td>Вимагає NHRP</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 26 — NAT TRAVERSAL ═══════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>NAT та проблеми VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">❌ Проблема NAT</div>
+          <ul class="bullet-list">
+            <li>AH: включає IP у MAC → NAT ламає підпис</li>
+            <li>ESP (IP 50): немає портів → проблема stateful NAT</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ NAT-T рішення</div>
+          <ul class="bullet-list">
+            <li>ESP обгортається у UDP 4500</li>
+            <li>IKE виявляє NAT автоматично</li>
+            <li>Keepalive: пакет 0xFF кожні 25с</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 27 — DNS LEAKS ═══════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>DNS-витоки та Kill Switch</h2>
+    <div class="divider"></div>
+    <p style="max-width:780px;margin-bottom:20px;">DNS-витік — DNS запити йдуть через ISP поза тунелем, розкриваючи відвідані сайти.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">⚠️ Причини DNS-витоків</div>
+          <ul class="bullet-list">
+            <li>VPN не підміняє системний DNS</li>
+            <li>Windows Async DNS (паралельні запити)</li>
+            <li>IPv6 DNS поза тунелем</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🛡️ Захист</div>
+          <ul class="bullet-list">
+            <li>DNS-сервер провайдера VPN через тунель</li>
+            <li>Kill Switch: блок трафіку при розриві VPN</li>
+            <li>Firewall: заборона DNS (53) через eth0</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 28 — КІНЕЦЬ ═══════════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
     <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>

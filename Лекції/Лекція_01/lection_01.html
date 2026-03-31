@@ -1029,7 +1029,74 @@ L1 │ Фізичний      │ Кабель / Wi-Fi</pre>
     </table>
   </div>
 
-  <!-- ═══════════════════════════════ SLIDE 25 — END ════════════════════════════════ -->
+  <!-- ═══════════════════════════════ SLIDE 25 — PFS ════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Perfect Forward Secrecy (PFS)</h2>
+    <div class="divider"></div>
+    <p style="max-width:780px;margin-bottom:24px;">PFS гарантує, що компрометація довгострокового ключа <span class="hl">не розкриє минулих сесій</span>.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">❌ Без PFS</div>
+          <p>RSA ключ сервера скомпрометовано → зловмисник розшифровує весь записаний трафік</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ З PFS (ECDHE)</div>
+          <p>Кожна сесія — новий ephemeral DH ключ. Минулий трафік не може бути розшифрований.</p>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:20px;">TLS 1.3 вимагає PFS обов'язково (лише ECDHE). IKEv2: PFS через CREATE_CHILD_SA.</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 26 — ATTACKS ═════════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Атаки на VPN та методи захисту</h2>
+    <div class="divider"></div>
+    <table>
+      <thead><tr><th>Атака</th><th>Опис</th><th>Захист</th></tr></thead>
+      <tbody>
+        <tr><td>MITM</td><td>Перехоплення трафіку між клієнтом та сервером</td><td>PKI сертифікати, pinning</td></tr>
+        <tr><td>Replay Attack</td><td>Повторне надсилання перехоплених пакетів</td><td>Sequence Number, Anti-Replay Window</td></tr>
+        <tr><td>Brute Force PSK</td><td>Підбір Pre-Shared Key офлайн</td><td>IKEv2 + сертифікати або strong PSK</td></tr>
+        <tr><td>IKE Flooding</td><td>CPU exhaustion через DH обчислення</td><td>IKEv2 COOKIE механізм</td></tr>
+        <tr><td>DNS Leak</td><td>DNS запити поза тунелем</td><td>Примусовий DNS через VPN, Kill Switch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 27 — QUANTUM ══════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Квантові загрози та постквантова криптографія</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">⚡ Загрози від квантових комп'ютерів</div>
+          <ul class="bullet-list">
+            <li>Алгоритм Шора ламає RSA та ECDH</li>
+            <li>Алгоритм Гровера вдвічі знижує стійкість симетричних шифрів</li>
+            <li>AES-128 → еквівалент AES-64 проти квантового атакуючого</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🛡️ NIST PQC стандарти 2024</div>
+          <ul class="bullet-list">
+            <li><span class="hl">ML-KEM</span> (Kyber) — обмін ключами</li>
+            <li><span class="hl">ML-DSA</span> (Dilithium) — цифровий підпис</li>
+            <li>AES-256 залишається безпечним</li>
+            <li>Гібридний режим: ECDH + Kyber</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 28 — END ════════════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
     <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
