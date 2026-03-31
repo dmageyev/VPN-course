@@ -1164,6 +1164,220 @@ crl-verify /etc/openvpn/crl.pem # відкликані сертифікати</p
     </div>
   </div>
 
+
+  <!-- SLIDE 29 TLS 1.3 details -->
+  <div class="slide bg-teal">
+    <h2>TLS 1.3 детальний аналіз</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Що видалено в TLS 1.3</div>
+          <ul class="bullet-list">
+            <li>Статичний RSA key exchange (немає PFS)</li>
+            <li>RC4, DES, 3DES, MD5, SHA-1</li>
+            <li>CBC cipher suites</li>
+            <li>Компресія (CRIME атака)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Обов'язкові cipher suites</div>
+          <ul class="bullet-list">
+            <li>TLS_AES_128_GCM_SHA256</li>
+            <li>TLS_AES_256_GCM_SHA384</li>
+            <li>TLS_CHACHA20_POLY1305_SHA256</li>
+            <li>Всі з ECDHE + AEAD: нема слабких варіантів</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 30 OpenVPN Access Server -->
+  <div class="slide bg-purple">
+    <h2>OpenVPN Access Server</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">OpenVPN AS</span> — комерційна версія з веб-інтерфейсом управління, LDAP/RADIUS інтеграцією та портальним клієнтом.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Можливості AS</div>
+          <ul class="bullet-list">
+            <li>Веб-UI для управління клієнтами</li>
+            <li>Автоматичне налаштування клієнтів</li>
+            <li>LDAP/RADIUS/SAML аутентифікація</li>
+            <li>Безкоштовно до 2 клієнтів</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Хмарне розгортання</div>
+          <ul class="bullet-list">
+            <li>AWS Marketplace (Pay-as-you-go)</li>
+            <li>Azure, GCP Marketplace</li>
+            <li>Ліцензування: 10/25/50/100+ сесій</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 31 SoftEther -->
+  <div class="slide bg-dark">
+    <h2>SoftEther VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">SoftEther</span> — open-source VPN (Японія, Tsukuba University). Підтримує OpenVPN, L2TP/IPsec, SSTP, MS-SSTP, EtherIP протоколи одночасно.</p>
+    <table style="max-width:950px;">
+      <thead><tr><th>Протокол</th><th>Порт</th><th>Статус у SoftEther</th></tr></thead>
+      <tbody>
+        <tr><td>SoftEther SSL-VPN</td><td>TCP 443/UDP 443</td><td>Власний протокол (HTTPS-like)</td></tr>
+        <tr><td>OpenVPN</td><td>UDP 1194</td><td>Вбудована підтримка</td></tr>
+        <tr><td>L2TP/IPsec</td><td>UDP 500/4500</td><td>Вбудована підтримка</td></tr>
+        <tr><td>SSTP</td><td>TCP 443</td><td>Сумісний з Windows клієнтом</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 32 SSL inspection -->
+  <div class="slide bg-navy">
+    <h2>SSL Inspection (SSL/TLS Interception)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">SSL Inspection</span> — техніка MITM для аналізу зашифрованого трафіку. Корпоративний проксі або NGFW дешифрує, інспектує та повторно шифрує трафік.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">Конфіденційність</div>
+          <ul class="bullet-list">
+            <li>Корпоративний CA встановлюється на всі ПК</li>
+            <li>IT може бачити весь HTTPS трафік</li>
+            <li>Порушує e2e шифрування, HPKP</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Безпека</div>
+          <ul class="bullet-list">
+            <li>Виявлення malware у зашифрованих завантаженнях</li>
+            <li>Запобігання exfiltration через HTTPS</li>
+            <li>DLP (Data Loss Prevention)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 33 VPN gateway clustering -->
+  <div class="slide bg-teal">
+    <h2>Кластеризація VPN-шлюзів</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Load Balancing підходи</div>
+          <ul class="bullet-list">
+            <li>DNS Round Robin (простий, без health check)</li>
+            <li>L4 Load Balancer (HAProxy, AWS NLB)</li>
+            <li>Anycast IP (BGP-based, для великих мереж)</li>
+            <li>GSLB (Global Server Load Balancing)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Stateful HA</div>
+          <ul class="bullet-list">
+            <li>Синхронізація сесій між вузлами</li>
+            <li>Failover без розриву VPN-з'єднань</li>
+            <li>OpenVPN за L4 LB + sticky sessions</li>
+            <li>IPsec + VRRP для gateway HA</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 cisco anyconnect globalprotect -->
+  <div class="slide bg-purple">
+    <h2>Корпоративні SSL VPN рішення</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Продукт</th><th>Вендор</th><th>Протокол</th><th>Особливості</th></tr></thead>
+      <tbody>
+        <tr><td>Cisco AnyConnect</td><td>Cisco</td><td>TLS/DTLS</td><td>Always-On, posture check</td></tr>
+        <tr><td>GlobalProtect</td><td>Palo Alto</td><td>IPsec/SSL</td><td>NGFW інтеграція</td></tr>
+        <tr><td>Pulse Connect Secure</td><td>Ivanti</td><td>TLS</td><td>Web portal, clientless</td></tr>
+        <tr><td>Fortinet FortiClient</td><td>Fortinet</td><td>IPsec/SSL</td><td>SASE, ZTNA extension</td></tr>
+        <tr><td>Citrix Gateway</td><td>Citrix</td><td>SSL</td><td>Virtualization integration</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 35 web portal ssl vpn -->
+  <div class="slide bg-dark">
+    <h2>SSL VPN Web Portal (Clientless)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Clientless SSL VPN</span> — доступ до внутрішніх ресурсів через веб-браузер без встановлення VPN-клієнта.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Переваги</div>
+          <ul class="bullet-list">
+            <li>Не потрібен клієнт на пристрої</li>
+            <li>Доступ з будь-якого браузера</li>
+            <li>Ідеально для партнерів та підрядників</li>
+            <li>Контроль доступу на рівні застосунку</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Обмеження</div>
+          <ul class="bullet-list">
+            <li>Лише HTTP/HTTPS застосунки</li>
+            <li>Немає доступу до мережевих ресурсів</li>
+            <li>HTML5 RDP/SSH через браузер (laggy)</li>
+            <li>Перевірка stану пристрою неможлива</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 36 summary l06 -->
+  <div class="slide bg-teal">
+    <h2>Підсумок: SSL/TLS VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Коли обирати SSL VPN</div>
+          <ul class="bullet-list">
+            <li>Потрібен обхід рестриктивних firewall (TCP 443)</li>
+            <li>Клієнтська база різнорідна (OS, пристрої)</li>
+            <li>Потрібен Clientless доступ для партнерів</li>
+            <li>Вже є інфраструктура PKI та сертифікати</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Best Practices</div>
+          <ul class="bullet-list">
+            <li>TLS 1.3 або мінімум TLS 1.2</li>
+            <li>tls-crypt (не лише tls-auth)</li>
+            <li>MFA обов'язково</li>
+            <li>DCO для підвищення throughput</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════════════════════════ SLIDE 28 — ПІДСУМОК ══════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:3.5rem;margin-bottom:8px;">🔐</div>

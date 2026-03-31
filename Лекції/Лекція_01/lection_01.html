@@ -1096,6 +1096,218 @@ L1 │ Фізичний      │ Кабель / Wi-Fi</pre>
     </div>
   </div>
 
+
+  <!-- ═══════════ SLIDE 29 — DIFFIE-HELLMAN ════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Diffie-Hellman: обмін ключами</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">DH дозволяє двом сторонам узгодити спільний секрет через <span class="hl">незахищений канал</span> без попереднього обміну ключами.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">🔢 Математика DH</div>
+          <ul class="bullet-list">
+            <li>Спільні параметри: g (генератор), p (просте число)</li>
+            <li>Alice: a (приватний) → g^a mod p (публічний)</li>
+            <li>Bob: b (приватний) → g^b mod p (публічний)</li>
+            <li>Shared secret: g^(ab) mod p</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Сучасні варіанти</div>
+          <ul class="bullet-list">
+            <li><span class="hl">ECDH</span> на Curve25519 — WireGuard</li>
+            <li>ECDH на P-256/P-384 — TLS 1.3, IKEv2</li>
+            <li>Ephemeral DH → Perfect Forward Secrecy</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 30 — ЦИФРОВІ СЕРТИФІКАТИ ════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Цифрові сертифікати та довіра</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Сертифікат X.509 пов'язує <span class="hl">публічний ключ</span> з ідентичністю власника, підписаний центром сертифікації (CA).</p>
+    <table style="max-width:900px;">
+      <thead><tr><th>Тип</th><th>Валідація</th><th>Застосування</th></tr></thead>
+      <tbody>
+        <tr><td>DV (Domain Validated)</td><td>Лише домен</td><td>Веб-сайти, Let's Encrypt</td></tr>
+        <tr><td>OV (Organization Validated)</td><td>Організація</td><td>Корпоративні сервіси</td></tr>
+        <tr><td>EV (Extended Validation)</td><td>Юридична особа</td><td>Банки, фінансові установи</td></tr>
+        <tr><td>Client Certificate</td><td>Ідентичність користувача</td><td>VPN, mTLS аутентифікація</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 31 — VPN AUTHENTICATION ═════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Методи аутентифікації у VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">⚠️ Слабкі методи</div>
+          <ul class="bullet-list">
+            <li>Pre-Shared Key (PSK) — вразливий до brute-force</li>
+            <li>Пароль без MFA — компрометується при фішингу</li>
+            <li>PPTP MS-CHAPv2 — повністю зламаний</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Рекомендовані методи</div>
+          <ul class="bullet-list">
+            <li>Сертифікати X.509 (PKI) + ECDSA</li>
+            <li>IKEv2 з EAP-TLS (клієнтський сертифікат)</li>
+            <li>MFA: TOTP + сертифікат</li>
+            <li>SAML/OIDC через IAM провайдера</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 32 — ZERO TRUST INTRO ════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Від периметра до Zero Trust</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">🏰 Класичний підхід (Castle-and-Moat)</div>
+          <ul class="bullet-list">
+            <li>Довіра базується на розташуванні в мережі</li>
+            <li>Всередині периметра = довірений</li>
+            <li>VPN надає доступ до всієї внутрішньої мережі</li>
+            <li>Lateral movement після компрометації</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🔐 Zero Trust</div>
+          <ul class="bullet-list">
+            <li>«Ніколи не довіряй, завжди перевіряй»</li>
+            <li>Доступ до конкретного застосунку, не мережі</li>
+            <li>Постійна верифікація ідентичності</li>
+            <li>Перевірка стану пристрою (device posture)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 33 — VPN PERFORMANCE ════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Продуктивність VPN-рішень</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Протокол</th><th>Throughput</th><th>Latency</th><th>CPU</th></tr></thead>
+      <tbody>
+        <tr><td><strong>WireGuard</strong></td><td>⚡ 2–5 Гбіт/с</td><td>🟢 Мінімальна</td><td>🟢 Kernel</td></tr>
+        <tr><td><strong>IPsec (kernel)</strong></td><td>⚡ 1–5 Гбіт/с</td><td>🟢 Низька</td><td>🟢 AES-NI</td></tr>
+        <tr><td><strong>OpenVPN (DCO)</strong></td><td>🔶 1–3 Гбіт/с</td><td>🔶 Середня</td><td>🔶 Kernel</td></tr>
+        <tr><td><strong>OpenVPN (user)</strong></td><td>🔶 300–600 Мбіт/с</td><td>🔴 Вища</td><td>🔴 User-space</td></tr>
+        <tr><td><strong>L2TP/IPsec</strong></td><td>🔶 300–500 Мбіт/с</td><td>🔶 Середня</td><td>🔶 Подвійне encap</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 34 — COMPLIANCE ═════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>VPN та вимоги відповідності (Compliance)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">📋 Регуляторні вимоги</div>
+          <ul class="bullet-list">
+            <li><span class="hl">GDPR</span>: шифрування персональних даних при передачі</li>
+            <li><span class="hl">HIPAA</span>: захист медичних даних (PHI) у транзиті</li>
+            <li><span class="hl">PCI DSS</span>: шифрування платіжних даних</li>
+            <li><span class="hl">ISO 27001</span>: контроль доступу та шифрування</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ VPN для compliance</div>
+          <ul class="bullet-list">
+            <li>AES-256 задовольняє всі основні стандарти</li>
+            <li>Логування з'єднань для аудиту</li>
+            <li>MFA обов'язкова для фінансового сектору</li>
+            <li>Документований процес управління ключами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 35 — ALWAYS-ON VPN ══════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Always-On VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Always-On VPN</span> — режим, при якому VPN встановлюється автоматично при запуску пристрою та блокує мережевий доступ до підключення.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Переваги</div>
+          <ul class="bullet-list">
+            <li>Жодного незахищеного мережевого трафіку</li>
+            <li>Прозоро для користувача</li>
+            <li>Централізоване управління через MDM</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">⚙️ Реалізація</div>
+          <ul class="bullet-list">
+            <li>Microsoft Intune + DirectAccess/AOVPN</li>
+            <li>Cisco AnyConnect з профілем Always-On</li>
+            <li>iOS/Android MDM з VPN On Demand</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 36 — ПІДСУМОК ════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Підсумок: основи кібербезпеки та VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">📚 Ключові концепції</div>
+          <ul class="bullet-list">
+            <li>CIA тріада — основа будь-якої системи безпеки</li>
+            <li>AEAD (AES-GCM, ChaCha20-Poly1305) — сучасний стандарт</li>
+            <li>PFS через ECDHE — захист минулих сесій</li>
+            <li>PKI та X.509 — аутентифікація у VPN</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🎯 Практичні висновки</div>
+          <ul class="bullet-list">
+            <li>WireGuard/IKEv2 — рекомендовані для нових розгортань</li>
+            <li>MFA обов'язкова для корпоративного VPN</li>
+            <li>Zero Trust замінює периметрову модель</li>
+            <li>Always-On VPN для корпоративних пристроїв</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════════════════════════ SLIDE 28 — END ════════════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>

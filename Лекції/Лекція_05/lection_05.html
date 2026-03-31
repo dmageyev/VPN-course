@@ -1058,6 +1058,190 @@
     </ul>
   </div>
 
+
+  <!-- SLIDE 29 IPsec on Linux -->
+  <div class="slide bg-teal">
+    <h2>IPsec на Linux: xfrm та strongSwan</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Linux xfrm підсистема</div>
+          <ul class="bullet-list">
+            <li>Ядро Linux містить IPsec-стек (xfrm)</li>
+            <li>ip xfrm state — переглянути активні SA</li>
+            <li>ip xfrm policy — переглянути SPD</li>
+            <li>ip xfrm monitor — live-моніторинг подій</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">strongSwan</div>
+          <ul class="bullet-list">
+            <li>Open-source IKEv1/IKEv2 демон</li>
+            <li>Підтримка EAP, X.509, PSK</li>
+            <li>swanctl.conf — сучасний формат конфігурації</li>
+            <li>Широко використовується у корпоративному VPN</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 30 replay protection -->
+  <div class="slide bg-purple">
+    <h2>Anti-Replay захист в IPsec</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Replay атака</span> — повторне надсилання раніше перехоплених легітимних пакетів. IPsec захищається через Sequence Number та Replay Window.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Механізм захисту</div>
+          <ul class="bullet-list">
+            <li>Кожен ESP/AH пакет має монотонний Sequence Number</li>
+            <li>Отримувач зберігає Replay Window (64-4096 пакетів)</li>
+            <li>Пакет з SN ≤ Window Left → відкидається</li>
+            <li>ESN (Extended Sequence Number): 64-бітний лічильник</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">Коли вимикають?</div>
+          <ul class="bullet-list">
+            <li>Multicast IPsec: один sender → багато receivers</li>
+            <li>Асиметрична пропускна здатність (пакети можуть прийти не по порядку)</li>
+            <li>Тестові/лабораторні середовища</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 31 policy vs route based -->
+  <div class="slide bg-dark">
+    <h2>Policy-Based vs Route-Based IPsec VPN</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Параметр</th><th>Policy-Based</th><th>Route-Based</th></tr></thead>
+      <tbody>
+        <tr><td>Визначення трафіку</td><td>ACL/Policy (src/dst IP, порт)</td><td>Маршрут через тунельний інтерфейс</td></tr>
+        <tr><td>Тунельний інтерфейс</td><td>Немає (логічний)</td><td>Є (vti0, xfrm-intf)</td></tr>
+        <tr><td>Динамічний routing</td><td>Складно (без GRE)</td><td>BGP, OSPF через інтерфейс</td></tr>
+        <tr><td>Кілька підмереж</td><td>Кілька SA (child SA)</td><td>Один тунель</td></tr>
+        <tr><td>Cisco/Fortinet</td><td>Класичний crypto map</td><td>VTI (Virtual Tunnel Interface)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 32 IKEv2 EAP -->
+  <div class="slide bg-navy">
+    <h2>IKEv2 EAP: аутентифікація через RADIUS</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">EAP</span> у IKEv2 дозволяє використовувати корпоративні методи аутентифікації без зміни IKEv2 протоколу.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">EAP методи у IKEv2</div>
+          <ul class="bullet-list">
+            <li>EAP-TLS: клієнтський X.509 сертифікат</li>
+            <li>EAP-MSCHAPv2: пароль (у PEAP тунелі)</li>
+            <li>EAP-TTLS: будь-який метод у TLS тунелі</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">RADIUS інтеграція</div>
+          <ul class="bullet-list">
+            <li>VPN-шлюз = RADIUS Client</li>
+            <li>RADIUS Server перевіряє проти AD/LDAP</li>
+            <li>Централізоване управління доступом</li>
+            <li>Microsoft NPS, FreeRADIUS, Cisco ISE</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 33 IPsec performance -->
+  <div class="slide bg-teal">
+    <h2>Продуктивність IPsec та оптимізація</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Технологія</th><th>Throughput</th><th>Примітки</th></tr></thead>
+      <tbody>
+        <tr><td>IPsec kernel xfrm</td><td>1-5 Гбіт/с на ядро</td><td>Вимагає AES-NI для максимуму</td></tr>
+        <tr><td>AES-NI інструкції</td><td>+400% vs software</td><td>Intel/AMD x86-64</td></tr>
+        <tr><td>ChaCha20 (без AES-NI)</td><td>~500 Мбіт/с на ядро</td><td>ARM без крипто-прискорення</td></tr>
+        <tr><td>IPsec апаратний offload</td><td>10-100 Гбіт/с</td><td>Cisco ASA, Intel QAT, SmartNIC</td></tr>
+        <tr><td>Multi-core scaling</td><td>Лінійно з кількістю ядер</td><td>RSS, parallel SA обробка</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 34 IPsec debug -->
+  <div class="slide bg-purple">
+    <h2>Налагодження IPsec</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Типові проблеми</div>
+          <ul class="bullet-list">
+            <li>«No proposal chosen» — невідповідність Phase 1/2 алгоритмів</li>
+            <li>«TS mismatch» — різні Traffic Selectors</li>
+            <li>Тунель не піднімається через NAT без NAT-T</li>
+            <li>MTU проблеми (малі пакети ок, великі ні)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Команди діагностики</div>
+          <ul class="bullet-list">
+            <li>ip xfrm state / ip xfrm policy</li>
+            <li>tcpdump -i eth0 -n port 500 or port 4500</li>
+            <li>strongSwan: swanctl --list-sas</li>
+            <li>strongSwan: ipsec statusall</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 35 summary l05 -->
+  <div class="slide bg-dark">
+    <h2>Підсумок: IPsec протоколи</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Рекомендації</div>
+          <ul class="bullet-list">
+            <li>Використовуйте IKEv2 (не IKEv1)</li>
+            <li>AES-256-GCM або ChaCha20-Poly1305</li>
+            <li>ECDHE P-256+ або Curve25519 для PFS</li>
+            <li>X.509 сертифікати (не PSK для production)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Уникайте</div>
+          <ul class="bullet-list">
+            <li>IKEv1 Aggressive Mode + PSK</li>
+            <li>DH Group 1/2/5 (1024 біт та менше)</li>
+            <li>3DES, DES, MD5, SHA-1</li>
+            <li>AH без ESP (несумісний з NAT)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════ SLIDE 29 — КІНЕЦЬ ═══════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🔐</div>

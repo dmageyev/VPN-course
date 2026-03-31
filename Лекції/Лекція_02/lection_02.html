@@ -1175,6 +1175,149 @@ Finished ──────────▶
     </ul>
   </div>
 
+
+  <!-- ═══════════ SLIDE 32 — HSM & KEY STORAGE ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Зберігання ключів: HSM та TPM</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">🔒 HSM (Hardware Security Module)</div>
+          <ul class="bullet-list">
+            <li>Апаратний модуль для захисту приватних ключів</li>
+            <li>Ключі ніколи не покидають HSM у відкритому вигляді</li>
+            <li>FIPS 140-2 Level 3/4 сертифікація</li>
+            <li>AWS CloudHSM, Azure Dedicated HSM, Thales</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">💻 TPM 2.0</div>
+          <ul class="bullet-list">
+            <li>Вбудований чіп у більшості сучасних ноутбуків</li>
+            <li>Secure Boot, захист ключів шифрування диска</li>
+            <li>Device attestation для Zero Trust/ZTNA</li>
+            <li>BitLocker + TPM — стандарт для корп. ПК</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 33 — CERTIFICATE PINNING ══════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Certificate Pinning та HPKP</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Certificate Pinning</span> — клієнт заздалегідь знає очікуваний сертифікат і відхиляє будь-який інший, навіть підписаний довіреним CA.</p>
+    <table style="max-width:900px;">
+      <thead><tr><th>Метод</th><th>Що порівнюється</th><th>Недолік</th></tr></thead>
+      <tbody>
+        <tr><td>Certificate Pinning</td><td>Весь сертифікат</td><td>Ламається при оновленні серт.</td></tr>
+        <tr><td>Public Key Pinning</td><td>Лише public key</td><td>Стабільніший при ротації</td></tr>
+        <tr><td>CA Pinning</td><td>Дозволені CA</td><td>Менш точний, але гнучкіший</td></tr>
+        <tr><td>HSTS Preloading</td><td>Домен = HTTPS only</td><td>Потрібна реєстрація в списку</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 34 — mTLS ══════════════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>mTLS — Mutual TLS (взаємна аутентифікація)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">mTLS</span> — і клієнт, і сервер аутентифікуються за допомогою X.509 сертифікатів. Стандарт для мікросервісів та VPN.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">🔄 Процес mTLS</div>
+          <ul class="bullet-list">
+            <li>1. Сервер надсилає свій сертифікат</li>
+            <li>2. Клієнт перевіряє сертифікат сервера</li>
+            <li>3. Сервер запитує ClientCertificate</li>
+            <li>4. Клієнт надсилає свій сертифікат</li>
+            <li>5. Сервер перевіряє сертифікат клієнта</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Застосування mTLS</div>
+          <ul class="bullet-list">
+            <li>Service Mesh (Istio, Linkerd) — між мікросервісами</li>
+            <li>OpenVPN з --verify-client-cert require</li>
+            <li>IPsec з RSA/ECDSA автентифікацією</li>
+            <li>API між корпоративними сервісами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 35 — LET'S ENCRYPT & ACME ═════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Let's Encrypt та ACME протокол</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Let's Encrypt</span> — безкоштовний автоматичний CA для публічних доменів. Використовує ACME протокол (RFC 8555).</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">⚙️ ACME процес</div>
+          <ul class="bullet-list">
+            <li>Клієнт генерує keypair та CSR</li>
+            <li>Challenge: HTTP-01 або DNS-01</li>
+            <li>CA перевіряє контроль над доменом</li>
+            <li>Видача сертифіката (90 днів)</li>
+            <li>Автоматичне поновлення certbot</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">⚠️ Обмеження</div>
+          <ul class="bullet-list">
+            <li>Лише DV (domain validation)</li>
+            <li>Не підходить для внутрішніх PKI</li>
+            <li>Не можна видати сертифікат для IP-адреси</li>
+            <li>Rate limits: 50 серт/домен/тиждень</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 36 — PKI BEST PRACTICES ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Кращі практики PKI</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Рекомендації</div>
+          <ul class="bullet-list">
+            <li>Root CA — offline, у HSM, фізично захищений</li>
+            <li>Intermediate CA — online, видає кінцеві серт.</li>
+            <li>Автоматичне поновлення (ACME, CMC)</li>
+            <li>OCSP Stapling для швидкої перевірки</li>
+            <li>Certificate Transparency (CT logs)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">❌ Типові помилки</div>
+          <ul class="bullet-list">
+            <li>Root CA online та доступний з мережі</li>
+            <li>Самопідписані сертифікати у production</li>
+            <li>Ігнорування CRL/OCSP перевірки</li>
+            <li>Відсутність процедури revocation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════ SLIDE 31 — ПІДСУМОК ═══════════ -->
   <div class="slide bg-end">
     <h2 style="color:#50dc64;">Підсумок лекції</h2>

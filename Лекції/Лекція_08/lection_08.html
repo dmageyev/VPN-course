@@ -1004,6 +1004,223 @@ openvpn --config client.ovpn --verb 4</pre>
     </ul>
   </div>
 
+
+  <!-- SLIDE 29 VPN audit -->
+  <div class="slide bg-teal">
+    <h2>Аудит VPN-інфраструктури</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Що перевіряти</div>
+          <ul class="bullet-list">
+            <li>Версії програмного забезпечення та патч-рівень</li>
+            <li>Криптографічні алгоритми (немає SHA-1, 3DES)</li>
+            <li>Сертифікати: термін дії, CRL/OCSP</li>
+            <li>Логи доступу: аномалії, неуспішні авторизації</li>
+            <li>Права доступу: принцип мінімальних привілеїв</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Інструменти аудиту</div>
+          <ul class="bullet-list">
+            <li>Nmap: сканування відкритих портів VPN</li>
+            <li>IKE-scan: аудит IKEv1/IKEv2 конфігурацій</li>
+            <li>sslyze: аналіз TLS конфігурації SSL VPN</li>
+            <li>testssl.sh: перевірка TLS cipher suites</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 30 incident response -->
+  <div class="slide bg-purple">
+    <h2>Реагування на інциденти VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Поетапний план реагування при підозрі на компрометацію VPN-шлюзу або облікових даних.</p>
+    <table style="max-width:950px;">
+      <thead><tr><th>Крок</th><th>Дія</th><th>Часовий рамки</th></tr></thead>
+      <tbody>
+        <tr><td>1. Виявлення</td><td>SIEM alert, anomaly detection</td><td>Автоматично (хвилини)</td></tr>
+        <tr><td>2. Ізоляція</td><td>Заблокувати підозрілі облікові записи/IP</td><td>&lt; 30 хвилин</td></tr>
+        <tr><td>3. Розслідування</td><td>Аналіз логів, forensics VPN gateway</td><td>1-8 годин</td></tr>
+        <tr><td>4. Усунення</td><td>Патч/ротація ключів/скидання паролів</td><td>1-24 години</td></tr>
+        <tr><td>5. Відновлення</td><td>Перевірка цілісності, повернення сервісу</td><td>Після підтвердження</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 31 AWS advanced -->
+  <div class="slide bg-dark">
+    <h2>AWS VPN: розширені можливості</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">AWS Transit Gateway</div>
+          <ul class="bullet-list">
+            <li>Hub для підключення множини VPC і on-premises</li>
+            <li>Centralized routing між всіма підключеннями</li>
+            <li>Transit Gateway VPN — один ендпойнт для 5000+ VPC</li>
+            <li>Multicast, route tables, BGP підтримка</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">AWS Client VPN деталі</div>
+          <ul class="bullet-list">
+            <li>OpenVPN-сумісний протокол</li>
+            <li>Active Directory або Certificate auth</li>
+            <li>Split-tunnel або Full-tunnel режими</li>
+            <li>Authorization rules по AD group</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 32 GCP advanced -->
+  <div class="slide bg-navy">
+    <h2>Google Cloud HA VPN та Cloud Router</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">HA VPN</span> + <span class="hl">Cloud Router</span> — рекомендована архітектура для Site-to-Site у GCP з SLA 99.99%.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">HA VPN архітектура</div>
+          <ul class="bullet-list">
+            <li>2 зовнішні IP-адреси (два інтерфейси)</li>
+            <li>Мінімум 2 тунелі до різних peer-інтерфейсів</li>
+            <li>BGP через Cloud Router на кожному тунелі</li>
+            <li>99.99% SLA при правильній конфігурації</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Cloud Router BGP</div>
+          <ul class="bullet-list">
+            <li>Автоматично розповсюджує Cloud підмережі</li>
+            <li>Dynamic routing = no static routes</li>
+            <li>ASN налаштовується (16-бітний або 32-бітний)</li>
+            <li>Route filtering через route policies</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 33 VPN documentation -->
+  <div class="slide bg-teal">
+    <h2>Документація VPN-інфраструктури</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Обов'язкова документація</div>
+          <ul class="bullet-list">
+            <li>Мережева топологія та схема тунелів</li>
+            <li>Реєстр всіх VPN-шлюзів (IP, версія, ПЗ)</li>
+            <li>Матриця доступу: хто до чого підключається</li>
+            <li>PKI ієрархія та термін дії сертифікатів</li>
+            <li>SLA та RTO/RPO вимоги</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Інструменти</div>
+          <ul class="bullet-list">
+            <li>Confluence/Notion для wiki</li>
+            <li>Draw.io для мережевих схем</li>
+            <li>Terraform state як «живу» документацію</li>
+            <li>Ansible inventory для конфігурацій</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 post-quantum vpn -->
+  <div class="slide bg-purple">
+    <h2>Постквантова криптографія у VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Harvest now, decrypt later</span> — зловмисники збирають зашифрований трафік сьогодні, щоб розшифрувати після появи квантових комп'ютерів.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Загроза</div>
+          <ul class="bullet-list">
+            <li>RSA, ECDSA, ECDH — вразливі до алгоритму Шора</li>
+            <li>Записаний сьогодні VPN-трафік — розшифровано через 10-15 років</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Міграція</div>
+          <ul class="bullet-list">
+            <li>AWS: гібридний TLS + ML-KEM вже доступний</li>
+            <li>OpenSSH 9.0: CRYSTALS-Kyber підтримка</li>
+            <li>WireGuard: PQC патчі в розробці</li>
+            <li>Гібридний режим: класичний + PQC</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 35 VPN telemetry -->
+  <div class="slide bg-dark">
+    <h2>VPN телеметрія та SIEM інтеграція</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Подія</th><th>Ризик</th><th>Alerting правило</th></tr></thead>
+      <tbody>
+        <tr><td>Failed auth burst</td><td>Brute force</td><td>&gt; 5 невдалих спроб за 1 хвилину</td></tr>
+        <tr><td>Geo-suspicious login</td><td>Компрометація</td><td>Логін з нової країни</td></tr>
+        <tr><td>Concurrent sessions</td><td>Credential sharing</td><td>&gt; 2 одночасні сесії для одного user</td></tr>
+        <tr><td>Large data transfer</td><td>Exfiltration</td><td>&gt; 1 ГБ за VPN-сесію</td></tr>
+        <tr><td>Off-hours connection</td><td>Аномалія</td><td>Підключення поза робочими годинами</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 36 summary l08 -->
+  <div class="slide bg-teal">
+    <h2>Підсумок: хмарні VPN та безпека</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Ключові висновки</div>
+          <ul class="bullet-list">
+            <li>Хмарні VPN: AWS HA VPN, Azure VPN GW, GCP HA VPN</li>
+            <li>SD-WAN замінює MPLS + додає flexibility</li>
+            <li>ZTNA поступово замінює Remote Access VPN</li>
+            <li>Постквантові алгоритми — вже час починати міграцію</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Checklist безпеки</div>
+          <ul class="bullet-list">
+            <li>MFA обов'язково для всіх VPN-підключень</li>
+            <li>Регулярний аудит та патчування</li>
+            <li>SIEM з alerting на аномалії</li>
+            <li>Incident Response Plan готовий</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════════════════════════ SLIDE 28 — END ════════════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>

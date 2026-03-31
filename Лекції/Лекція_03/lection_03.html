@@ -911,6 +911,204 @@ $ tcpdump -i tun0 "tcp[tcpflags] & tcp-syn != 0"</pre>
     </div>
   </div>
 
+
+  <!-- SLIDE 29 VXLAN -->
+  <div class="slide bg-teal">
+    <h2>VXLAN та сучасні Overlay технології</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Технологія</th><th>Рівень</th><th>Протокол</th><th>Застосування</th></tr></thead>
+      <tbody>
+        <tr><td>VXLAN</td><td>L2 over L3</td><td>UDP 4789</td><td>ЦОД, хмарні мережі, Kubernetes</td></tr>
+        <tr><td>GRE</td><td>L3 over L3</td><td>IP 47</td><td>Site-to-Site, DMVPN</td></tr>
+        <tr><td>L2TP</td><td>L2 over L3</td><td>UDP 1701</td><td>VPN тунелі, ISP</td></tr>
+        <tr><td>Geneve</td><td>L2 over L3</td><td>UDP 6081</td><td>NSX-T, OVN (замінює VXLAN)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 30 SD-WAN -->
+  <div class="slide bg-purple">
+    <h2>SD-WAN: Software-Defined Wide Area Network</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Переваги SD-WAN</div>
+          <ul class="bullet-list">
+            <li>Application-Aware Routing</li>
+            <li>Автоматичний failover між каналами</li>
+            <li>WAN optimization (дедупл., компресія)</li>
+            <li>Centralized policy management</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Провайдери SD-WAN</div>
+          <ul class="bullet-list">
+            <li>Cisco Meraki SD-WAN</li>
+            <li>Fortinet FortiGate SD-WAN</li>
+            <li>VMware VeloCloud</li>
+            <li>HPE Aruba EdgeConnect</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 31 IPv6 -->
+  <div class="slide bg-dark">
+    <h2>IPv6 у VPN-архітектурі</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Типові проблеми</div>
+          <ul class="bullet-list">
+            <li>VPN захищає лише IPv4, IPv6 іде напряму</li>
+            <li>DNS AAAA записи — витік через ISP DNS</li>
+            <li>6to4/Teredo тунелі обходять VPN</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Рішення</div>
+          <ul class="bullet-list">
+            <li>WireGuard: AllowedIPs ::/0 для IPv6</li>
+            <li>OpenVPN: redirect-gateway ipv6</li>
+            <li>Вимкнення IPv6 або route через VPN</li>
+            <li>Dual-Stack VPN Gateway</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 32 QoS -->
+  <div class="slide bg-navy">
+    <h2>QoS у VPN-тунелях</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Зашифрований VPN-трафік не дозволяє ISP виконувати QoS за вмістом пакетів. QoS застосовується до або після тунелювання.</p>
+    <table style="max-width:950px;">
+      <thead><tr><th>Підхід</th><th>Де</th><th>Деталі</th></tr></thead>
+      <tbody>
+        <tr><td>Pre-tunnel QoS</td><td>VPN-клієнт</td><td>DSCP marking до шифрування</td></tr>
+        <tr><td>DSCP копіювання</td><td>VPN-шлюз</td><td>Inner DSCP → Outer IP header</td></tr>
+        <tr><td>Traffic shaping</td><td>WAN інтерфейс</td><td>CBWFQ, LLQ для VoIP</td></tr>
+        <tr><td>SD-WAN QoS</td><td>SD-WAN контролер</td><td>Application-aware priority</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 33 HA -->
+  <div class="slide bg-teal">
+    <h2>Висока доступність VPN (HA)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Стратегії HA</div>
+          <ul class="bullet-list">
+            <li>Active/Standby: резервний шлюз при відмові</li>
+            <li>Active/Active: балансування навантаження</li>
+            <li>ECMP: рівноцінні маршрути через кілька тунелів</li>
+            <li>IKEv2 MOBIKE: зміна IP без розриву сесії</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Метрики доступності</div>
+          <ul class="bullet-list">
+            <li>RTO &lt; 30 с, RPO = 0 (stateful failover)</li>
+            <li>SLA 99.99% = 52 хвилини даунтайму/рік</li>
+            <li>DPD: виявлення розриву за 15-30 с</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 redundancy -->
+  <div class="slide bg-purple">
+    <h2>Патерни резервування VPN</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Патерн</th><th>Опис</th><th>Failover час</th></tr></thead>
+      <tbody>
+        <tr><td>Dual ISP + один шлюз</td><td>Два провайдери</td><td>30-120 с</td></tr>
+        <tr><td>Dual шлюзи (A/S)</td><td>Основний + резервний</td><td>15-30 с (DPD)</td></tr>
+        <tr><td>Dual шлюзи (A/A)</td><td>Load balancer між двома</td><td>&lt; 5 с</td></tr>
+        <tr><td>Cloud HA VPN</td><td>AWS/Azure 99.99% SLA</td><td>&lt; 60 с автоматично</td></tr>
+        <tr><td>SD-WAN</td><td>Динамічний вибір каналу</td><td>Суб-секундний</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 35 capacity -->
+  <div class="slide bg-dark">
+    <h2>Планування потужності VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Параметри розрахунку</div>
+          <ul class="bullet-list">
+            <li>Кількість одночасних тунелів/клієнтів</li>
+            <li>Необхідний throughput (Мбіт/с)</li>
+            <li>Тип трафіку (VoIP, відео, файли)</li>
+            <li>MTU та overhead накладні витрати</li>
+            <li>AES-NI підтримка CPU</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Типові значення</div>
+          <ul class="bullet-list">
+            <li>OpenVPN: 1 core ≈ 200 Мбіт/с</li>
+            <li>WireGuard: 1 core ≈ 1+ Гбіт/с</li>
+            <li>IPsec (AES-NI): 1 core ≈ 3-5 Гбіт/с</li>
+            <li>Запас потужності: 2x від розрахункового</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 36 summary -->
+  <div class="slide bg-teal">
+    <h2>Підсумок: мережева архітектура VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Ключові поняття</div>
+          <ul class="bullet-list">
+            <li>Overlay/Underlay: логічна vs фізична мережа</li>
+            <li>TUN (L3) і TAP (L2): різні задачі</li>
+            <li>MTU/MSS: критично для продуктивності</li>
+            <li>Split/Full-Tunnel: компроміс безпека/зручність</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Рекомендації</div>
+          <ul class="bullet-list">
+            <li>MTU 1420 для WireGuard</li>
+            <li>Full-Tunnel + Kill Switch для корп. пристроїв</li>
+            <li>HA з DPD для критичних з'єднань</li>
+            <li>Моніторуйте IPv6 DNS-витоки</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════════════════════════ SLIDE 28 — КІНЕЦЬ ═══════════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
