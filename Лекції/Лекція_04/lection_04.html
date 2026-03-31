@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Лекція 2 — Протоколи тунелювання</title>
+  <title>Лекція 4 — Протоколи тунелювання</title>
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -170,7 +170,7 @@
   <!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
   <div class="slide bg-title active">
     <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
-    <h1>Лекція 2</h1>
+    <h1>Лекція 4</h1>
     <div class="divider"></div>
     <h1 style="font-size:2rem;margin-top:8px;">Протоколи тунелювання</h1>
     <p class="subtitle">PPTP · L2TP · GRE · SSTP · IKEv2</p>
@@ -1195,7 +1195,7 @@
         <div class="card good">
           <h3 style="color:#50dc64;">Публічні VPN-провайдери</h3>
           <ul style="max-width:100%;">
-            <li>Сучасні (NordVPN, ExpressVPN) → IKEv2/IPsec, WireGuard (Лекція 05)</li>
+            <li>Сучасні (NordVPN, ExpressVPN) → IKEv2/IPsec (Лекція 05), WireGuard (Лекція 07)</li>
             <li>Застарілі → L2TP/IPsec, PPTP (зникає)</li>
           </ul>
         </div>
@@ -1255,12 +1255,165 @@
     </div>
   </div>
 
+
+  <!-- SLIDE 31 WireGuard intro -->
+  <div class="slide bg-teal">
+    <h2>WireGuard: сучасний протокол тунелювання</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Переваги WireGuard</div>
+          <ul class="bullet-list">
+            <li>Лише ~4000 рядків коду (vs 400k у OpenVPN)</li>
+            <li>Kernel-space обробка (Linux 5.6+)</li>
+            <li>Фіксований криптостек: ChaCha20, Curve25519</li>
+            <li>Простота конфігурації (INI-файл)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">Обмеження</div>
+          <ul class="bullet-list">
+            <li>Немає вибору криптоалгоритмів (intentional)</li>
+            <li>UDP only (немає TCP fallback)</li>
+            <li>Відсутній власний механізм аутентифікації</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 32 MACsec -->
+  <div class="slide bg-purple">
+    <h2>MACsec — IEEE 802.1AE</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">MACsec</span> — шифрування на рівні L2 (Ethernet). Шифрує кадри між двома портами одного сегменту, включаючи заголовок Ethernet.</p>
+    <table style="max-width:950px;">
+      <thead><tr><th>Параметр</th><th>MACsec</th><th>IPsec</th></tr></thead>
+      <tbody>
+        <tr><td>Рівень OSI</td><td>L2 (між свічами/хостами)</td><td>L3 (між маршрутизаторами)</td></tr>
+        <tr><td>Overhead</td><td>~32 байти</td><td>~50-70 байтів</td></tr>
+        <tr><td>Шифрування</td><td>AES-GCM-128/256</td><td>AES-GCM-256, ChaCha20</td></tr>
+        <tr><td>Застосування</td><td>ЦОД, міжсерверний</td><td>WAN, Internet VPN</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 33 DTLS -->
+  <div class="slide bg-dark">
+    <h2>DTLS — Datagram TLS</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">DTLS</span> (RFC 6347) — версія TLS для UDP. Зберігає переваги TLS (автентифікація, шифрування) без вимог до надійного транспорту.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Переваги DTLS</div>
+          <ul class="bullet-list">
+            <li>Нижча latency ніж TLS over TCP</li>
+            <li>Підтримка UDP-based застосунків (VoIP, відео)</li>
+            <li>Cisco AnyConnect використовує DTLS</li>
+            <li>WebRTC використовує DTLS-SRTP</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Проти TCP TLS</div>
+          <ul class="bullet-list">
+            <li>Самостійне управління порядком пакетів</li>
+            <li>Replay protection через record sequence number</li>
+            <li>Retransmission timeout замість TCP ACK</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 QUIC -->
+  <div class="slide bg-navy">
+    <h2>QUIC та MASQUE — VPN майбутнього</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">QUIC</span> (RFC 9000) — сучасний транспортний протокол на базі UDP з нативним TLS 1.3. <span class="hl">MASQUE</span> (RFC 9298) — тунелювання через QUIC.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Переваги QUIC</div>
+          <ul class="bullet-list">
+            <li>0-RTT відновлення з'єднання</li>
+            <li>Connection Migration (зміна IP без розриву)</li>
+            <li>Мультиплексування потоків</li>
+            <li>Вбудований TLS 1.3</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Реалізації</div>
+          <ul class="bullet-list">
+            <li>Cloudflare WARP використовує MASQUE</li>
+            <li>Apple Private Relay — MASQUE</li>
+            <li>HTTP/3 базується на QUIC</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 35 proprietary protocols -->
+  <div class="slide bg-purple">
+    <h2>Пропрієтарні VPN-протоколи</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Протокол</th><th>Вендор</th><th>Основа</th><th>Особливості</th></tr></thead>
+      <tbody>
+        <tr><td>AnyConnect DTLS</td><td>Cisco</td><td>TLS/DTLS</td><td>Обхід firewall, Always-On</td></tr>
+        <tr><td>GlobalProtect IPsec</td><td>Palo Alto</td><td>IPsec + SSL</td><td>Інтеграція з NGFW</td></tr>
+        <tr><td>FortiClient VPN</td><td>Fortinet</td><td>IPsec/SSL</td><td>SASE інтеграція</td></tr>
+        <tr><td>Lightway</td><td>ExpressVPN</td><td>WolfSSL</td><td>Швидкість, мобільність</td></tr>
+        <tr><td>Catapult Hydra</td><td>Akamai</td><td>UDP</td><td>Оптимізований для CDN</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 36 summary l04 -->
+  <div class="slide bg-dark">
+    <h2>Підсумок: протоколи тунелювання</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Рекомендований вибір</div>
+          <ul class="bullet-list">
+            <li>Нові розгортання: IKEv2 або WireGuard</li>
+            <li>Мобільні клієнти: IKEv2+MOBIKE</li>
+            <li>Обхід firewall: OpenVPN TCP 443 / SSTP</li>
+            <li>Legacy: L2TP/IPsec для старих пристроїв</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Не використовувати</div>
+          <ul class="bullet-list">
+            <li>PPTP — повністю зламаний протокол</li>
+            <li>L2TP без IPsec — немає шифрування</li>
+            <li>IKEv1 Aggressive Mode + PSK</li>
+            <li>RC4, DES, 3DES у будь-яких конфігурах</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══════════════════════════════ SLIDE 30 — ПІДСУМКИ ══════════════════════════ -->
   <div class="slide bg-end">
     <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
     <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
     <div class="divider"></div>
-    <p class="subtitle">Лекція 2: Протоколи тунелювання</p>
+    <p class="subtitle">Лекція 4: Протоколи тунелювання</p>
     <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:900px;">
       <span class="tag">PPTP (застарілий)</span>
       <span class="tag">L2TP/IPsec</span>
@@ -1280,7 +1433,7 @@
         <li>✅ <span class="hl3">SSTP</span> — коли порти UDP заблоковані</li>
       </ul>
     </div>
-    <p style="margin-top:20px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 3 — Мережева архітектура та механізми тунелювання</p>
+    <p style="margin-top:20px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 5 — Протоколи IPsec</p>
   </div>
 
 </div><!-- /slideshow -->

@@ -1,17 +1,21 @@
-# Лекція 04 — OpenVPN
+# Лекція 04 — Протоколи тунелювання
 
 ## Мета
 
-Вивчити принципи роботи та налаштування OpenVPN.
+Вивчити основні протоколи тунелювання, їхні особливості та сфери застосування у VPN-рішеннях.
 
-## План
+## План лекції
 
-1. Архітектура OpenVPN
-2. Режими роботи (TUN та TAP)
-3. Сертифікати та PKI в OpenVPN
-4. Конфігураційні файли клієнта та сервера
-5. Безпека OpenVPN
+1. Поняття тунелювання та інкапсуляції
+2. PPTP (Point-to-Point Tunneling Protocol)
+3. L2TP (Layer 2 Tunneling Protocol)
+4. GRE (Generic Routing Encapsulation)
+5. SSTP (Secure Socket Tunneling Protocol)
+6. IKEv2 (Internet Key Exchange version 2)
+7. Порівняння протоколів тунелювання та критерії вибору
 
 ## Матеріали
 
-> Тут будуть розміщені слайди та додаткові матеріали до лекції.
+- 📊 [Презентація (HTML)](lection_04.html)
+- 📝 [Слайди (Markdown)](lection_04.md)
+- 📖 [Конспект лекції](NOTES.md)

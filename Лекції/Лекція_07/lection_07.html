@@ -1085,6 +1085,176 @@ PersistentKeepalive = 25</pre>
 </div>
 
 <!-- ═══════════════════════════ SLIDE 30 — ПІДСУМКИ ══════════════════════════ -->
+
+  <!-- SLIDE 31 Tailscale -->
+  <div class="slide bg-teal">
+    <h2>Tailscale та Netbird: Mesh VPN нового покоління</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Tailscale</span> — mesh VPN на базі WireGuard з централізованою координацією через control plane.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Tailscale архітектура</div>
+          <ul class="bullet-list">
+            <li>Control plane (Tailscale server) — координація</li>
+            <li>Data plane (WireGuard) — пряме p2p з'єднання</li>
+            <li>DERP relay — fallback коли p2p неможливий</li>
+            <li>Кожен пристрій: постійна 100.x.x.x IPv4 адреса</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Аутентифікація</div>
+          <ul class="bullet-list">
+            <li>SSO: Google, GitHub, Microsoft, Okta</li>
+            <li>Device authorization через management console</li>
+            <li>ACL policies у JSON форматі</li>
+            <li>Безкоштовно до 100 пристроїв</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 32 WireGuard on cloud -->
+  <div class="slide bg-purple">
+    <h2>WireGuard у хмарних середовищах</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Провайдер</th><th>Підтримка WireGuard</th><th>Деталі</th></tr></thead>
+      <tbody>
+        <tr><td>AWS</td><td>EC2 + WireGuard</td><td>Вручну або через AWS Marketplace AMI</td></tr>
+        <tr><td>Azure</td><td>VM + WireGuard</td><td>Вбудований в ядро Linux</td></tr>
+        <tr><td>GCP</td><td>VM + WireGuard</td><td>Cloud Router + WireGuard комбінація</td></tr>
+        <tr><td>Cloudflare</td><td>WARP Client</td><td>WireGuard + MASQUE protocol</td></tr>
+        <tr><td>Hetzner/DigitalOcean</td><td>Нативна підтримка</td><td>Kernel 5.6+ у всіх образах</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 33 BeyondCorp -->
+  <div class="slide bg-dark">
+    <h2>Google BeyondCorp: перша ZTNA реалізація</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">BeyondCorp</span> — розроблений Google після злому Aurora (2009). Перша великомасштабна реалізація Zero Trust.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Принципи BeyondCorp</div>
+          <ul class="bullet-list">
+            <li>Доступ визначається: ідентичність + стан пристрою</li>
+            <li>Немає «довіреної» корпоративної мережі</li>
+            <li>Всі застосунки — за HTTPS-проксі</li>
+            <li>Постійна верифікація при кожному запиті</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Сучасна реалізація</div>
+          <ul class="bullet-list">
+            <li>Google BeyondCorp Enterprise (GCP)</li>
+            <li>Chrome Device Trust extension</li>
+            <li>Context-Aware Access у Google Workspace</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 Cloudflare Access -->
+  <div class="slide bg-navy">
+    <h2>Cloudflare Access — ZTNA у хмарі</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Cloudflare Access</span> — ZTNA рішення від Cloudflare. Безкоштовно до 50 користувачів (Cloudflare Zero Trust Free).</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Як це працює</div>
+          <ul class="bullet-list">
+            <li>Cloudflare Tunnel (cloudflared) від застосунку до CF</li>
+            <li>Застосунок за CF проксі, не доступний напряму</li>
+            <li>Identity provider: Okta, Azure AD, GitHub, Google</li>
+            <li>Zero Trust Policy: хто/звідки/коли має доступ</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">ZTNA продукти конкурентів</div>
+          <ul class="bullet-list">
+            <li>Zscaler Private Access (ZPA)</li>
+            <li>Palo Alto Prisma Access</li>
+            <li>Microsoft Entra Private Access</li>
+            <li>Cisco Umbrella ZTNA</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 35 SDP -->
+  <div class="slide bg-teal">
+    <h2>SDP: Software Defined Perimeter</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">SDP</span> (Cloud Security Alliance) — архітектурна модель ZTNA з трьома компонентами. Основа для більшості сучасних ZTNA продуктів.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Компоненти SDP</div>
+          <ul class="bullet-list">
+            <li><span class="hl">IH</span> (Initiating Host): клієнт, що запитує доступ</li>
+            <li><span class="hl">AH</span> (Accepting Host): захищений сервер/застосунок</li>
+            <li><span class="hl">Controller</span>: авторизує IH та надає адресу AH</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">SPA: Single Packet Authorization</div>
+          <ul class="bullet-list">
+            <li>Перший пакет — аутентифікаційний</li>
+            <li>Port knocking наступного покоління</li>
+            <li>Сервер не відповідає до авторизації</li>
+            <li>Захист від port scanning та DDoS</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 36 summary l07 -->
+  <div class="slide bg-dark">
+    <h2>Підсумок: WireGuard та ZTNA</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">WireGuard: коли обирати</div>
+          <ul class="bullet-list">
+            <li>Нові Site-to-Site та Remote Access розгортання</li>
+            <li>Висока продуктивність (IoT, мобільні)</li>
+            <li>Простота налаштування та аудиту</li>
+            <li>Основа для Tailscale, Netbird, Cloudflare WARP</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">ZTNA: коли переходити</div>
+          <ul class="bullet-list">
+            <li>Потреба у мінімізації lateral movement</li>
+            <li>Різнорідні пристрої (BYOD)</li>
+            <li>Cloud-first архітектура</li>
+            <li>Compliance вимоги (Zero Trust Mandate)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
 <div class="slide bg-end">
   <div style="font-size:4rem;margin-bottom:10px;">🔐</div>
   <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>

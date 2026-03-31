@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 1 — Основи кібербезпеки та введення в технології VPN</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title   { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark    { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal    { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple  { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green   { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red     { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy    { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end     { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 14px 16px 14px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue  { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red   { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow{ border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple{ border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 900px; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 16px 20px;
+      font-family: 'Courier New', monospace; font-size: 0.9rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 1</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:2rem;margin-top:8px;">Основи кібербезпеки та введення в технології VPN</h1>
+    <p class="subtitle">Тріада CIA · Хешування · AES · ChaCha20 · Site-to-Site · Remote Access · OSI</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 2 — ПЛАН ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Тріада CIA (Confidentiality, Integrity, Availability) як основа безпеки</li>
+      <li>Криптографічне хешування та контроль цілісності даних</li>
+      <li>Симетрична криптологія: алгоритми AES, ChaCha20 та режими шифрування</li>
+      <li>Визначення та класифікація VPN (Site-to-Site, Remote Access)</li>
+      <li>Рівні моделі OSI в контексті тунелювання</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 3 — CIA INTRO ══════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Тріада CIA — Фундамент інформаційної безпеки</h2>
+    <div class="divider"></div>
+    <p style="max-width:780px;margin-bottom:24px;">Фундаментальною моделлю інформаційної безпеки є <span class="hl">тріада CIA</span> — три взаємодоповнюючих принципи захисту будь-якої системи.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>🔒 C — Confidentiality</h3>
+          <p><span class="hl">Конфіденційність</span> — захист інформації від несанкціонованого читання або розкриття стороннім особам.</p>
+        </div>
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">🛡️ I — Integrity</h3>
+          <p><span class="hl2">Цілісність</span> — гарантія того, що дані не були змінені несанкціоновано в процесі передачі або зберігання.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">⚡ A — Availability</h3>
+          <p><span class="hl3">Доступність</span> — гарантія того, що авторизовані користувачі мають доступ до ресурсів у потрібний момент.</p>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>VPN реалізує тріаду через:</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Шифрування</span> → Confidentiality</li>
+            <li><span class="hl2">HMAC / Poly1305</span> → Integrity</li>
+            <li><span class="hl3">Захищений канал</span> → Availability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 4 — CONFIDENTIALITY ════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>C — Конфіденційність (Confidentiality)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Загрози конфіденційності</h3>
+          <ul style="max-width:100%;">
+            <li>Перехоплення трафіку (Man-in-the-Middle)</li>
+            <li>Прослуховування публічних Wi-Fi мереж</li>
+            <li>Аналіз трафіку провайдером (ISP)</li>
+            <li>Несанкціонований доступ до сховищ</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Засоби захисту</h3>
+          <ul style="max-width:100%;">
+            <li>Симетричне шифрування: <span class="hl">AES-256</span>, ChaCha20</li>
+            <li>Асиметричний обмін ключами: RSA, ECDH</li>
+            <li>Захищені канали: TLS, IPsec, WireGuard</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card accent" style="max-width:900px;margin-top:8px;">
+      <h3>Без VPN vs З VPN</h3>
+      <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <p style="color:#ff8080;font-size:0.9rem;">❌ Без VPN: ISP та зловмисник бачать увесь відкритий трафік у публічній мережі.</p>
+        </div>
+        <div style="flex:1;">
+          <p style="color:#50dc64;font-size:0.9rem;">✅ З VPN: трафік зашифровано — зловмисник бачить лише зашифровані байти без можливості читання.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 5 — INTEGRITY & AVAILABILITY ═══════════ -->
+  <div class="slide bg-purple">
+    <h2>I — Цілісність та A — Доступність</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">🛡️ Integrity (Цілісність)</h3>
+          <p style="margin-bottom:10px;">Гарантія відсутності несанкціонованих змін у даних.</p>
+          <ul style="max-width:100%;">
+            <li>Хеш-функції: SHA-256, SHA-3</li>
+            <li>HMAC (прив'язка до секретного ключа)</li>
+            <li>Цифрові підписи (RSA, ECDSA)</li>
+            <li>У VPN: MAC на кожен пакет</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">⚡ Availability (Доступність)</h3>
+          <p style="margin-bottom:10px;">Гарантія доступу до ресурсів для авторизованих користувачів.</p>
+          <ul style="max-width:100%;">
+            <li>Захист від DDoS-атак</li>
+            <li>Резервування каналів зв'язку</li>
+            <li>Балансування навантаження</li>
+            <li>У VPN: обхід блокувань та цензури</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="diagram" style="margin-top:10px;">
+      <div class="dbox blue">Конфіденційність<br/><small>Шифрування</small></div>
+      <div class="arrow">+</div>
+      <div class="dbox purple">Цілісність<br/><small>HMAC</small></div>
+      <div class="arrow">+</div>
+      <div class="dbox green">Доступність<br/><small>Надійний канал</small></div>
+      <div class="arrow">=</div>
+      <div class="dbox yellow" style="min-width:130px;">Безпечний<br/>VPN-тунель</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 6 — CIA TABLE ══════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Тріада CIA у реалізації VPN</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Принцип CIA</th>
+          <th>Загроза</th>
+          <th>Механізм VPN</th>
+          <th>Алгоритм</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl">Confidentiality</span></td>
+          <td>Перехоплення трафіку (MITM)</td>
+          <td>Шифрування каналу</td>
+          <td>AES-256-GCM / ChaCha20</td>
+        </tr>
+        <tr>
+          <td><span class="hl2">Integrity</span></td>
+          <td>Підміна або модифікація пакетів</td>
+          <td>Автентифікація пакетів</td>
+          <td>HMAC-SHA256 / Poly1305</td>
+        </tr>
+        <tr>
+          <td><span class="hl3">Availability</span></td>
+          <td>Блокування або DDoS</td>
+          <td>Обхід фільтрів, резервування</td>
+          <td>Obfuscation / Multi-path</td>
+        </tr>
+        <tr>
+          <td colspan="2"><strong>Обмін ключами (допоміжно)</strong></td>
+          <td>Безпечний початковий обмін</td>
+          <td>ECDH Curve25519 / DH Group 21</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:820px;margin-top:20px;text-align:center;">
+      <p>Сучасний VPN = <span class="hl">AEAD</span> (Confidentiality + Integrity одночасно) + безпечний <span class="hl2">DH обмін ключами</span> + стійка <span class="hl3">автентифікація</span></p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 7 — HASH FUNCTIONS ═════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Криптографічні хеш-функції</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">Хеш-функція</span> перетворює дані довільного розміру у фіксований дайджест фіксованої довжини. У VPN використовується для контролю цілісності пакетів.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Властивості хеш-функції</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Детермінованість:</span> однакові дані → однаковий хеш</li>
+            <li><span class="hl">Лавинний ефект:</span> 1 біт різниці → кардинально інший хеш</li>
+            <li><span class="hl">Незворотність:</span> неможливо відновити вхід із хешу</li>
+            <li><span class="hl">Стійкість до колізій:</span> не знайти два входи з однаковим хешем</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <table>
+          <thead>
+            <tr><th>Алгоритм</th><th>Розмір</th><th>Статус</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>MD5</td><td>128 біт</td><td><span class="badge badge-red">Застарілий ⚠️</span></td></tr>
+            <tr><td>SHA-1</td><td>160 біт</td><td><span class="badge badge-yellow">Не рекоменд.</span></td></tr>
+            <tr><td>SHA-256</td><td>256 біт</td><td><span class="badge badge-green">Актуальний ✅</span></td></tr>
+            <tr><td>SHA-512</td><td>512 біт</td><td><span class="badge badge-green">Актуальний ✅</span></td></tr>
+            <tr><td>SHA-3</td><td>256/512</td><td><span class="badge badge-green">Актуальний ✅</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 8 — HMAC ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>HMAC — Hash-based Message Authentication Code</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;">Цілісність у VPN забезпечується <span class="hl">HMAC</span> — поєднанням хеш-функції із секретним ключем. Це підтверджує не лише цілісність, а й <span class="hl2">автентичність джерела</span> пакета.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Формула HMAC</h3>
+          <pre>HMAC(K, M) = H(
+  (K ⊕ opad) ||
+  H( (K ⊕ ipad) || M )
+)
+
+K  — секретний ключ
+M  — повідомлення
+H  — хеш-функція (SHA-256)</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">HMAC vs простий хеш</h3>
+          <ul style="max-width:100%;">
+            <li>Простий хеш: підтверджує <span class="hl">цілісність</span></li>
+            <li>HMAC: підтверджує і цілісність, і <span class="hl2">автентичність</span></li>
+            <li>Захист від атак підміни пакетів</li>
+            <li>Потребує знання секретного ключа</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:0;">
+          <h3>Використання у VPN</h3>
+          <ul style="max-width:100%;">
+            <li><strong>IPsec:</strong> HMAC-SHA256, HMAC-SHA512</li>
+            <li><strong>OpenVPN:</strong> HMAC-SHA256 (tls-auth)</li>
+            <li><strong>WireGuard:</strong> Poly1305 (AEAD)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 9 — SYMMETRIC CRYPTO ═══════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Симетрична криптографія</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">Симетричне шифрування</span> використовує один і той самий ключ для шифрування та дешифрування. Конфіденційність у VPN базується саме на ньому.</p>
+    <div class="diagram" style="margin-bottom:20px;">
+      <div class="dbox green">Відкритий текст</div>
+      <div class="arrow">──[<span style="color:#ffaa00;">Ключ K</span>]──►</div>
+      <div class="dbox red">Шифртекст</div>
+      <div class="arrow">──[<span style="color:#ffaa00;">Ключ K</span>]──►</div>
+      <div class="dbox green">Відкритий текст</div>
+    </div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Переваги</h3>
+          <ul style="max-width:100%;">
+            <li>Надвисока швидкість (AES-NI апаратне прискорення)</li>
+            <li>Ефективне для великих обсягів даних</li>
+            <li>Малий розмір ключа: 128/256 біт</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Виклик: обмін ключем</h3>
+          <p>Головна проблема — <span class="hl2">Key Distribution Problem</span>: як безпечно передати ключ через публічну мережу до початку шифрування?</p>
+          <p style="margin-top:8px;">У VPN вирішується через <span class="hl">асиметричний handshake</span> (Diffie-Hellman), після якого обидві сторони мають спільний симетричний ключ.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 10 — AES ═══════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>AES — Advanced Encryption Standard</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Параметри AES</h3>
+          <ul style="max-width:100%;">
+            <li>Розмір блоку: <span class="hl">128 біт</span> (16 байт) — фіксовано</li>
+            <li>Розмір ключа: <span class="hl">128, 192 або 256 біт</span></li>
+            <li>Раундів: 10 (AES-128) / 14 (AES-256)</li>
+            <li>Прийнятий NIST у 2001 р., стандарт FIPS 197</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:0;">
+          <h3>Операції одного раунду</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">SubBytes</span> — підстановка через S-box</li>
+            <li><span class="hl">ShiftRows</span> — зсув рядків матриці</li>
+            <li><span class="hl">MixColumns</span> — лінійне перемішування</li>
+            <li><span class="hl">AddRoundKey</span> — XOR з ключем раунду</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <h3 style="margin-bottom:10px;text-align:left;">Режими роботи у VPN</h3>
+        <table>
+          <thead><tr><th>Режим</th><th>Особливість</th><th>Використання</th></tr></thead>
+          <tbody>
+            <tr><td>AES-CBC</td><td>Потребує окремий MAC</td><td>OpenVPN (старий)</td></tr>
+            <tr><td><span class="hl">AES-GCM</span></td><td>AEAD: шифрування+MAC</td><td>IPsec, OpenVPN 2.4+</td></tr>
+            <tr><td>AES-CTR</td><td>Паралельний, без MAC</td><td>Потокова передача</td></tr>
+          </tbody>
+        </table>
+        <div class="card warn" style="margin-top:12px;">
+          <p><span class="hl2">Рекомендований вибір:</span> AES-256-GCM — забезпечує шифрування та автентифікацію одночасно (AEAD).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 11 — ChaCha20 ══════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>ChaCha20-Poly1305</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">ChaCha20</span> — потоковий шифр Деніела Бернштейна (djb). Ключова альтернатива AES для пристроїв без апаратного прискорення (мобільні, IoT).</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>ChaCha20-Poly1305 = AEAD</h3>
+          <div class="diagram" style="flex-direction:column;gap:6px;align-items:flex-start;margin:10px 0;">
+            <div class="dbox blue" style="width:100%;text-align:left;">ChaCha20 → шифрування потоку (256-біт ключ)</div>
+            <div class="dbox purple" style="width:100%;text-align:left;">Poly1305 → автентифікація MAC (128 біт)</div>
+            <div class="dbox green" style="width:100%;text-align:left;">Разом → AEAD (Confidentiality + Integrity)</div>
+          </div>
+          <p style="font-size:0.9rem;">ARX-операції (Add, Rotate, XOR) — константний час виконання → стійкість до timing-атак.</p>
+        </div>
+      </div>
+      <div class="col">
+        <h3 style="margin-bottom:10px;">AES-256-GCM vs ChaCha20-Poly1305</h3>
+        <table>
+          <thead><tr><th>Критерій</th><th>AES-256-GCM</th><th>ChaCha20</th></tr></thead>
+          <tbody>
+            <tr><td>AES-NI прискорення</td><td><span class="hl3">Є (Intel/AMD)</span></td><td>Не потрібне</td></tr>
+            <tr><td>Без AES-NI</td><td>Повільніший</td><td><span class="hl3">Швидший</span></td></tr>
+            <tr><td>Timing-атаки</td><td>Потребує обережності</td><td><span class="hl3">Константний час</span></td></tr>
+            <tr><td>WireGuard</td><td>❌</td><td><span class="hl3">✅ (основний)</span></td></tr>
+            <tr><td>IPsec / TLS 1.3</td><td><span class="hl3">✅</span></td><td>✅ (альтернатива)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 12 — GCM / AEAD ════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Режим GCM та принцип AEAD</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">AEAD (Authenticated Encryption with Associated Data)</span> — шифрування, що одночасно забезпечує конфіденційність та цілісність одним проходом.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.07);">
+          <h3>Схема GCM (AES-GCM)</h3>
+          <pre style="font-size:0.82rem;">Вхід: Текст (P) + Nonce + AAD
+    ↓ AES-CTR (шифрування)
+Шифртекст (C)
+    ↓ GHASH (автентифікація)
+Auth Tag (128 біт)
+
+Вихід: C || Tag</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Associated Data (AAD)</h3>
+          <p>Заголовки пакетів, які <span class="hl">автентифікуються, але не шифруються</span>. Маршрутизатори можуть читати IP-заголовки, але не можуть їх підмінити.</p>
+        </div>
+        <div class="card good" style="margin-top:0;">
+          <h3 style="color:#50dc64;">Переваги AEAD</h3>
+          <ul style="max-width:100%;">
+            <li>Один прохід замість двох → вища швидкість</li>
+            <li>Захист від атак з відтворенням (Replay)</li>
+            <li>Детектує будь-яку модифікацію пакета</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 13 — VPN DEFINITION ════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>VPN — Virtual Private Network</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:22px;"><span class="hl">VPN</span> — технологія створення захищеного логічного з'єднання (тунелю) поверх публічної мережі. Використовує <span class="hl2">інкапсуляцію</span> — вкладення одного пакета в інший із додаванням нових заголовків і шифрування.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Ключові концепції</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Underlay</span> — реальна публічна мережа (Інтернет)</li>
+            <li><span class="hl">Overlay</span> — захищений логічний канал поверх Underlay</li>
+            <li><span class="hl">Інкапсуляція</span> — вкладення оригінального пакета в зовнішній</li>
+            <li><span class="hl">Тунель</span> — захищений шлях від клієнта до сервера</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Функції VPN</h3>
+          <ul style="max-width:100%;">
+            <li>Захист трафіку у публічних мережах</li>
+            <li>Анонімність (приховування IP-адреси)</li>
+            <li>Об'єднання розподілених мереж</li>
+            <li>Обхід географічних обмежень та цензури</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="diagram" style="margin-top:10px;">
+      <div class="dbox green">Клієнт</div>
+      <div class="arrow">──── зашифрований тунель ────</div>
+      <div class="dbox purple">VPN-сервер</div>
+      <div class="arrow">────</div>
+      <div class="dbox blue">Ресурс</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 14 — SITE-TO-SITE ══════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Site-to-Site VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">Site-to-Site VPN</span> — постійний тунель між двома мережами (офісами, дата-центрами). Тунель встановлюється між <span class="hl2">VPN-шлюзами</span>, а не окремими хостами.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="dbox green" style="font-size:0.85rem;">Офіс А<br/><small>192.168.1.0/24</small></div>
+            <div class="arrow">⟶</div>
+            <div class="dbox blue" style="font-size:0.85rem;">VPN-шлюз A</div>
+          </div>
+          <div class="arrow" style="font-size:1rem;color:#00d4ff;">│ Тунель IPsec │</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="dbox blue" style="font-size:0.85rem;">VPN-шлюз Б</div>
+            <div class="arrow">⟶</div>
+            <div class="dbox green" style="font-size:0.85rem;">Офіс Б<br/><small>192.168.2.0/24</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Характеристики</h3>
+          <ul style="max-width:100%;">
+            <li>Хости використовують тунель <span class="hl">автоматично</span> (без VPN-клієнта)</li>
+            <li>Тунель зазвичай <span class="hl">постійний</span> (always-on)</li>
+            <li>Прозорість для кінцевих пристроїв</li>
+          </ul>
+        </div>
+        <div class="card" style="margin-top:0;">
+          <h3>Типові сценарії</h3>
+          <ul style="max-width:100%;">
+            <li>Об'єднання корпоративних філій</li>
+            <li>Підключення офісу до хмари (AWS VPC)</li>
+            <li>Резервування між дата-центрами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 15 — REMOTE ACCESS ═════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Remote Access VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">Remote Access VPN</span> — підключення окремого користувача до корпоративної мережі з будь-якого місця. Потребує встановлення <span class="hl2">VPN-клієнта</span> на пристрої.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;">
+          <div class="dbox green" style="font-size:0.85rem;">Ноутбук / Телефон<br/>(VPN-клієнт)</div>
+          <div class="arrow">↓ Тунель через Інтернет</div>
+          <div class="dbox blue" style="font-size:0.85rem;">VPN-концентратор<br/>(сервер доступу)</div>
+          <div class="arrow">↓</div>
+          <div class="dbox purple" style="font-size:0.85rem;">Корпоративні ресурси<br/>(файли, БД, застосунки)</div>
+        </div>
+      </div>
+      <div class="col">
+        <table>
+          <thead><tr><th>Критерій</th><th>Site-to-Site</th><th>Remote Access</th></tr></thead>
+          <tbody>
+            <tr><td>Суб'єкти</td><td>Мережа ↔ Мережа</td><td>Користувач ↔ Мережа</td></tr>
+            <tr><td>Тунель</td><td><span class="hl3">Постійний</span></td><td>На вимогу</td></tr>
+            <tr><td>VPN-клієнт</td><td>На шлюзі</td><td>На пристрої</td></tr>
+            <tr><td>Автентифікація</td><td>Сертифікати / PSK</td><td>Логін + MFA</td></tr>
+            <tr><td>Масштаб</td><td>Мережа-Мережа</td><td>Один користувач</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 16 — OSI MODEL ═════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Модель OSI — 7 рівнів</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Рівні OSI</h3>
+          <pre style="font-size:0.88rem;">7 │ Прикладний    │ HTTP, FTP, DNS
+6 │ Представлення │ TLS/SSL (шифрування)
+5 │ Сеансовий     │ Управління сеансами
+4 │ Транспортний  │ TCP, UDP
+3 │ Мережевий     │ IP, ICMP (маршрутизація)
+2 │ Канальний     │ Ethernet (MAC-адреси)
+1 │ Фізичний      │ Біти, кабелі, сигнали</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Де діє VPN-шифрування</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">L7 — TLS/SSL VPN</span> (SSTP, OpenVPN)</li>
+            <li><span class="hl">L3 — IPsec, WireGuard</span> (Мережевий рівень)</li>
+            <li><span class="hl">L2 — L2TP, PPTP</span> (Канальний рівень)</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Правило</h3>
+          <p>Нижчий рівень тунелювання → більший overhead, але більша <span class="hl">прозорість</span> для застосунків (L2 VPN тунелює навіть Ethernet-трафік).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 17 — VPN LEVELS OSI ════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Класифікація VPN за рівнем OSI</h2>
+    <div class="divider"></div>
+    <table style="max-width:1000px;">
+      <thead>
+        <tr>
+          <th>Рівень OSI</th>
+          <th>Протокол</th>
+          <th>Що тунелюється</th>
+          <th>Приклади</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-purple">L2 — Канальний</span></td>
+          <td>L2TP, PPTP</td>
+          <td>Ethernet-фрейми (з MAC)</td>
+          <td>Мостовий VPN, корп. LAN</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">L3 — Мережевий</span></td>
+          <td>IPsec, WireGuard</td>
+          <td>IP-пакети</td>
+          <td>Site-to-Site, Remote Access</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">L4 — Транспортний</span></td>
+          <td>OpenVPN (UDP/TCP)</td>
+          <td>TCP/UDP сегменти</td>
+          <td>SSL VPN, обхід DPI</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">L7 — Прикладний</span></td>
+          <td>SSTP, WebVPN</td>
+          <td>HTTPS-трафік</td>
+          <td>Obfuscated VPN, клієнт у браузері</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:860px;margin-top:18px;">
+      <p><span class="hl">L2 VPN:</span> тунелює <code>[Ethernet Hdr][IP Hdr][TCP][Data]</code> &nbsp;|&nbsp; <span class="hl2">L3 VPN:</span> тунелює <code>[IP Hdr][TCP][Data]</code> (без Ethernet)</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 18 — ENCAPSULATION OSI ═════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Інкапсуляція у моделі OSI</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:18px;">Рівні моделі OSI в контексті тунелювання: кожен рівень <span class="hl">обгортає</span> пакет попереднього рівня у власний заголовок.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>WireGuard (L3 VPN через UDP)</h3>
+          <pre style="font-size:0.82rem;">Оригінальний пакет (VPN-мережа):
+[ IP (10.0.0.x) │ TCP │ Дані ]
+
+↓ Шифрування ChaCha20-Poly1305
+
+Після інкапсуляції (реальна мережа):
+[ IP (реальний) │ UDP │ WG Hdr │ Шифртекст │ MAC ]
+  ↑ L3 Underlay  ↑ L4   ↑ VPN     ↑ Overlay</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Overhead WireGuard</h3>
+          <ul style="max-width:100%;">
+            <li>Зовнішній IP-заголовок: <span class="hl">20 байт</span></li>
+            <li>UDP-заголовок: <span class="hl">8 байт</span></li>
+            <li>WireGuard-заголовок: <span class="hl">32 байт</span></li>
+            <li>Poly1305 MAC: <span class="hl">16 байт</span></li>
+            <li><strong>Загалом: ~76 байт на пакет</strong></li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <p>При MTU = 1500 байт ефективний розмір payload пакета: <span class="hl2">1500 – 76 = 1424 байт</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 19 — IPSEC OSI ═════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>IPsec у моделі OSI</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:20px;"><span class="hl">IPsec</span> — найпоширеніший корпоративний VPN-стек. Працює на <span class="hl2">Рівні 3 (Мережевий)</span>, захищаючи IP-пакети.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Стек IPsec</h3>
+          <pre style="font-size:0.85rem;">L7 │ Прикладний    │ HTTP, SMTP…
+L4 │ Транспортний  │ TCP / UDP
+L3 │ Мережевий     │ ← IPsec тут (ESP/AH)
+L2 │ Канальний     │ Ethernet
+L1 │ Фізичний      │ Кабель / Wi-Fi</pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Компоненти IPsec</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">IKEv2</span> — обмін ключами (UDP 500/4500)</li>
+            <li><span class="hl">ESP</span> — шифрування + автентифікація (IP 50)</li>
+            <li><span class="hl">AH</span> — лише автентифікація (IP 51)</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Два режими IPsec</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Transport Mode:</span> шифрує лише payload → Host-to-Host</li>
+            <li><span class="hl2">Tunnel Mode:</span> шифрує весь IP-пакет → Site-to-Site</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 20 — VPN TUNNEL SETUP ══════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Встановлення VPN-тунелю: IKEv2</h2>
+    <div class="divider"></div>
+    <p style="max-width:820px;margin-bottom:18px;">Процес встановлення IPsec IKEv2 тунелю відбувається у <span class="hl">двох фазах</span>.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <pre style="font-size:0.82rem;">Клієнт              VPN-сервер
+  │                       │
+  │─ IKE_SA_INIT ────────►│ Фаза 1
+  │  (алгоритми, DH pub)  │ (IKE SA)
+  │◄─ IKE_SA_INIT ────────│
+  │  (вибір, DH pub)      │
+  │                       │
+  │─ IKE_AUTH ───────────►│ Фаза 2
+  │  (ідентифікація, cert) │ (Child SA)
+  │◄─ IKE_AUTH ───────────│
+  │  (підтвердження)      │
+  │                       │
+  │═════ Тунель ESP ══════│ Передача</pre>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Що відбувається</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">1. Узгодження алгоритмів</span> — DH-група, AES, SHA</li>
+            <li><span class="hl">2. Diffie-Hellman</span> — генерація спільного секрету</li>
+            <li><span class="hl">3. Автентифікація</span> — сертифікати або PSK</li>
+            <li><span class="hl">4. SA (Security Association)</span> — параметри тунелю</li>
+            <li><span class="hl">5. Передача даних</span> — зашифрований трафік ESP</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 21 — PFS & SECURITY ════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Ключові концепції безпеки VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card accent">
+          <h3>Perfect Forward Secrecy (PFS)</h3>
+          <p style="margin-bottom:10px;">Кожна сесія використовує унікальні тимчасові DH-ключі. Компрометація поточного ключа <span class="hl">не розкриває минулі сесії</span>.</p>
+          <ul style="max-width:100%;">
+            <li>Реалізується через Ephemeral Diffie-Hellman (EDH)</li>
+            <li>Ключ сесії генерується на льоту та видаляється після використання</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Defense in Depth</h3>
+          <div class="diagram" style="flex-direction:column;gap:4px;align-items:flex-start;margin:8px 0;">
+            <div class="dbox blue" style="width:100%;font-size:0.82rem;text-align:left;">Мережевий периметр (Firewall)</div>
+            <div class="dbox purple" style="width:100%;font-size:0.82rem;text-align:left;">VPN-шифрування (Confidentiality)</div>
+            <div class="dbox green" style="width:100%;font-size:0.82rem;text-align:left;">HMAC / Poly1305 (Integrity)</div>
+            <div class="dbox yellow" style="width:100%;font-size:0.82rem;text-align:left;">Авторизація (ACL, Firewall)</div>
+            <div class="dbox" style="width:100%;font-size:0.82rem;text-align:left;">Аудит (Логування з'єднань)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 22 — VPN USE CASES ═════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Практичні сценарії застосування VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(0,212,255,0.4);background:rgba(0,212,255,0.07);">
+          <h3>🏢 Корпоративний Remote Access</h3>
+          <p>Співробітники підключаються до офісних ресурсів з дому або у відрядженні. Cisco AnyConnect, GlobalProtect, WireGuard.</p>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>🌐 Site-to-Site між офісами</h3>
+          <p>Постійний тунель між філіями: Kyiv HQ ↔ Lviv Office. Усі локальні ресурси стають доступними через тунель.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(80,220,100,0.4);background:rgba(80,220,100,0.07);">
+          <h3 style="color:#50dc64;">☕ Захист у публічних Wi-Fi</h3>
+          <p>Шифрування трафіку у кафе, готелях, аеропортах. Запобігання MITM-атакам та перехопленню сесій.</p>
+        </div>
+        <div class="card" style="border-color:rgba(176,123,255,0.4);background:rgba(176,123,255,0.07);margin-top:0;">
+          <h3 style="color:#b07bff;">🔒 Безпека IoT та критичних пристроїв</h3>
+          <p>Тунелювання трафіку розумних пристроїв через захищений шлюз. Ізоляція IoT-підмереж.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 23 — PROTOCOL COMPARISON ════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Порівняння сучасних VPN-протоколів</h2>
+    <div class="divider"></div>
+    <table style="max-width:1000px;">
+      <thead>
+        <tr>
+          <th>Протокол</th>
+          <th>Рівень OSI</th>
+          <th>Шифрування</th>
+          <th>Статус</th>
+          <th>Швидкість</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>WireGuard</strong></td>
+          <td>L3</td>
+          <td>ChaCha20-Poly1305</td>
+          <td><span class="badge badge-green">✅ Актуальний</span></td>
+          <td><span class="badge badge-blue">⚡ Найвища</span></td>
+        </tr>
+        <tr>
+          <td><strong>IPsec/IKEv2</strong></td>
+          <td>L3</td>
+          <td>AES-256-GCM</td>
+          <td><span class="badge badge-green">✅ Актуальний</span></td>
+          <td><span class="badge badge-blue">⚡ Висока</span></td>
+        </tr>
+        <tr>
+          <td><strong>OpenVPN</strong></td>
+          <td>L4 (TLS)</td>
+          <td>AES-256-GCM</td>
+          <td><span class="badge badge-green">✅ Актуальний</span></td>
+          <td><span class="badge badge-yellow">🔶 Середня</span></td>
+        </tr>
+        <tr>
+          <td><strong>L2TP/IPsec</strong></td>
+          <td>L2 + L3</td>
+          <td>AES-256</td>
+          <td><span class="badge badge-yellow">🔶 Застарілий</span></td>
+          <td><span class="badge badge-yellow">🔶 Середня</span></td>
+        </tr>
+        <tr>
+          <td><strong>PPTP</strong></td>
+          <td>L2</td>
+          <td>RC4 (40–128 біт)</td>
+          <td><span class="badge badge-red">❌ Небезпечний</span></td>
+          <td><span class="badge badge-yellow">🔶 Висока</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 24 — SUMMARY TABLE ═════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Зведена таблиця: CIA + Криптографія + VPN</h2>
+    <div class="divider"></div>
+    <table style="max-width:1000px;">
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Технологія</th>
+          <th>Принцип CIA</th>
+          <th>Алгоритм / Протокол</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Шифрування каналу</td>
+          <td>VPN-тунель</td>
+          <td><span class="hl">Confidentiality</span></td>
+          <td>AES-256-GCM / ChaCha20-Poly1305</td>
+        </tr>
+        <tr>
+          <td>Контроль цілісності</td>
+          <td>HMAC / MAC</td>
+          <td><span class="hl2">Integrity</span></td>
+          <td>HMAC-SHA256 / Poly1305</td>
+        </tr>
+        <tr>
+          <td>Обмін ключами</td>
+          <td>Diffie-Hellman</td>
+          <td><span class="hl">Confidentiality</span></td>
+          <td>ECDH Curve25519 / DH Group 21</td>
+        </tr>
+        <tr>
+          <td>Автентифікація</td>
+          <td>Сертифікати / PSK</td>
+          <td><span class="hl2">Integrity</span></td>
+          <td>RSA / Ed25519 / IKEv2</td>
+        </tr>
+        <tr>
+          <td>Резервування</td>
+          <td>Multi-path VPN</td>
+          <td><span class="hl3">Availability</span></td>
+          <td>MOBIKE, WireGuard roaming</td>
+        </tr>
+        <tr>
+          <td>Тунелювання</td>
+          <td>Інкапсуляція</td>
+          <td>Всі три</td>
+          <td>IPsec ESP / WireGuard / OpenVPN</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 25 — PFS ════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Perfect Forward Secrecy (PFS)</h2>
+    <div class="divider"></div>
+    <p style="max-width:780px;margin-bottom:24px;">PFS гарантує, що компрометація довгострокового ключа <span class="hl">не розкриє минулих сесій</span>.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">❌ Без PFS</div>
+          <p>RSA ключ сервера скомпрометовано → зловмисник розшифровує весь записаний трафік</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ З PFS (ECDHE)</div>
+          <p>Кожна сесія — новий ephemeral DH ключ. Минулий трафік не може бути розшифрований.</p>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:20px;">TLS 1.3 вимагає PFS обов'язково (лише ECDHE). IKEv2: PFS через CREATE_CHILD_SA.</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 26 — ATTACKS ═════════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Атаки на VPN та методи захисту</h2>
+    <div class="divider"></div>
+    <table>
+      <thead><tr><th>Атака</th><th>Опис</th><th>Захист</th></tr></thead>
+      <tbody>
+        <tr><td>MITM</td><td>Перехоплення трафіку між клієнтом та сервером</td><td>PKI сертифікати, pinning</td></tr>
+        <tr><td>Replay Attack</td><td>Повторне надсилання перехоплених пакетів</td><td>Sequence Number, Anti-Replay Window</td></tr>
+        <tr><td>Brute Force PSK</td><td>Підбір Pre-Shared Key офлайн</td><td>IKEv2 + сертифікати або strong PSK</td></tr>
+        <tr><td>IKE Flooding</td><td>CPU exhaustion через DH обчислення</td><td>IKEv2 COOKIE механізм</td></tr>
+        <tr><td>DNS Leak</td><td>DNS запити поза тунелем</td><td>Примусовий DNS через VPN, Kill Switch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 27 — QUANTUM ══════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Квантові загрози та постквантова криптографія</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">⚡ Загрози від квантових комп'ютерів</div>
+          <ul class="bullet-list">
+            <li>Алгоритм Шора ламає RSA та ECDH</li>
+            <li>Алгоритм Гровера вдвічі знижує стійкість симетричних шифрів</li>
+            <li>AES-128 → еквівалент AES-64 проти квантового атакуючого</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🛡️ NIST PQC стандарти 2024</div>
+          <ul class="bullet-list">
+            <li><span class="hl">ML-KEM</span> (Kyber) — обмін ключами</li>
+            <li><span class="hl">ML-DSA</span> (Dilithium) — цифровий підпис</li>
+            <li>AES-256 залишається безпечним</li>
+            <li>Гібридний режим: ECDH + Kyber</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ SLIDE 29 — DIFFIE-HELLMAN ════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Diffie-Hellman: обмін ключами</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">DH дозволяє двом сторонам узгодити спільний секрет через <span class="hl">незахищений канал</span> без попереднього обміну ключами.</p>
+    <div class="cols" style="max-width:1000px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">🔢 Математика DH</div>
+          <ul class="bullet-list">
+            <li>Спільні параметри: g (генератор), p (просте число)</li>
+            <li>Alice: a (приватний) → g^a mod p (публічний)</li>
+            <li>Bob: b (приватний) → g^b mod p (публічний)</li>
+            <li>Shared secret: g^(ab) mod p</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Сучасні варіанти</div>
+          <ul class="bullet-list">
+            <li><span class="hl">ECDH</span> на Curve25519 — WireGuard</li>
+            <li>ECDH на P-256/P-384 — TLS 1.3, IKEv2</li>
+            <li>Ephemeral DH → Perfect Forward Secrecy</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 30 — ЦИФРОВІ СЕРТИФІКАТИ ════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Цифрові сертифікати та довіра</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Сертифікат X.509 пов'язує <span class="hl">публічний ключ</span> з ідентичністю власника, підписаний центром сертифікації (CA).</p>
+    <table style="max-width:900px;">
+      <thead><tr><th>Тип</th><th>Валідація</th><th>Застосування</th></tr></thead>
+      <tbody>
+        <tr><td>DV (Domain Validated)</td><td>Лише домен</td><td>Веб-сайти, Let's Encrypt</td></tr>
+        <tr><td>OV (Organization Validated)</td><td>Організація</td><td>Корпоративні сервіси</td></tr>
+        <tr><td>EV (Extended Validation)</td><td>Юридична особа</td><td>Банки, фінансові установи</td></tr>
+        <tr><td>Client Certificate</td><td>Ідентичність користувача</td><td>VPN, mTLS аутентифікація</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 31 — VPN AUTHENTICATION ═════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Методи аутентифікації у VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad" style="border-color:rgba(255,180,50,0.4);background:rgba(255,180,50,0.07);">
+          <div class="card-title" style="color:#ffb432;">⚠️ Слабкі методи</div>
+          <ul class="bullet-list">
+            <li>Pre-Shared Key (PSK) — вразливий до brute-force</li>
+            <li>Пароль без MFA — компрометується при фішингу</li>
+            <li>PPTP MS-CHAPv2 — повністю зламаний</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Рекомендовані методи</div>
+          <ul class="bullet-list">
+            <li>Сертифікати X.509 (PKI) + ECDSA</li>
+            <li>IKEv2 з EAP-TLS (клієнтський сертифікат)</li>
+            <li>MFA: TOTP + сертифікат</li>
+            <li>SAML/OIDC через IAM провайдера</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 32 — ZERO TRUST INTRO ════════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Від периметра до Zero Trust</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">🏰 Класичний підхід (Castle-and-Moat)</div>
+          <ul class="bullet-list">
+            <li>Довіра базується на розташуванні в мережі</li>
+            <li>Всередині периметра = довірений</li>
+            <li>VPN надає доступ до всієї внутрішньої мережі</li>
+            <li>Lateral movement після компрометації</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🔐 Zero Trust</div>
+          <ul class="bullet-list">
+            <li>«Ніколи не довіряй, завжди перевіряй»</li>
+            <li>Доступ до конкретного застосунку, не мережі</li>
+            <li>Постійна верифікація ідентичності</li>
+            <li>Перевірка стану пристрою (device posture)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 33 — VPN PERFORMANCE ════════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Продуктивність VPN-рішень</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Протокол</th><th>Throughput</th><th>Latency</th><th>CPU</th></tr></thead>
+      <tbody>
+        <tr><td><strong>WireGuard</strong></td><td>⚡ 2–5 Гбіт/с</td><td>🟢 Мінімальна</td><td>🟢 Kernel</td></tr>
+        <tr><td><strong>IPsec (kernel)</strong></td><td>⚡ 1–5 Гбіт/с</td><td>🟢 Низька</td><td>🟢 AES-NI</td></tr>
+        <tr><td><strong>OpenVPN (DCO)</strong></td><td>🔶 1–3 Гбіт/с</td><td>🔶 Середня</td><td>🔶 Kernel</td></tr>
+        <tr><td><strong>OpenVPN (user)</strong></td><td>🔶 300–600 Мбіт/с</td><td>🔴 Вища</td><td>🔴 User-space</td></tr>
+        <tr><td><strong>L2TP/IPsec</strong></td><td>🔶 300–500 Мбіт/с</td><td>🔶 Середня</td><td>🔶 Подвійне encap</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════ SLIDE 34 — COMPLIANCE ═════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>VPN та вимоги відповідності (Compliance)</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">📋 Регуляторні вимоги</div>
+          <ul class="bullet-list">
+            <li><span class="hl">GDPR</span>: шифрування персональних даних при передачі</li>
+            <li><span class="hl">HIPAA</span>: захист медичних даних (PHI) у транзиті</li>
+            <li><span class="hl">PCI DSS</span>: шифрування платіжних даних</li>
+            <li><span class="hl">ISO 27001</span>: контроль доступу та шифрування</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ VPN для compliance</div>
+          <ul class="bullet-list">
+            <li>AES-256 задовольняє всі основні стандарти</li>
+            <li>Логування з'єднань для аудиту</li>
+            <li>MFA обов'язкова для фінансового сектору</li>
+            <li>Документований процес управління ключами</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 35 — ALWAYS-ON VPN ══════════════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Always-On VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Always-On VPN</span> — режим, при якому VPN встановлюється автоматично при запуску пристрою та блокує мережевий доступ до підключення.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">✅ Переваги</div>
+          <ul class="bullet-list">
+            <li>Жодного незахищеного мережевого трафіку</li>
+            <li>Прозоро для користувача</li>
+            <li>Централізоване управління через MDM</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">⚙️ Реалізація</div>
+          <ul class="bullet-list">
+            <li>Microsoft Intune + DirectAccess/AOVPN</li>
+            <li>Cisco AnyConnect з профілем Always-On</li>
+            <li>iOS/Android MDM з VPN On Demand</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLIDE 36 — ПІДСУМОК ════════════════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Підсумок: основи кібербезпеки та VPN</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">📚 Ключові концепції</div>
+          <ul class="bullet-list">
+            <li>CIA тріада — основа будь-якої системи безпеки</li>
+            <li>AEAD (AES-GCM, ChaCha20-Poly1305) — сучасний стандарт</li>
+            <li>PFS через ECDHE — захист минулих сесій</li>
+            <li>PKI та X.509 — аутентифікація у VPN</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">🎯 Практичні висновки</div>
+          <ul class="bullet-list">
+            <li>WireGuard/IKEv2 — рекомендовані для нових розгортань</li>
+            <li>MFA обов'язкова для корпоративного VPN</li>
+            <li>Zero Trust замінює периметрову модель</li>
+            <li>Always-On VPN для корпоративних пристроїв</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════ SLIDE 28 — END ════════════════════════════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 1: Основи кібербезпеки та введення в технології VPN</p>
+    <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+      <span class="tag">Тріада CIA</span>
+      <span class="tag">HMAC</span>
+      <span class="tag">AES-256-GCM</span>
+      <span class="tag">ChaCha20-Poly1305</span>
+      <span class="tag">Site-to-Site VPN</span>
+      <span class="tag">Remote Access VPN</span>
+      <span class="tag">Інкапсуляція</span>
+      <span class="tag">IPsec</span>
+      <span class="tag">WireGuard</span>
+      <span class="tag">Модель OSI</span>
+    </div>
+    <p style="margin-top:28px;color:#90a0b8;font-size:0.9rem;">Наступна лекція: Лекція 2 — Асиметричне шифрування, цифрові підписи, PKI та центри сертифікації</p>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">‹</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">›</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>

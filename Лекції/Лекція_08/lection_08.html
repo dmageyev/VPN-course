@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лекція 8 — Огляд хмарних VPN-рішень. Моніторинг та аналіз інцидентів</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+    /* ===== Layout ===== */
+    .slideshow { width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .slide { display: none; flex: 1; flex-direction: column; justify-content: center; align-items: center; padding: 48px 60px; text-align: center; position: relative; }
+    .slide.active { display: flex; }
+
+    /* ===== Backgrounds ===== */
+    .bg-title   { background: linear-gradient(135deg, #0d0d2b 0%, #1a1a4e 50%, #0d2b4e 100%); }
+    .bg-dark    { background: linear-gradient(160deg, #0f0f23 0%, #1a1a3e 100%); }
+    .bg-teal    { background: linear-gradient(160deg, #0d2b3e 0%, #0a3d4a 100%); }
+    .bg-purple  { background: linear-gradient(160deg, #1a0d2e 0%, #2d1a4e 100%); }
+    .bg-green   { background: linear-gradient(160deg, #0d2b1a 0%, #0a3d2a 100%); }
+    .bg-red     { background: linear-gradient(160deg, #2b0d0d 0%, #3d1a1a 100%); }
+    .bg-navy    { background: linear-gradient(160deg, #0d1a3e 0%, #1a2d5e 100%); }
+    .bg-end     { background: linear-gradient(135deg, #0d2b0d 0%, #1a4e1a 50%, #0d3b2b 100%); }
+
+    /* ===== Accent bar ===== */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7, #00d4ff);
+    }
+
+    /* ===== Progress bar ===== */
+    #progress-bar {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ===== Slide counter ===== */
+    #slide-counter {
+      position: fixed; bottom: 12px; right: 20px;
+      font-size: 13px; color: rgba(255,255,255,0.4);
+      z-index: 100;
+    }
+
+    /* ===== Navigation ===== */
+    .nav-btn {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; width: 44px; height: 44px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 100; user-select: none;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.2); }
+    #prev-btn { left: 12px; }
+    #next-btn { right: 12px; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 2.6rem; font-weight: 700; line-height: 1.2; color: #fff; }
+    h2 { font-size: 2rem; font-weight: 600; color: #00d4ff; margin-bottom: 28px; }
+    h3 { font-size: 1.3rem; font-weight: 600; color: #7beeff; margin-bottom: 10px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: #cdd8e8; }
+    .subtitle  { font-size: 1.25rem; color: #7beeff; margin-top: 16px; }
+    .meta      { font-size: 0.95rem; color: #90a0b8; margin-top: 10px; }
+    .tag       { display: inline-block; background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.35);
+                 color: #00d4ff; border-radius: 4px; padding: 3px 10px; font-size: 0.85rem; margin: 3px; }
+
+    /* ===== Two-column layout ===== */
+    .cols { display: flex; gap: 32px; width: 100%; max-width: 1100px; align-items: flex-start; text-align: left; }
+    .col  { flex: 1; }
+
+    /* ===== Card ===== */
+    .card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; text-align: left;
+    }
+    .card.accent { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.07); }
+    .card.warn   { border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.07); }
+    .card.good   { border-color: rgba(80,220,100,0.4); background: rgba(80,220,100,0.07); }
+    .card.bad    { border-color: rgba(255,80,80,0.4);  background: rgba(255,80,80,0.07); }
+
+    /* ===== List ===== */
+    ul { list-style: none; width: 100%; max-width: 860px; text-align: left; }
+    ul li { padding: 8px 0 8px 28px; position: relative; font-size: 1.05rem; color: #cdd8e8; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    ul li:last-child { border-bottom: none; }
+    ul li::before { content: '▸'; position: absolute; left: 4px; color: #00d4ff; }
+
+    /* ===== Numbered plan ===== */
+    .plan-list { list-style: none; width: 100%; max-width: 840px; text-align: left; counter-reset: plan; }
+    .plan-list li {
+      counter-increment: plan;
+      padding: 10px 16px 10px 70px;
+      position: relative;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.98rem; color: #cdd8e8;
+      border-left: 3px solid #7b2ff7;
+    }
+    .plan-list li::before {
+      content: counter(plan);
+      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ===== Diagram boxes ===== */
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .dbox {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 18px; font-size: 0.95rem;
+      text-align: center; min-width: 110px;
+    }
+    .dbox.blue  { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.1); }
+    .dbox.green { border-color: #50dc64; color: #50dc64; background: rgba(80,220,100,0.1); }
+    .dbox.red   { border-color: #ff6464; color: #ff6464; background: rgba(255,100,100,0.1); }
+    .dbox.yellow{ border-color: #ffaa00; color: #ffaa00; background: rgba(255,170,0,0.1); }
+    .dbox.purple{ border-color: #b07bff; color: #b07bff; background: rgba(176,123,255,0.1); }
+    .arrow { font-size: 1.4rem; color: rgba(255,255,255,0.35); }
+
+    /* ===== Table ===== */
+    table { width: 100%; max-width: 900px; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: rgba(0,212,255,0.2); color: #00d4ff; padding: 12px 16px; text-align: left; }
+    td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); color: #cdd8e8; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    /* ===== Code block ===== */
+    pre {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px; padding: 16px 20px;
+      font-family: 'Courier New', monospace; font-size: 0.9rem;
+      color: #a8ffb8; text-align: left; width: 100%; max-width: 800px;
+      overflow-x: auto; white-space: pre-wrap;
+    }
+
+    /* ===== Badge ===== */
+    .badge { display: inline-block; border-radius: 20px; padding: 4px 14px; font-size: 0.85rem; font-weight: 600; margin: 4px; }
+    .badge-blue   { background: rgba(0,212,255,0.2);  color: #00d4ff;  border: 1px solid rgba(0,212,255,0.4); }
+    .badge-purple { background: rgba(123,47,247,0.2); color: #b07bff;  border: 1px solid rgba(176,123,255,0.4); }
+    .badge-green  { background: rgba(80,220,100,0.2); color: #50dc64;  border: 1px solid rgba(80,220,100,0.4); }
+    .badge-red    { background: rgba(255,100,100,0.2);color: #ff8080;  border: 1px solid rgba(255,100,100,0.4); }
+    .badge-yellow { background: rgba(255,170,0,0.2);  color: #ffcc55;  border: 1px solid rgba(255,170,0,0.4); }
+
+    /* ===== Section divider ===== */
+    .divider { width: 80px; height: 3px; background: linear-gradient(90deg, #00d4ff, #7b2ff7); border-radius: 2px; margin: 18px auto; }
+    .divider-left { margin: 14px 0; }
+
+    /* ===== Highlight ===== */
+    .hl  { color: #00d4ff; font-weight: 600; }
+    .hl2 { color: #ffaa00; font-weight: 600; }
+    .hl3 { color: #50dc64; font-weight: 600; }
+
+    /* ===== Wide content ===== */
+    .wide { width: 100%; max-width: 1100px; text-align: left; }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- ═══════════════════════════════ SLIDE 1 — TITLE ═══════════════════════════════ -->
+  <div class="slide bg-title active">
+    <div style="font-size:0.9rem;letter-spacing:3px;text-transform:uppercase;color:#7beeff;margin-bottom:18px;">Курс: Віртуальні приватні мережі (VPN)</div>
+    <h1>Лекція 8</h1>
+    <div class="divider"></div>
+    <h1 style="font-size:1.8rem;margin-top:8px;">Огляд хмарних VPN-рішень. Моніторинг, діагностика та аналіз інцидентів безпеки</h1>
+    <p class="subtitle">AWS VPN · Azure · Google Cloud · ZTNA · SD-WAN · iPerf3 · MTR · Ivanti CVE</p>
+    <p class="meta" style="margin-top:28px;">Спеціальність: Інфокомунікації та мережна безпека</p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 2 — ПЛАН ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>План лекції</h2>
+    <ol class="plan-list">
+      <li>Хмарні VPN: AWS VPN, Azure VPN Gateway, Google Cloud VPN</li>
+      <li>SD-WAN та його зв'язок з VPN</li>
+      <li>Zero Trust Network Access (ZTNA)</li>
+      <li>VPN у контексті DevOps та мікросервісів</li>
+      <li>Перспективи розвитку VPN-технологій</li>
+      <li>Метрики якості: Latency, Jitter і Packet Loss</li>
+      <li>Інструменти моніторингу: iPerf3, MTR, Wireshark</li>
+      <li>Типові несправності: MTU, DNS-витоки, помилки автентифікації</li>
+      <li>Кейс-стаді: зломи VPN Ivanti та Pulse Secure (2024)</li>
+      <li>Найкращі практики: Hardening та управління патчами</li>
+    </ol>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 3 — ХМАРНІ VPN: ОГЛЯД ══════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Хмарні VPN-рішення: огляд</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:22px;"><span class="hl">Хмарні VPN</span> — керовані постачальниками хмарних послуг рішення для безпечного підключення корпоративних мереж до хмарної інфраструктури без власного обладнання.</p>
+    <table>
+      <thead>
+        <tr><th>Постачальник</th><th>Сервіс</th><th>Протоколи</th><th>Пропускна здатність</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="hl">Amazon AWS</span></td><td>AWS Site-to-Site VPN / Client VPN</td><td>IPsec, OpenVPN</td><td>до 1,25 Гбіт/с</td></tr>
+        <tr><td><span class="hl2">Microsoft Azure</span></td><td>Azure VPN Gateway</td><td>IKEv2, SSTP, OpenVPN</td><td>до 10 Гбіт/с</td></tr>
+        <tr><td><span class="hl3">Google Cloud</span></td><td>Cloud VPN (HA VPN)</td><td>IKEv2/IPsec</td><td>до 3 Гбіт/с</td></tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:800px;margin-top:18px;">
+      <p><span class="hl">Спільні переваги:</span> висока доступність (SLA 99.9 %+), масштабування без власного обладнання, інтеграція з IAM та хмарним моніторингом.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 4 — AWS VPN ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>AWS Site-to-Site VPN та Client VPN</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>Site-to-Site VPN</h3>
+          <p>З'єднує корпоративну мережу з AWS VPC через IPsec-тунелі.</p>
+          <div class="diagram" style="margin:12px 0;flex-direction:column;gap:4px;align-items:flex-start;">
+            <div class="dbox green" style="font-size:0.85rem;">Корпоративна мережа</div>
+            <div class="arrow" style="margin-left:60px;">↓ IPsec</div>
+            <div class="dbox blue" style="font-size:0.85rem;">Virtual Private Gateway</div>
+            <div class="arrow" style="margin-left:60px;">↓</div>
+            <div class="dbox purple" style="font-size:0.85rem;">AWS VPC</div>
+          </div>
+          <ul style="max-width:100%;margin-top:8px;">
+            <li>Два резервні тунелі (Active/Standby)</li>
+            <li>Статична або динамічна (BGP) маршрутизація</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Client VPN</h3>
+          <p>Доступ окремих користувачів до AWS-ресурсів.</p>
+          <ul style="max-width:100%;margin-top:10px;">
+            <li>Протокол: <span class="hl">OpenVPN</span> (порт 443 TCP/UDP)</li>
+            <li>Інтеграція з AWS IAM та Active Directory</li>
+            <li>Підтримка Split-Tunnel</li>
+            <li>Журналювання через CloudWatch Logs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 5 — AZURE VPN GATEWAY ══════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Azure VPN Gateway</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;">Забезпечує зашифровані з'єднання між Azure VNet та корпоративними мережами або окремими клієнтами.</p>
+    <table style="margin-bottom:18px;">
+      <thead>
+        <tr><th>SKU</th><th>Пропускна здатність</th><th>Призначення</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Basic</td><td>100 Мбіт/с</td><td>Розробка/тестування</td></tr>
+        <tr><td>VpnGw1</td><td>650 Мбіт/с</td><td>Малий бізнес</td></tr>
+        <tr><td>VpnGw3</td><td>1,25 Гбіт/с</td><td>Корпоративний рівень</td></tr>
+        <tr><td><span class="hl">VpnGw5</span></td><td><span class="hl">10 Гбіт/с</span></td><td>Великі підприємства</td></tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:800px;">
+      <h3>Point-to-Site протоколи</h3>
+      <p><span class="hl">IKEv2</span> — Windows, macOS, Linux &nbsp;|&nbsp; <span class="hl2">SSTP</span> — тільки Windows (порт 443) &nbsp;|&nbsp; <span class="hl3">OpenVPN</span> — кросплатформений</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 6 — GOOGLE CLOUD VPN ════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Google Cloud VPN (HA VPN)</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>HA VPN — висока доступність</h3>
+          <ul style="max-width:100%;">
+            <li>Два зовнішніх IP та два тунелі (Active/Active)</li>
+            <li><span class="hl">SLA 99,99 %</span> (Classic VPN: 99,9 %)</li>
+            <li>Автоматичне перемикання при збої тунелю</li>
+            <li>Динамічна маршрутизація через Cloud Router (BGP)</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <h3>Обмеження</h3>
+          <ul style="max-width:100%;">
+            <li>Тільки IKEv2 (Classic VPN підтримує IKEv1)</li>
+            <li>Максимум 3 Гбіт/с на тунель</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;">
+          <div class="dbox green" style="width:220px;">On-Premises мережа</div>
+          <div style="display:flex;gap:10px;">
+            <div class="arrow">↙ IKEv2 (основний)</div>
+            <div class="arrow">↘ IKEv2 (резерв)</div>
+          </div>
+          <div class="dbox blue" style="width:220px;">HA Cloud VPN Gateway<br/><small>(2 інтерфейси)</small></div>
+          <div class="arrow">↓</div>
+          <div class="dbox purple" style="width:220px;">GCP VPC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 7 — SD-WAN ═════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>SD-WAN та його зв'язок з VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;"><span class="hl">SD-WAN (Software-Defined WAN)</span> — технологія централізованого програмного управління WAN-з'єднаннями. Використовує IPsec VPN як транспорт, але додає інтелектуальну оркестрацію.</p>
+    <table>
+      <thead>
+        <tr><th>Критерій</th><th>Класичний VPN</th><th>SD-WAN</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Управління</td><td>Ручне / децентралізоване</td><td><span class="hl3">Централізований контролер</span></td></tr>
+        <tr><td>Вибір шляху</td><td>Статичний</td><td><span class="hl3">Динамічний (QoS-aware)</span></td></tr>
+        <tr><td>Видимість трафіку</td><td>Обмежена</td><td><span class="hl3">Повна аналітика</span></td></tr>
+        <tr><td>Резервування каналів</td><td>Вручну</td><td><span class="hl3">Автоматичне</span></td></tr>
+        <tr><td>Підтримка каналів</td><td>Один тип</td><td>MPLS + LTE + broadband</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;color:#90a0b8;font-size:0.9rem;">Приклади: <span class="hl">Cisco Viptela</span>, <span class="hl2">VMware SD-WAN</span>, <span class="hl3">Fortinet Secure SD-WAN</span></p>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 8 — ZTNA ═══════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Zero Trust Network Access (ZTNA)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;"><span class="hl">ZTNA</span> — модель безпеки <em>«ніколи не довіряй, завжди перевіряй»</em>. Доступ надається на основі ідентичності та контексту, а не мережевого розташування.</p>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Модель VPN (застаріла)</h3>
+          <p>Клієнт → Тунель до мережі → <span class="hl2">Всі ресурси доступні</span><br/>
+          Компроміс одного пристрою = доступ до всього.</p>
+        </div>
+        <div class="card good">
+          <h3 style="color:#50dc64;">Модель ZTNA</h3>
+          <p>Клієнт → Перевірка ID + пристрою → <span class="hl3">Тільки дозволені ресурси</span><br/>
+          Мікросегментація на рівні кожного додатку.</p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Ключові принципи ZTNA</h3>
+          <ul style="max-width:100%;">
+            <li>Мінімальні привілеї (Least Privilege)</li>
+            <li>Безперервна автентифікація та авторизація</li>
+            <li>Мікросегментація доступу</li>
+            <li>Ізоляція додатків від мережевого рівня</li>
+          </ul>
+        </div>
+        <p style="font-size:0.9rem;color:#90a0b8;margin-top:8px;">Рішення: Zscaler ZPA · Cloudflare Access · BeyondCorp (Google)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 9 — DEVOPS ════════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>VPN у DevOps та мікросервісах</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>Service Mesh vs VPN</h3>
+          <table style="max-width:100%;font-size:0.88rem;margin-top:10px;">
+            <thead><tr><th></th><th>VPN</th><th>Service Mesh</th></tr></thead>
+            <tbody>
+              <tr><td>Рівень</td><td>L3/L4</td><td>L7</td></tr>
+              <tr><td>Шифрування</td><td>IPsec/TLS</td><td>mTLS між podами</td></tr>
+              <tr><td>Видимість</td><td>Трафік</td><td>HTTP-метрики</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Практичні сценарії</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">CI/CD пайплайни</span> — доступ до внутрішніх репозиторіїв</li>
+            <li><span class="hl">Kubernetes</span> — WireGuard-based CNI (Cilium, Flannel)</li>
+            <li><span class="hl">IaC</span> — управління VPN як кодом (Terraform/Ansible)</li>
+            <li><span class="hl">Hashicorp Vault</span> — розподіл секретів через VPN</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 10 — ПЕРСПЕКТИВИ ════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Перспективи розвитку VPN-технологій</h2>
+    <div class="divider"></div>
+    <div class="wide">
+      <div class="cols">
+        <div class="col">
+          <div class="card accent">
+            <h3>🔐 Post-Quantum Cryptography</h3>
+            <p>Перехід до алгоритмів, стійких до квантових комп'ютерів: CRYSTALS-Kyber, CRYSTALS-Dilithium. Стандарти NIST PQC затверджені у 2024 р.</p>
+          </div>
+          <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+            <h3 style="color:#b07bff;">🌐 Meshnet / P2P VPN</h3>
+            <p>Децентралізовані моделі без центрального сервера: <span class="hl">Tailscale</span>, <span class="hl2">NetBird</span> на базі WireGuard.</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card good">
+            <h3 style="color:#50dc64;">⚡ QUIC-based VPN</h3>
+            <p>Тунелювання поверх QUIC зменшує затримку при перемиканні мереж (0-RTT відновлення сесії).</p>
+          </div>
+          <div class="card warn">
+            <h3>☁️ SASE</h3>
+            <p><span class="hl">Secure Access Service Edge</span> — конвергенція SD-WAN + ZTNA + FWaaS + CASB у єдину хмарну платформу (Gartner, 2019 → масове впровадження 2024–2025).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 11 — МЕТРИКИ ═══════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Метрики якості VPN-з'єднань (KPI)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;">Ефективна експлуатація VPN вимагає постійного моніторингу ключових показників якості (KPI):</p>
+    <table>
+      <thead>
+        <tr><th>Метрика</th><th>Визначення</th><th>Норма для VPN</th><th>Критичний поріг</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="hl">Latency (Затримка)</span></td>
+          <td>Час проходження пакета (RTT)</td>
+          <td>&lt; 50 мс (LAN), &lt; 150 мс (WAN)</td>
+          <td><span class="badge badge-red">&gt; 300 мс</span></td>
+        </tr>
+        <tr>
+          <td><span class="hl2">Jitter (Джитер)</span></td>
+          <td>Коливання затримки</td>
+          <td>&lt; 10 мс</td>
+          <td><span class="badge badge-red">&gt; 30 мс (VoIP)</span></td>
+        </tr>
+        <tr>
+          <td><span class="hl3">Packet Loss</span></td>
+          <td>Частка загублених пакетів</td>
+          <td>&lt; 0,1 %</td>
+          <td><span class="badge badge-red">&gt; 1 %</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card warn" style="max-width:800px;margin-top:16px;">
+      <p><span class="hl2">Важливо:</span> Затримка у VPN завжди вища за native-з'єднання через шифрування та маршрутизацію через сервер. Нормальна надбавка: <span class="hl">+5–30 мс</span> залежно від протоколу.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 12 — LATENCY/JITTER ═════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Latency та Jitter: деталі</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>Latency — компоненти затримки</h3>
+          <pre style="margin:10px 0;font-size:0.82rem;">RTT = 2 × (Propagation delay
+        + Transmission delay
+        + Encryption overhead)</pre>
+          <ul style="max-width:100%;">
+            <li>Фізична відстань (≈ 200 км/мс)</li>
+            <li>Шифрування AES-256 (&lt; 1 мс на CPU)</li>
+            <li>Навантаження на сервер (черги)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(255,170,0,0.4);background:rgba(255,170,0,0.07);">
+          <h3 style="color:#ffaa00;">Jitter — наслідки</h3>
+          <ul style="max-width:100%;">
+            <li>Критичний для <span class="hl">VoIP</span> — погіршення якості голосу</li>
+            <li>Критичний для <span class="hl">відеоконференцій</span> — артефакти</li>
+            <li>Вирішується jitter-buffer на рівні додатку</li>
+          </ul>
+        </div>
+        <div class="card good" style="margin-top:0;">
+          <h3 style="color:#50dc64;">Вимірювання</h3>
+          <pre style="font-size:0.82rem;">ping -c 100 &lt;VPN_server&gt;
+# min/avg/max/mdev — показник jitter</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 13 — PACKET LOSS ════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Packet Loss: вплив на продуктивність</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Формула Mathis (TCP throughput)</h3>
+          <pre style="font-size:0.82rem;">Throughput ≈ MSS / (RTT × √PacketLoss)
+
+При RTT=100мс та Loss=1%:
+Throughput ≈ 1460 / (0.1 × √0.01)
+           ≈ 146 кБ/с
+(замість 10+ МБ/с!)</pre>
+          <p style="margin-top:8px;">Навіть 1% втрат <span class="hl2">знижує пропускну здатність у 68 разів!</span></p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Причини втрат у VPN</h3>
+          <ul style="max-width:100%;">
+            <li>Перевантаження каналу між клієнтом і сервером</li>
+            <li>Проблеми з MTU (фрагменти відкидаються)</li>
+            <li>Нестабільний Wi-Fi (остання миля)</li>
+            <li>Перевантаження апаратного шлюза</li>
+          </ul>
+        </div>
+        <div class="card accent" style="margin-top:0;">
+          <h3>UDP vs TCP тунелі</h3>
+          <p>OpenVPN over UDP стійкіший до втрат, ніж over TCP (проблема <span class="hl">«TCP over TCP»</span> — подвійна ретрансмісія).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 14 — IPERF3 ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>iPerf3: вимірювання пропускної здатності</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <pre style="font-size:0.85rem;"># Запуск сервера (на VPN-хості):
+iperf3 -s -p 5201
+
+# TCP-тест (30 секунд):
+iperf3 -c 10.0.0.1 -p 5201 -t 30
+
+# UDP-тест (100 Мбіт/с):
+iperf3 -c 10.0.0.1 -u -b 100M -t 30
+
+# Паралельні потоки (реальніший сценарій):
+iperf3 -c 10.0.0.1 -P 4 -t 30</pre>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Інтерпретація результатів</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Bitrate</span> — фактична пропускна здатність (МБіт/с)</li>
+            <li><span class="hl2">Retr</span> — ретрансмісії TCP (&gt; 0 → є congestion)</li>
+            <li><span class="hl3">Jitter / Lost</span> — тільки в UDP-режимі</li>
+          </ul>
+        </div>
+        <div class="card warn" style="margin-top:0;">
+          <h3>Практика</h3>
+          <p>Порівнюйте результати з VPN і без VPN — різниця = overhead шифрування. Типово WireGuard: -3–8%, OpenVPN: -10–20%.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 15 — MTR ═══════════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>MTR: динамічний трасувальник</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:16px;"><span class="hl">MTR (My Traceroute)</span> — комбінація <code>traceroute</code> та <code>ping</code>, показує затримку та втрати на кожному хопі в реальному часі.</p>
+    <pre style="max-width:900px;">$ mtr --report --report-cycles 100 203.0.113.1
+
+Host                    Loss%   Snt   Last   Avg  Best  Wrst StDev
+1. 192.168.1.1           0.0%   100    1.2   1.3   1.1   2.1   0.2
+2. 10.20.0.1             0.0%   100    8.5   9.1   8.2  12.4   0.8
+3. 203.0.113.1           2.0%   100   45.3  46.7  44.1  89.2   4.1</pre>
+    <div class="cols" style="max-width:900px;margin-top:16px;">
+      <div class="col">
+        <div class="card warn">
+          <h3>Діагностика</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Loss% &gt; 0</span> на проміжному хопі → проблема у провайдера</li>
+            <li>Loss% тільки на останньому → ICMP-обмеження</li>
+            <li>Різкий стрибок Avg → bottleneck</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Корисні опції</h3>
+          <pre style="font-size:0.82rem;">mtr -u 203.0.113.1   # UDP-режим
+mtr -T 203.0.113.1   # TCP-режим
+mtr -n 203.0.113.1   # без DNS lookup</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 16 — WIRESHARK ════════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Wireshark: глибокий аналіз пакетів</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <h3 style="margin-bottom:10px;">Фільтри для VPN-діагностики</h3>
+        <pre style="font-size:0.82rem;"># IKE (узгодження IPsec):
+isakmp
+
+# ESP (зашифрований IPsec):
+esp
+
+# WireGuard UDP (порт 51820):
+udp.port == 51820
+
+# TCP ретрансмісії (ознака втрат):
+tcp.analysis.retransmission
+
+# DF bit (діагностика MTU):
+ip.flags.df == 1 &amp;&amp; icmp</pre>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Важливо для VPN</h3>
+          <p>Зашифровані тунелі (ESP/WireGuard) не дозволяють аналізувати внутрішній трафік. Аналізуйте на <span class="hl">TUN-інтерфейсі клієнта</span> до шифрування.</p>
+        </div>
+        <div class="card accent" style="margin-top:0;">
+          <h3>Корисні функції</h3>
+          <ul style="max-width:100%;">
+            <li>Statistics → I/O Graph (графік трафіку)</li>
+            <li>Statistics → TCP Stream Graphs (RTT)</li>
+            <li>Follow → TCP Stream (потік з'єднання)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 17 — MTU PROBLEMS ══════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Типові несправності: MTU-проблеми</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Симптоми MTU-проблем</h3>
+          <ul style="max-width:100%;">
+            <li>Малі пакети (ping) — проходять нормально</li>
+            <li>HTTP/HTTPS-сторінки — зависають або дуже повільні</li>
+            <li>SSH — підключається, але виведення «зависає»</li>
+            <li>Файлові передачі — починаються, потім зупиняються</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Діагностика та виправлення</h3>
+          <pre style="font-size:0.82rem;"># Пошук правильного MTU:
+ping -M do -s 1472 &lt;VPN_server&gt;
+ping -M do -s 1400 &lt;VPN_server&gt;
+ping -M do -s 1350 &lt;VPN_server&gt;
+
+# Поточний MTU тунелю:
+ip link show tun0 | grep mtu
+
+# Встановлення MTU:
+ip link set tun0 mtu 1420
+
+# MSS Clamping (iptables):
+iptables -t mangle -A FORWARD \
+  -p tcp --tcp-flags SYN,RST SYN \
+  -j TCPMSS --clamp-mss-to-pmtu</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 18 — DNS LEAKS ════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>DNS-витоки: виявлення та усунення</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Що таке DNS-витік?</h3>
+          <p>DNS-запити обходять VPN-тунель і передаються через ISP, розкриваючи активність користувача — навіть якщо сам трафік зашифрований.</p>
+          <ol style="list-style:decimal;padding-left:20px;color:#cdd8e8;margin-top:10px;">
+            <li style="padding:4px 0;">Хост підключається до VPN (Split-Tunnel)</li>
+            <li style="padding:4px 0;">DNS налаштований на ISP-сервер</li>
+            <li style="padding:4px 0;">DNS-запити йдуть напряму через ISP</li>
+            <li style="padding:4px 0;">ISP бачить всі запити → <span class="hl2">витік!</span></li>
+          </ol>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Перевірка та виправлення</h3>
+          <pre style="font-size:0.82rem;"># Поточний DNS:
+cat /etc/resolv.conf
+
+# Онлайн-перевірка:
+# dnsleaktest.com
+# ipleak.net</pre>
+          <ul style="max-width:100%;margin-top:10px;">
+            <li>Вказати <code>DNS = 10.0.0.1</code> у конфіг WireGuard/OpenVPN</li>
+            <li>Увімкнути DNS leak protection у клієнті</li>
+            <li>Використовувати DoH/DoT поверх тунелю</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 19 — AUTH ERRORS ════════════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Помилки автентифікації у VPN</h2>
+    <div class="divider"></div>
+    <table>
+      <thead>
+        <tr><th>Помилка</th><th>Причина</th><th>Рішення</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-red">AUTH_FAILED</span></td>
+          <td>Неправильний PSK або сертифікат</td>
+          <td>Перевірити ключі, оновити сертифікати</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-red">TLS handshake failed</span></td>
+          <td>Невідповідність cipher suite</td>
+          <td>Узгодити алгоритми між клієнтом і сервером</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">Certificate expired</span></td>
+          <td>Прострочений TLS-сертифікат</td>
+          <td>Оновити сертифікат, налаштувати auto-renew</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-yellow">Clock skew</span></td>
+          <td>Розбіжність часу &gt; 5 хв (IKE)</td>
+          <td>Синхронізувати NTP на всіх вузлах</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-red">No response from server</span></td>
+          <td>Фаєрвол блокує UDP 500/4500</td>
+          <td>Відкрити порти для IKE/NAT-T</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="card accent" style="max-width:800px;margin-top:16px;">
+      <pre style="font-size:0.82rem;"># Діагностика IKEv2 / strongSwan:
+journalctl -u strongswan -f
+
+# Детальний вивід OpenVPN:
+openvpn --config client.ovpn --verb 4</pre>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 20 — IVANTI CASE ════════════════════════ -->
+  <div class="slide bg-red">
+    <h2>Кейс-стаді: масові зломи VPN (2024)</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:18px;">У 2024–2025 роках виявлено критичні вразливості в корпоративних VPN-шлюзах <span class="hl2">Ivanti Connect Secure</span> (раніше — Pulse Secure).</p>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Хронологія подій</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl2">Грудень 2023</span> — виявлено CVE-2023-46805 та CVE-2024-21887</li>
+            <li><span class="hl2">Січень 2024</span> — CISA видала екстрене попередження для федеральних агентств США</li>
+            <li><span class="hl2">Лютий 2024</span> — понад 2100 організацій скомпрометовано</li>
+            <li><span class="hl2">2025</span> — CVE-2025-0282 продовжує активно використовуватись</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Масштаб атаки</h3>
+          <ul style="max-width:100%;">
+            <li>Урядові, оборонні та фінансові організації</li>
+            <li>20+ країн по всьому світу</li>
+            <li>Хакерська група: <span class="hl2">UNC5221</span> (пов'язана з китайськими APT)</li>
+            <li>Мета: шпигунство та lateral movement</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 21 — CVE IVANTI TECH ═══════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Технічний аналіз вразливостей Ivanti</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">CVE-2023-46805 — Обхід автентифікації</h3>
+          <p>CVSS: <span class="badge badge-red">8.2 High</span></p>
+          <p style="margin-top:8px;">Маніпуляція URL-шляхами у веб-інтерфейсі для обходу перевірки автентифікації без будь-яких облікових даних.</p>
+        </div>
+        <div class="card bad" style="margin-top:0;">
+          <h3 style="color:#ff8080;">CVE-2024-21887 — Ін'єкція команд</h3>
+          <p>CVSS: <span class="badge badge-red">9.1 Critical</span></p>
+          <p style="margin-top:8px;">Виконання довільних команд ОС через вразливий endpoint. У комбінації з першою — <span class="hl2">без автентифікації!</span></p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Ланцюжок атаки (UNC5221)</h3>
+          <pre style="font-size:0.82rem;">1. HTTP-запит з маніпульованим URL
+   → CVE-2023-46805 (обхід auth)
+      ↓
+2. Ін'єкція команди у endpoint
+   → CVE-2024-21887 (RCE)
+      ↓
+3. Встановлення бекдору
+   (GLASSTOKEN web shell)
+      ↓
+4. Lateral movement у мережу</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 22 — УРОКИ IVANTI ══════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Уроки з аналізу інциденту Ivanti</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card bad">
+          <h3 style="color:#ff8080;">Що пішло не так</h3>
+          <ul style="max-width:100%;">
+            <li>VPN-шлюзи з прямим доступом з Інтернету (немає DMZ)</li>
+            <li>Відсутній моніторинг аномалій на шлюзі</li>
+            <li>Затримка патчів — тижні замість годин</li>
+            <li>Немає сегментації: шлюз → доступ до всієї мережі</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Індикатори компрометації (IoC)</h3>
+          <pre style="font-size:0.82rem;">- Аномальні HTTP-запити
+  з маніпульованими URL
+- Нові файли у
+  /data/runtime/mtmp/
+- Незвичайні вихідні з'єднання
+  з VPN-шлюза
+- Зміни конфігурації без
+  адмін-сесій</pre>
+        </div>
+      </div>
+    </div>
+    <div class="card accent" style="max-width:900px;margin-top:10px;">
+      <p><span class="hl">Реакція CISA:</span> рекомендувала відключити всі Ivanti-шлюзи та виконати повне відновлення з перевіреного образу (factory reset + оновлення прошивки).</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 23 — HARDENING ════════════════════════ -->
+  <div class="slide bg-navy">
+    <h2>Hardening VPN-шлюзів</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card good">
+          <h3 style="color:#50dc64;">Мінімізація поверхні атаки</h3>
+          <ul style="max-width:100%;">
+            <li>Відключити невикористовувані сервіси та протоколи</li>
+            <li>Вимкнути застарілі: SSLv3, TLS 1.0/1.1, IKEv1</li>
+            <li>Відключити веб-консоль з публічного Інтернету</li>
+            <li>Обмежити SSH до IP-адрес управління (allowlist)</li>
+            <li>Вимкнути SNMP v1/v2 → тільки SNMPv3</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card accent">
+          <h3>Автентифікація та доступ</h3>
+          <ul style="max-width:100%;">
+            <li><span class="hl">Обов'язкове MFA</span> для всіх VPN-користувачів</li>
+            <li>Сертифікати замість PSK (де можливо)</li>
+            <li>Обмеження кількості сеансів на користувача</li>
+            <li>Тайм-аут сесії — максимум 8 годин</li>
+            <li>RBAC: мінімально необхідні привілеї</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 24 — PATCH MANAGEMENT ══════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Управління патчами (Patch Management)</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>Процес управління патчами</h3>
+          <div class="diagram" style="flex-direction:column;gap:4px;align-items:flex-start;margin:10px 0;">
+            <div class="dbox blue" style="width:280px;font-size:0.85rem;">1. Підписка на CVE-повідомлення</div>
+            <div class="arrow" style="margin-left:120px;">↓</div>
+            <div class="dbox yellow" style="width:280px;font-size:0.85rem;">2. Оцінка CVSS + наявність PoC</div>
+            <div class="arrow" style="margin-left:120px;">↓</div>
+            <div class="dbox green" style="width:280px;font-size:0.85rem;">3. Тестування у staging</div>
+            <div class="arrow" style="margin-left:120px;">↓</div>
+            <div class="dbox blue" style="width:280px;font-size:0.85rem;">4. Розгортання (maintenance window)</div>
+            <div class="arrow" style="margin-left:120px;">↓</div>
+            <div class="dbox green" style="width:280px;font-size:0.85rem;">5. Верифікація та документування</div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card warn">
+          <h3>Пріоритизація за CVSS</h3>
+          <table style="max-width:100%;font-size:0.88rem;margin-top:8px;">
+            <thead><tr><th>CVSS</th><th>Умова</th><th>Термін</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-red">≥ 9.0</span></td><td>+ активна експлуатація</td><td><span class="hl2">24–48 год</span></td></tr>
+              <tr><td><span class="badge badge-yellow">7.0–8.9</span></td><td>будь-яка</td><td>7 днів</td></tr>
+              <tr><td><span class="badge badge-green">&lt; 7.0</span></td><td>будь-яка</td><td>30 днів</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card good" style="margin-top:0;">
+          <h3 style="color:#50dc64;">Інструменти сканування</h3>
+          <p>Tenable Nessus · Qualys · OpenVAS</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 25 — SIEM MONITORING ════════════════════ -->
+  <div class="slide bg-teal">
+    <h2>Моніторинг VPN та SIEM</h2>
+    <div class="divider"></div>
+    <div class="cols">
+      <div class="col">
+        <div class="card accent">
+          <h3>Що логувати на VPN-шлюзі</h3>
+          <ul style="max-width:100%;">
+            <li>Успішні та невдалі автентифікації (IP, user-agent)</li>
+            <li>Зміни конфігурації (хто, коли, що змінив)</li>
+            <li>Аномальна кількість з'єднань від одного IP</li>
+            <li>Підключення з нестандартних геолокацій</li>
+            <li>Обсяг переданого трафіку (виявлення exfiltration)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="border-color:rgba(123,47,247,0.4);background:rgba(123,47,247,0.08);">
+          <h3 style="color:#b07bff;">Інтеграція з SIEM</h3>
+          <table style="max-width:100%;font-size:0.88rem;margin-top:8px;">
+            <thead><tr><th>SIEM</th><th>Інтеграція</th></tr></thead>
+            <tbody>
+              <tr><td>Splunk</td><td>Forwarder + VPN App</td></tr>
+              <tr><td>MS Sentinel</td><td>Connector Cisco/Palo Alto</td></tr>
+              <tr><td>Elastic SIEM</td><td>Filebeat + Syslog</td></tr>
+              <tr><td>IBM QRadar</td><td>DSM для основних вендорів</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 26 — DEFENSE IN DEPTH ═══════════════════ -->
+  <div class="slide bg-purple">
+    <h2>Комплексна стратегія безпеки VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:16px;"><span class="hl">Defense-in-Depth</span> — багаторівневий захист, де кожен рівень стримує атаки, якщо попередній подолано.</p>
+    <div class="diagram" style="flex-direction:column;gap:6px;align-items:center;max-width:800px;">
+      <div class="dbox blue" style="width:360px;">Периметр: Anti-DDoS → WAF → Firewall</div>
+      <div class="arrow">↓</div>
+      <div class="dbox yellow" style="width:360px;">Шлюз: VPN Gateway ← Патчі та Hardening</div>
+      <div class="arrow">↓</div>
+      <div class="dbox green" style="width:360px;">Доступ: MFA + PKI → RBAC → Least Privilege</div>
+      <div class="arrow">↓</div>
+      <div class="dbox purple" style="width:360px;">Мережа: Сегментація → IDS/IPS → Zero Trust</div>
+      <div class="arrow">↓</div>
+      <div class="dbox" style="width:360px;">Моніторинг: SIEM → SOC → Incident Response</div>
+    </div>
+    <div class="card bad" style="max-width:800px;margin-top:14px;">
+      <p><span class="hl2">Ключовий принцип:</span> Жоден окремий захід не є достатнім. Тільки багаторівневий захист ефективно протистоїть APT-атакам класу UNC5221.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SLIDE 27 — ПИТАННЯ ════════════════════════════ -->
+  <div class="slide bg-dark">
+    <h2>Контрольні питання</h2>
+    <div class="divider"></div>
+    <ul style="max-width:860px;">
+      <li>Чим відрізняється AWS Site-to-Site VPN від Azure VPN Gateway за архітектурою та протоколами?</li>
+      <li>Як SD-WAN використовує VPN-технології та в чому його перевага над класичним VPN?</li>
+      <li>Що таке ZTNA і чому він вважається наступником корпоративних VPN?</li>
+      <li>Поясніть три основні KPI якості VPN: Latency, Jitter, Packet Loss.</li>
+      <li>Як iPerf3 та MTR допомагають у діагностиці VPN-з'єднань? Наведіть приклад команд.</li>
+      <li>Опишіть ланцюжок атаки CVE-2023-46805 + CVE-2024-21887 на Ivanti Connect Secure.</li>
+      <li>Які кроки hardening мінімізують поверхню атаки VPN-шлюза?</li>
+      <li>Як правильно пріоритизувати патчі за CVSS Score у критичній інфраструктурі?</li>
+    </ul>
+  </div>
+
+
+  <!-- SLIDE 29 VPN audit -->
+  <div class="slide bg-teal">
+    <h2>Аудит VPN-інфраструктури</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Що перевіряти</div>
+          <ul class="bullet-list">
+            <li>Версії програмного забезпечення та патч-рівень</li>
+            <li>Криптографічні алгоритми (немає SHA-1, 3DES)</li>
+            <li>Сертифікати: термін дії, CRL/OCSP</li>
+            <li>Логи доступу: аномалії, неуспішні авторизації</li>
+            <li>Права доступу: принцип мінімальних привілеїв</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Інструменти аудиту</div>
+          <ul class="bullet-list">
+            <li>Nmap: сканування відкритих портів VPN</li>
+            <li>IKE-scan: аудит IKEv1/IKEv2 конфігурацій</li>
+            <li>sslyze: аналіз TLS конфігурації SSL VPN</li>
+            <li>testssl.sh: перевірка TLS cipher suites</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 30 incident response -->
+  <div class="slide bg-purple">
+    <h2>Реагування на інциденти VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;">Поетапний план реагування при підозрі на компрометацію VPN-шлюзу або облікових даних.</p>
+    <table style="max-width:950px;">
+      <thead><tr><th>Крок</th><th>Дія</th><th>Часовий рамки</th></tr></thead>
+      <tbody>
+        <tr><td>1. Виявлення</td><td>SIEM alert, anomaly detection</td><td>Автоматично (хвилини)</td></tr>
+        <tr><td>2. Ізоляція</td><td>Заблокувати підозрілі облікові записи/IP</td><td>&lt; 30 хвилин</td></tr>
+        <tr><td>3. Розслідування</td><td>Аналіз логів, forensics VPN gateway</td><td>1-8 годин</td></tr>
+        <tr><td>4. Усунення</td><td>Патч/ротація ключів/скидання паролів</td><td>1-24 години</td></tr>
+        <tr><td>5. Відновлення</td><td>Перевірка цілісності, повернення сервісу</td><td>Після підтвердження</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 31 AWS advanced -->
+  <div class="slide bg-dark">
+    <h2>AWS VPN: розширені можливості</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">AWS Transit Gateway</div>
+          <ul class="bullet-list">
+            <li>Hub для підключення множини VPC і on-premises</li>
+            <li>Centralized routing між всіма підключеннями</li>
+            <li>Transit Gateway VPN — один ендпойнт для 5000+ VPC</li>
+            <li>Multicast, route tables, BGP підтримка</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">AWS Client VPN деталі</div>
+          <ul class="bullet-list">
+            <li>OpenVPN-сумісний протокол</li>
+            <li>Active Directory або Certificate auth</li>
+            <li>Split-tunnel або Full-tunnel режими</li>
+            <li>Authorization rules по AD group</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 32 GCP advanced -->
+  <div class="slide bg-navy">
+    <h2>Google Cloud HA VPN та Cloud Router</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">HA VPN</span> + <span class="hl">Cloud Router</span> — рекомендована архітектура для Site-to-Site у GCP з SLA 99.99%.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">HA VPN архітектура</div>
+          <ul class="bullet-list">
+            <li>2 зовнішні IP-адреси (два інтерфейси)</li>
+            <li>Мінімум 2 тунелі до різних peer-інтерфейсів</li>
+            <li>BGP через Cloud Router на кожному тунелі</li>
+            <li>99.99% SLA при правильній конфігурації</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Cloud Router BGP</div>
+          <ul class="bullet-list">
+            <li>Автоматично розповсюджує Cloud підмережі</li>
+            <li>Dynamic routing = no static routes</li>
+            <li>ASN налаштовується (16-бітний або 32-бітний)</li>
+            <li>Route filtering через route policies</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 33 VPN documentation -->
+  <div class="slide bg-teal">
+    <h2>Документація VPN-інфраструктури</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Обов'язкова документація</div>
+          <ul class="bullet-list">
+            <li>Мережева топологія та схема тунелів</li>
+            <li>Реєстр всіх VPN-шлюзів (IP, версія, ПЗ)</li>
+            <li>Матриця доступу: хто до чого підключається</li>
+            <li>PKI ієрархія та термін дії сертифікатів</li>
+            <li>SLA та RTO/RPO вимоги</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Інструменти</div>
+          <ul class="bullet-list">
+            <li>Confluence/Notion для wiki</li>
+            <li>Draw.io для мережевих схем</li>
+            <li>Terraform state як «живу» документацію</li>
+            <li>Ansible inventory для конфігурацій</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 34 post-quantum vpn -->
+  <div class="slide bg-purple">
+    <h2>Постквантова криптографія у VPN</h2>
+    <div class="divider"></div>
+    <p style="max-width:800px;margin-bottom:20px;"><span class="hl">Harvest now, decrypt later</span> — зловмисники збирають зашифрований трафік сьогодні, щоб розшифрувати після появи квантових комп'ютерів.</p>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card bad">
+          <div class="card-title">Загроза</div>
+          <ul class="bullet-list">
+            <li>RSA, ECDSA, ECDH — вразливі до алгоритму Шора</li>
+            <li>Записаний сьогодні VPN-трафік — розшифровано через 10-15 років</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Міграція</div>
+          <ul class="bullet-list">
+            <li>AWS: гібридний TLS + ML-KEM вже доступний</li>
+            <li>OpenSSH 9.0: CRYSTALS-Kyber підтримка</li>
+            <li>WireGuard: PQC патчі в розробці</li>
+            <li>Гібридний режим: класичний + PQC</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 35 VPN telemetry -->
+  <div class="slide bg-dark">
+    <h2>VPN телеметрія та SIEM інтеграція</h2>
+    <div class="divider"></div>
+    <table style="max-width:950px;">
+      <thead><tr><th>Подія</th><th>Ризик</th><th>Alerting правило</th></tr></thead>
+      <tbody>
+        <tr><td>Failed auth burst</td><td>Brute force</td><td>&gt; 5 невдалих спроб за 1 хвилину</td></tr>
+        <tr><td>Geo-suspicious login</td><td>Компрометація</td><td>Логін з нової країни</td></tr>
+        <tr><td>Concurrent sessions</td><td>Credential sharing</td><td>&gt; 2 одночасні сесії для одного user</td></tr>
+        <tr><td>Large data transfer</td><td>Exfiltration</td><td>&gt; 1 ГБ за VPN-сесію</td></tr>
+        <tr><td>Off-hours connection</td><td>Аномалія</td><td>Підключення поза робочими годинами</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 36 summary l08 -->
+  <div class="slide bg-teal">
+    <h2>Підсумок: хмарні VPN та безпека</h2>
+    <div class="divider"></div>
+    <div class="cols" style="max-width:1050px;">
+      <div class="col">
+        <div class="card good">
+          <div class="card-title">Ключові висновки</div>
+          <ul class="bullet-list">
+            <li>Хмарні VPN: AWS HA VPN, Azure VPN GW, GCP HA VPN</li>
+            <li>SD-WAN замінює MPLS + додає flexibility</li>
+            <li>ZTNA поступово замінює Remote Access VPN</li>
+            <li>Постквантові алгоритми — вже час починати міграцію</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Checklist безпеки</div>
+          <ul class="bullet-list">
+            <li>MFA обов'язково для всіх VPN-підключень</li>
+            <li>Регулярний аудит та патчування</li>
+            <li>SIEM з alerting на аномалії</li>
+            <li>Incident Response Plan готовий</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════ SLIDE 28 — END ════════════════════════════════ -->
+  <div class="slide bg-end">
+    <div style="font-size:4rem;margin-bottom:10px;">🛡️</div>
+    <h1 style="font-size:2.2rem;">Дякую за увагу!</h1>
+    <div class="divider"></div>
+    <p class="subtitle">Лекція 8: Огляд хмарних VPN-рішень. Моніторинг, діагностика та аналіз інцидентів безпеки</p>
+    <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:900px;">
+      <span class="tag">AWS VPN</span>
+      <span class="tag">Azure VPN Gateway</span>
+      <span class="tag">Google Cloud VPN</span>
+      <span class="tag">SD-WAN</span>
+      <span class="tag">ZTNA</span>
+      <span class="tag">SASE</span>
+      <span class="tag">Latency / Jitter</span>
+      <span class="tag">Packet Loss</span>
+      <span class="tag">iPerf3</span>
+      <span class="tag">MTR</span>
+      <span class="tag">Wireshark</span>
+      <span class="tag">MTU Clamping</span>
+      <span class="tag">DNS Leak</span>
+      <span class="tag">CVE-2023-46805</span>
+      <span class="tag">CVE-2024-21887</span>
+      <span class="tag">Hardening</span>
+      <span class="tag">Patch Management</span>
+      <span class="tag">SIEM</span>
+    </div>
+  </div>
+
+</div><!-- /slideshow -->
+
+<!-- Navigation -->
+<button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">‹</button>
+<button class="nav-btn" id="next-btn" onclick="changeSlide(1)">›</button>
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('progress-bar').style.width = ((current + 1) / slides.length * 100) + '%';
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + slides.length;
+    document.getElementById('prev-btn').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('next-btn').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  function changeSlide(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  changeSlide(-1);
+  });
+
+  // Touch/swipe support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changeSlide(dx < 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+</body>
+</html>
