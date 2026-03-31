@@ -12,7 +12,7 @@
 
 # Лекція 7
 
-# Сучасний протокол WireGuardта концепція Zero Trust (ZTNA)
+# Сучасний протокол WireGuard та концепція Zero Trust (ZTNA)
 
 WireGuard · Noise Protocol · Cryptokey Routing · ZTNA
 
