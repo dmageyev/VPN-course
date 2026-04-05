@@ -1,0 +1,1487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GLOSSARY>
+  <INFO>
+    <NAME>Глосарій курсу «Технології VPN»</NAME>
+    <INTRO>Словник термінів та скорочень курсу «Технології VPN»</INTRO>
+    <INTROFORMAT>1</INTROFORMAT>
+    <ALLOWDUPLICATEDENTRIES>0</ALLOWDUPLICATEDENTRIES>
+    <DISPLAYFORMAT>dictionary</DISPLAYFORMAT>
+    <SHOWSPECIAL>1</SHOWSPECIAL>
+    <SHOWALPHABET>1</SHOWALPHABET>
+    <SHOWALL>1</SHOWALL>
+    <ALLOWCOMMENTS>0</ALLOWCOMMENTS>
+    <USEDYNALINK>1</USEDYNALINK>
+    <DEFAULTAPPROVAL>1</DEFAULTAPPROVAL>
+    <GLOBALGLOSSARY>0</GLOBALGLOSSARY>
+    <ENTBYPAGE>10</ENTBYPAGE>
+    <ENTRIES>
+      <ENTRY>
+        <CONCEPT>--client-config-dir (CCD)</CONCEPT>
+        <DEFINITION><![CDATA[Директорія файлів індивідуальних налаштувань клієнтів OpenVPN. Дозволяє призначати фіксовані IP, маршрути та параметри на клієнта.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>--push</CONCEPT>
+        <DEFINITION><![CDATA[Директива OpenVPN-сервера для надсилання налаштувань клієнту: маршрути, DNS, параметри підключення.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ACME (Automatic Certificate Management Environment)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол автоматизації отримання та оновлення сертифікатів TLS, розроблений IETF і використовуваний Let's Encrypt.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Active/Active</CONCEPT>
+        <DEFINITION><![CDATA[Схема балансування навантаження VPN: обидва шлюзи одночасно активні. Забезпечує горизонтальне масштабування пропускної здатності.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Active/Standby</CONCEPT>
+        <DEFINITION><![CDATA[Схема резервування VPN: один шлюз активний, другий у резерві. При відмові активного — резерв перебирає з'єднання.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>AEAD (Authenticated Encryption with Associated Data)</CONCEPT>
+        <DEFINITION><![CDATA[Режим шифрування, що поєднує шифрування та автентифікацію. Прикладами є AES-GCM та ChaCha20-Poly1305.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>AES (Advanced Encryption Standard)</CONCEPT>
+        <DEFINITION><![CDATA[Симетричний блоковий шифр, прийнятий NIST у 2001 р. Підтримує ключі 128, 192, 256 біт. Стандарт шифрування у більшості VPN.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>AH (Authentication Header)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол IPsec (RFC 4302), що забезпечує тільки автентифікацію та цілісність без шифрування. Протокол IP 51.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>AllowedIPs</CONCEPT>
+        <DEFINITION><![CDATA[Параметр WireGuard peer: список IP-діапазонів, які маршрутизуються через цього peer. Основа Cryptokey Routing.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Anomaly Detection</CONCEPT>
+        <DEFINITION><![CDATA[Виявлення аномалій у мережевому трафіку або поведінці користувачів методами ML або статистичного аналізу для виявлення загроз.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>AWS VPN (Amazon Web Services VPN)</CONCEPT>
+        <DEFINITION><![CDATA[Хмарний VPN-сервіс AWS: Site-to-Site VPN (IPsec до Virtual Private Gateway) та Client VPN (OpenVPN-сумісний).<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Azure VPN Gateway</CONCEPT>
+        <DEFINITION><![CDATA[Хмарний VPN-шлюз Microsoft Azure для Site-to-Site та Point-to-Site VPN з підтримкою IKEv2, OpenVPN та SSTP.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>BeyondCorp</CONCEPT>
+        <DEFINITION><![CDATA[Модель Zero Trust від Google, що реалізує ZTNA для всіх корпоративних застосунків незалежно від мережевого розташування.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>BGP (Border Gateway Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол динамічної маршрутизації між автономними системами. Використовується у хмарних Site-to-Site VPN для обміну маршрутами.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>BLAKE2s</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічна хеш-функція, що використовується у WireGuard для хешування та KDF. Швидша за SHA-2 при порівняній безпеці.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CA (Certificate Authority)</CONCEPT>
+        <DEFINITION><![CDATA[Центр сертифікації — довірена організація, що видає та підписує цифрові сертифікати X.509.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CBC (Cipher Block Chaining)</CONCEPT>
+        <DEFINITION><![CDATA[Режим блокового шифру, де кожен блок XOR-ується з попереднім шифроблоком перед шифруванням. Вимагає вектора ініціалізації (IV).<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ChaCha20-Poly1305</CONCEPT>
+        <DEFINITION><![CDATA[Симетричний потоковий шифр із автентифікацією. Швидший за AES на пристроях без апаратного прискорення; використовується у TLS 1.3 та WireGuard.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CIA (Confidentiality, Integrity, Availability)</CONCEPT>
+        <DEFINITION><![CDATA[Тріада інформаційної безпеки: конфіденційність, цілісність та доступність — три фундаментальні принципи захисту інформації.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Cipher Suite</CONCEPT>
+        <DEFINITION><![CDATA[Набір криптографічних алгоритмів для TLS-з'єднання: алгоритм обміну ключами, шифрування та автентифікації (наприклад, TLS_AES_256_GCM_SHA384).<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CloudWatch</CONCEPT>
+        <DEFINITION><![CDATA[Сервіс моніторингу та логування AWS. Збирає метрики VPN-з'єднань, трафіку та стан тунелів.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Continuous Authentication</CONCEPT>
+        <DEFINITION><![CDATA[Безперервна автентифікація у Zero Trust: ідентичність підтверджується повторно при кожному запиті або через короткі інтервали.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Control Channel</CONCEPT>
+        <DEFINITION><![CDATA[Керуючий канал OpenVPN на основі TLS. Відповідає за автентифікацію, обмін ключами та управління з'єднанням.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CRL (Certificate Revocation List)</CONCEPT>
+        <DEFINITION><![CDATA[Список відкликаних сертифікатів — список серійних номерів сертифікатів, які CA визнав недійсними до закінчення терміну дії.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Cryptokey Routing</CONCEPT>
+        <DEFINITION><![CDATA[Концепція WireGuard: кожному публічному ключу відповідають дозволені IP-діапазони. Спрощує маршрутизацію та авторизацію.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CSR (Certificate Signing Request)</CONCEPT>
+        <DEFINITION><![CDATA[Запит на підписання сертифіката — файл, що містить відкритий ключ та інформацію про суб'єкт, надсилається в CA для отримання сертифіката.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>CTR (Counter Mode)</CONCEPT>
+        <DEFINITION><![CDATA[Потоковий режим блокового шифру, де шифрується лічильник. Дозволяє паралельне шифрування.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Curve25519</CONCEPT>
+        <DEFINITION><![CDATA[Еліптична крива, оптимізована для ECDH. Використовується у WireGuard та сучасних реалізаціях TLS завдяки швидкості та безпеці.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Data Channel</CONCEPT>
+        <DEFINITION><![CDATA[Канал даних OpenVPN. Шифрує та передає VPN-трафік. Може використовувати окремі ключі від Control Channel.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>DERP (Designated Encrypted Relay for Packets)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол та сервери-ретранслятори Tailscale для передачі WireGuard-трафіку через NAT у разі, коли пряме підключення неможливе.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Diffie-Hellman (DH)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол обміну ключами у відкритому каналі без попереднього спільного секрету. Основа більшості VPN-протоколів для узгодження ключів.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>DoS/DDoS</CONCEPT>
+        <DEFINITION><![CDATA[Denial of Service / Distributed Denial of Service — атаки на доступність мережевих сервісів шляхом перевантаження трафіком.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>DPD (Dead Peer Detection)</CONCEPT>
+        <DEFINITION><![CDATA[Механізм виявлення недоступності VPN-партнера шляхом надсилання контрольних повідомлень. Визначений у RFC 3706.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>DPI (Deep Packet Inspection)</CONCEPT>
+        <DEFINITION><![CDATA[Глибока інспекція пакетів — аналіз змісту пакетів на рівні застосунків. Використовується для фільтрації та виявлення VPN-трафіку.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>DSCP (Differentiated Services Code Point)</CONCEPT>
+        <DEFINITION><![CDATA[Поле у IP-заголовку для маркування класу обслуговування (QoS). Копіюється або переписується при тунелюванні у SD-WAN.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Dual-Stack VPN Gateway</CONCEPT>
+        <DEFINITION><![CDATA[VPN-шлюз з підтримкою одночасно IPv4 та IPv6, що запобігає витокам трафіку через неохоплений стек.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>EAP (Extensible Authentication Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Розширюваний протокол автентифікації, що використовується в IKEv2 для інтеграції з RADIUS, сертифікатами та OTP.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>EasyRSA</CONCEPT>
+        <DEFINITION><![CDATA[Набір скриптів для управління PKI, що постачається з OpenVPN. Спрощує генерацію CA, сертифікатів та ключів.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ECB (Electronic Codebook)</CONCEPT>
+        <DEFINITION><![CDATA[Режим блокового шифру, де кожен блок шифрується незалежно. Небезпечний: однакові блоки відкритого тексту дають однакові блоки шифротексту.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ECC (Elliptic Curve Cryptography)</CONCEPT>
+        <DEFINITION><![CDATA[Асиметрична криптографія на основі еліптичних кривих. Забезпечує еквівалентну стійкість при значно менших розмірах ключів порівняно з RSA.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ECDH (Elliptic Curve Diffie-Hellman)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол обміну ключами на основі еліптичних кривих. Основа для Perfect Forward Secrecy у TLS та IKE.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ECDSA (Elliptic Curve Digital Signature Algorithm)</CONCEPT>
+        <DEFINITION><![CDATA[Алгоритм цифрового підпису на основі еліптичних кривих. Використовується у TLS-сертифікатах та SSH-ключах.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ECMP (Equal-Cost Multi-Path)</CONCEPT>
+        <DEFINITION><![CDATA[Маршрутизація з кількома рівновартісними маршрутами — балансування навантаження між кількома VPN-тунелями однакової метрики.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Ed25519</CONCEPT>
+        <DEFINITION><![CDATA[Схема цифрового підпису на основі кривої Edwards25519. Використовується у SSH, WireGuard та PGP як стандарт сучасного підпису.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ELK Stack (Elasticsearch, Logstash, Kibana)</CONCEPT>
+        <DEFINITION><![CDATA[Стек для централізованого збору, індексації та візуалізації логів. ELK або OpenSearch використовується для аналізу VPN-логів.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ESN (Extended Sequence Numbers)</CONCEPT>
+        <DEFINITION><![CDATA[Розширені порядкові номери IPsec (RFC 4304) — 64-бітні замість 32-бітних. Запобігають переповненню лічильника при високій пропускній здатності.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ESP (Encapsulating Security Payload)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол IPsec (RFC 4303), що забезпечує шифрування, автентифікацію та захист від replay-атак. Протокол IP 50.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Full Tunneling</CONCEPT>
+        <DEFINITION><![CDATA[Режим VPN, де весь трафік клієнта направляється через VPN-тунель. Забезпечує максимальний контроль.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>GCM (Galois/Counter Mode)</CONCEPT>
+        <DEFINITION><![CDATA[Режим роботи блокового шифру, що реалізує AEAD. Забезпечує одночасно шифрування та автентифікацію.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Geneve</CONCEPT>
+        <DEFINITION><![CDATA[Протокол тунелювання наступного покоління після VXLAN. Підтримує розширювані метадані у заголовку, застосовується у OpenShift/Kubernetes.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Google Cloud VPN</CONCEPT>
+        <DEFINITION><![CDATA[Хмарний IPsec VPN Google Cloud. Підтримує HA VPN (99.99% SLA) з двома тунелями для надлишковості.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Grafana</CONCEPT>
+        <DEFINITION><![CDATA[Платформа візуалізації метрик та логів. Використовується разом з Prometheus для дашбордів VPN-статистики.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>GRE (Generic Routing Encapsulation)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол тунелювання Cisco для інкапсуляції будь-яких пакетів у IP. Заголовок 4 байти. Не шифрує, зазвичай поєднується з IPsec.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>HA (High Availability)</CONCEPT>
+        <DEFINITION><![CDATA[Висока доступність — архітектурний підхід для мінімізації часу простою через резервування компонентів (Active/Standby або Active/Active).<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Headscale</CONCEPT>
+        <DEFINITION><![CDATA[Відкрита self-hosted альтернатива control plane Tailscale для управління WireGuard mesh-мережею.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>HMAC (Hash-based Message Authentication Code)</CONCEPT>
+        <DEFINITION><![CDATA[Код автентифікації повідомлення на основі хеш-функції та секретного ключа. Забезпечує цілісність та автентифікацію джерела.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Identity-Aware Proxy (IAP)</CONCEPT>
+        <DEFINITION><![CDATA[Проксі, що перевіряє ідентичність та контекст перед наданням доступу до ресурсу. Ключовий компонент ZTNA-архітектур.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IDS/IPS (Intrusion Detection/Prevention System)</CONCEPT>
+        <DEFINITION><![CDATA[Система виявлення/запобігання вторгненням. Аналізує трафік для виявлення аномалій та відомих атак.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IKE (Internet Key Exchange)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол обміну ключами для IPsec. IKEv1 (RFC 2409) — застарілий, IKEv2 (RFC 7296) — сучасний стандарт.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IKEv2 (Internet Key Exchange v2)</CONCEPT>
+        <DEFINITION><![CDATA[Сучасна версія протоколу IKE (RFC 7296). Підтримує MOBIKE, EAP, пришвидшене повторне підключення та захист від DoS.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IKEv2 (Internet Key Exchange version 2)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол обміну ключами для IPsec (RFC 7296). Підтримує MOBIKE, швидке перепідключення, EAP-автентифікацію.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Intermediate CA</CONCEPT>
+        <DEFINITION><![CDATA[Проміжний центр сертифікації — підпорядкований Root CA. Видає кінцеві сертифікати, ізолюючи Root CA від прямих операцій.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IOC (Indicator of Compromise)</CONCEPT>
+        <DEFINITION><![CDATA[Індикатор компрометації — артефакт (IP, домен, хеш), що свідчить про можливий інцидент безпеки.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IPsec (Internet Protocol Security)</CONCEPT>
+        <DEFINITION><![CDATA[Набір стандартів IETF (RFC 4301) для захисту IP-трафіку на мережевому рівні (L3). Включає протоколи AH, ESP та IKE.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>IPv6 DNS leakage</CONCEPT>
+        <DEFINITION><![CDATA[Витік DNS-запитів через IPv6 у разі, якщо VPN-клієнт не перехоплює IPv6-трафік. Загроза конфіденційності у Dual-Stack середовищах.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>ISP (Internet Service Provider)</CONCEPT>
+        <DEFINITION><![CDATA[Інтернет-провайдер — компанія, що надає доступ до Інтернету та є власником Underlay-інфраструктури.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Key rotation (WireGuard)</CONCEPT>
+        <DEFINITION><![CDATA[Регулярна ротація попередньо розподілених ключів (PSK) у WireGuard для підвищення PFS та захисту від майбутнього квантового зламу.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>L2TP (Layer 2 Tunneling Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол тунелювання канального рівня (RFC 2661). Не шифрує самостійно; зазвичай використовується разом з IPsec (L2TP/IPsec).<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>L2TP/IPsec</CONCEPT>
+        <DEFINITION><![CDATA[Комбінація L2TP для тунелювання та IPsec для шифрування. Поширений у корпоративних VPN, вбудований у Windows, macOS, iOS, Android.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>LDAP-автентифікація</CONCEPT>
+        <DEFINITION><![CDATA[Інтеграція OpenVPN з LDAP/Active Directory для централізованої автентифікації користувачів через плагін openvpn-auth-ldap.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Let&apos;s Encrypt</CONCEPT>
+        <DEFINITION><![CDATA[Безкоштовний автоматизований CA з підтримкою протоколу ACME для автоматичного отримання та оновлення TLS-сертифікатів.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>libreswan</CONCEPT>
+        <DEFINITION><![CDATA[Відкрита реалізація IKEv1/IKEv2 для Linux, нащадок FreeS/WAN. Широко використовується у Red Hat/Fedora середовищах.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MAC (Message Authentication Code)</CONCEPT>
+        <DEFINITION><![CDATA[Код автентифікації повідомлення — криптографічний тег, що підтверджує цілісність та справжність повідомлення.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MagicDNS</CONCEPT>
+        <DEFINITION><![CDATA[Функція Tailscale: автоматичне DNS-розв'язання імен вузлів у mesh-мережі без ручного налаштування DNS.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Man-in-the-Middle (MITM)</CONCEPT>
+        <DEFINITION><![CDATA[Атака, при якій зловмисник непомітно перехоплює та може модифікувати трафік між двома сторонами.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MD5</CONCEPT>
+        <DEFINITION><![CDATA[Застарілий хеш-алгоритм з 128-бітним дайджестом. Вважається зламаним, не застосовується у сучасних системах безпеки.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MOBIKE (IKEv2 Mobility and Multihoming)</CONCEPT>
+        <DEFINITION><![CDATA[Розширення IKEv2 (RFC 4555), що дозволяє мобільним клієнтам змінювати IP-адресу без повного переузгодження SA.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MS-CHAPv2</CONCEPT>
+        <DEFINITION><![CDATA[Microsoft Challenge Handshake Authentication Protocol v2 — протокол автентифікації. Вразливий до офлайн-атак перебором; не рекомендується без захисного тунеля.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MSS (Maximum Segment Size)</CONCEPT>
+        <DEFINITION><![CDATA[Максимальний розмір корисних даних у TCP-сегменті. Коригується через MSS Clamping при тунелюванні VPN.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MTU (Maximum Transmission Unit)</CONCEPT>
+        <DEFINITION><![CDATA[Максимальний розмір кадру (байт), який може передаватися через мережевий інтерфейс без фрагментації. У VPN зменшується через додаткові заголовки.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>MTU та MSS Clamping</CONCEPT>
+        <DEFINITION><![CDATA[Налаштування максимального розміру пакета для уникнення фрагментації у IPsec тунелях. Overhead ESP у тунельному режимі — близько 60 байт.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>NAT Traversal (NAT-T)</CONCEPT>
+        <DEFINITION><![CDATA[Механізм для роботи IPsec через NAT шляхом інкапсуляції ESP у UDP (порт 4500).<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Noise Protocol Framework</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічний фреймворк, на якому побудований WireGuard. Визначає безпечне рукостискання та управління ключами.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Obfsproxy / obfs4</CONCEPT>
+        <DEFINITION><![CDATA[Плагін маскування трафіку OpenVPN під звичайний HTTPS. Застосовується для обходу DPI у країнах з цензурою.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>OCSP (Online Certificate Status Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол онлайн-перевірки статусу сертифіката в реальному часі — альтернатива CRL.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>OpenSSL</CONCEPT>
+        <DEFINITION><![CDATA[Відкрита бібліотека криптографії. Основа OpenVPN та більшості TLS-реалізацій. Надає утиліти для роботи з сертифікатами та ключами.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>OpenVPN</CONCEPT>
+        <DEFINITION><![CDATA[VPN-рішення з відкритим кодом, що використовує TLS для управління та шифрування трафіку. Підтримує UDP/TCP, порт 1194 за замовчуванням.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>OSI (Open Systems Interconnection)</CONCEPT>
+        <DEFINITION><![CDATA[Семирівнева модель мережевої взаємодії: фізичний, канальний, мережевий, транспортний, сеансовий, представницький та прикладний рівні.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Overlay мережа</CONCEPT>
+        <DEFINITION><![CDATA[Віртуальна мережа, побудована поверх Underlay. VPN — приклад Overlay: пакети тунелюються крізь фізичну мережу без знання про неї.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PAM (Pluggable Authentication Modules)</CONCEPT>
+        <DEFINITION><![CDATA[Система автентифікації Linux. Використовується OpenVPN через плагін openvpn-plugin-auth-pam для інтеграції з системними обліковими записами.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PEM (Privacy-Enhanced Mail)</CONCEPT>
+        <DEFINITION><![CDATA[Текстовий формат кодування сертифікатів та ключів у Base64 між заголовками BEGIN/END. Найпоширеніший формат у Linux/OpenSSL.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PFS (Perfect Forward Secrecy)</CONCEPT>
+        <DEFINITION><![CDATA[Властивість протоколу: компрометація довгострокового ключа не розкриває сесійних ключів минулих сеансів. Реалізується через ECDH.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Phase 1 / IKE SA</CONCEPT>
+        <DEFINITION><![CDATA[Перша фаза IKE: взаємна автентифікація сторін та встановлення захищеного каналу для обміну ключами.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Phase 2 / Child SA (IPsec SA)</CONCEPT>
+        <DEFINITION><![CDATA[Друга фаза IKE: узгодження параметрів ESP/AH для захисту трафіку даних. Може бути кілька Child SA в рамках одного IKE SA.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PKCS#12 (.pfx/.p12)</CONCEPT>
+        <DEFINITION><![CDATA[Бінарний формат контейнера для зберігання сертифіката та приватного ключа разом, захищений паролем.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PKCS#8</CONCEPT>
+        <DEFINITION><![CDATA[Стандарт зберігання приватних ключів. Підтримує шифрування ключа паролем. Використовується в OpenVPN та OpenSSL.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PKI (Public Key Infrastructure)</CONCEPT>
+        <DEFINITION><![CDATA[Інфраструктура відкритих ключів — набір ролей, політик і процедур для управління цифровими сертифікатами та ключами шифрування.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Policy-Based VPN</CONCEPT>
+        <DEFINITION><![CDATA[IPsec VPN, де шифрування визначається ACL-правилами (політиками). Не вимагає окремого тунельного інтерфейсу.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PPP (Point-to-Point Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол канального рівня для послідовних з'єднань. Основа PPTP та L2TP; забезпечує IP-адресацію та автентифікацію (PAP, CHAP).<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>PPTP (Point-to-Point Tunneling Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[Застарілий VPN-протокол Microsoft (RFC 2637) на основі PPP. Вважається небезпечним через вразливості MS-CHAPv2 та MPPE.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Preshared Key (PSK)</CONCEPT>
+        <DEFINITION><![CDATA[Додатковий симетричний ключ у WireGuard поверх ECDH. Підвищує квантову стійкість та забезпечує додатковий шар безпеки.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Prometheus</CONCEPT>
+        <DEFINITION><![CDATA[Відкрита система моніторингу та алертингу з моделлю pull-збору метрик. Широко використовується для моніторингу VPN-шлюзів.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>QoS (Quality of Service)</CONCEPT>
+        <DEFINITION><![CDATA[Набір механізмів управління мережевим трафіком для пріоритизації критичних потоків (голос, відео) над менш важливими.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>RADIUS (Remote Authentication Dial-In User Service)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол AAA (автентифікація, авторизація, облік). Інтегрується з IKEv2 через EAP для централізованої автентифікації користувачів.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Rate Limiting</CONCEPT>
+        <DEFINITION><![CDATA[Обмеження швидкості обробки запитів для захисту від DoS-атак та зловживань.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Remote Access VPN</CONCEPT>
+        <DEFINITION><![CDATA[VPN для підключення окремих користувачів до корпоративної мережі з будь-якого місця.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Replay Window</CONCEPT>
+        <DEFINITION><![CDATA[Вікно допустимих порядкових номерів пакетів IPsec. Пакети зі Sequence Number поза вікном відкидаються як повторні.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Roaming (WireGuard)</CONCEPT>
+        <DEFINITION><![CDATA[Здатність WireGuard-клієнта змінювати IP-адресу без переузгодження тунелю. Реалізовано через відстеження останньої активної endpoint-адреси.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Root CA</CONCEPT>
+        <DEFINITION><![CDATA[Кореневий центр сертифікації — верхній рівень ієрархії PKI, чий сертифікат є самопідписаним та попередньо встановлений у довірені сховища.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Route-Based VPN</CONCEPT>
+        <DEFINITION><![CDATA[IPsec VPN з окремим тунельним інтерфейсом (vti, xfrmi). Маршрутизація визначає, який трафік іде через тунель.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>RSA (Rivest–Shamir–Adleman)</CONCEPT>
+        <DEFINITION><![CDATA[Асиметричний алгоритм шифрування та електронного підпису, що базується на складності факторизації великих чисел. Розміри ключів: 2048–4096 біт.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SA (Security Association)</CONCEPT>
+        <DEFINITION><![CDATA[Однобічна угода про параметри безпеки між двома вузлами IPsec: алгоритми шифрування, ключі, SPI. SA є однонаправленою.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SADB (Security Association Database)</CONCEPT>
+        <DEFINITION><![CDATA[База даних активних Security Associations у ядрі ОС. Зберігає параметри шифрування для кожного тунелю.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SD-WAN (Software-Defined Wide Area Network)</CONCEPT>
+        <DEFINITION><![CDATA[Програмно-визначена глобальна мережа. Централізоване управління, динамічний вибір маршрутів, підтримка кількох каналів WAN з автоматичним перемиканням.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SDP (Software-Defined Perimeter)</CONCEPT>
+        <DEFINITION><![CDATA[Архітектура Zero Trust, де захищений периметр будується динамічно навколо кожного користувача/ресурсу, а не навколо мережі.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SHA-256</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічна хеш-функція сімейства SHA-2 з 256-бітним дайджестом. Стандарт цілісності у IPsec та TLS.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SHA-3</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічна хеш-функція на основі конструкції губки Keccak, стандартизована NIST у 2015 р.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SIEM (Security Information and Event Management)</CONCEPT>
+        <DEFINITION><![CDATA[Система управління подіями та інформацією безпеки. Збирає, нормалізує та аналізує логи з усіх джерел для виявлення інцидентів.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Site-to-Site VPN</CONCEPT>
+        <DEFINITION><![CDATA[VPN між двома мережами (офісами чи ЦОД), де трафік усієї мережі прозоро тунелюється через шлюзи.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SOAR (Security Orchestration, Automation and Response)</CONCEPT>
+        <DEFINITION><![CDATA[Платформа оркестрації, автоматизації та реагування на інциденти безпеки. Автоматизує реакцію на типові загрози.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SPD (Security Policy Database)</CONCEPT>
+        <DEFINITION><![CDATA[База даних політик безпеки IPsec. Визначає, який трафік шифрувати, пропускати або відкидати.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SPI (Security Parameters Index)</CONCEPT>
+        <DEFINITION><![CDATA[32-бітний індекс у ESP/AH заголовку для ідентифікації Security Association при обробці пакета.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Split Tunneling</CONCEPT>
+        <DEFINITION><![CDATA[Режим VPN, де лише частина трафіку направляється через тунель, а решта — напряму в Інтернет.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Split Tunneling (OpenVPN)</CONCEPT>
+        <DEFINITION><![CDATA[Налаштування OpenVPN, де лише певні мережі направляються через VPN, а решта — напряму. Реалізується через директиву route.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SSL/TLS VPN</CONCEPT>
+        <DEFINITION><![CDATA[VPN на основі протоколу SSL/TLS, що працює через стандартні веб-порти (TCP 443). Ефективно проходить через більшість файрволів.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SSTP</CONCEPT>
+        <DEFINITION><![CDATA[Secure Socket Tunneling Protocol — VPN на базі SSL/TLS, порт 443. Вбудований у Windows, ефективно проходить NAT та файрволи.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>SSTP (Secure Socket Tunneling Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[VPN-протокол Microsoft (RFC 5246), що тунелює PPP через TLS/HTTPS (порт 443). Ефективно обходить більшість файрволів.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>strongSwan</CONCEPT>
+        <DEFINITION><![CDATA[Відкрита реалізація IKEv2 для Linux/FreeBSD. Найпоширеніший IKE-демон для корпоративних IPsec VPN.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Tailscale</CONCEPT>
+        <DEFINITION><![CDATA[VPN-сервіс на основі WireGuard з централізованою панеллю керування (control plane). Реалізує mesh-топологію зі DERP-релеями.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TAP-інтерфейс</CONCEPT>
+        <DEFINITION><![CDATA[Мережевий тунельний інтерфейс рівня 2 (Ethernet). Використовується для бриджингових VPN (Ethernet-кадри).<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Threat Intelligence</CONCEPT>
+        <DEFINITION><![CDATA[Дані про відомі загрози (IP-адреси атакуючих, індикатори компрометації). Використовується у SIEM для кореляції подій.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TLS (Transport Layer Security)</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічний протокол захисту транспортного рівня. Забезпечує конфіденційність, цілісність та автентифікацію у мережевій передачі.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TLS 1.3</CONCEPT>
+        <DEFINITION><![CDATA[Найсучасніша версія TLS (RFC 8446). Спрощений handshake, обов'язковий PFS, видалено застарілі алгоритми. Стандарт у OpenVPN 2.5+.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TLS Handshake</CONCEPT>
+        <DEFINITION><![CDATA[Процедура узгодження TLS-з'єднання: обмін сертифікатами, вибір шифрнаборів, узгодження ключів через ECDH.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>tls-auth / tls-crypt</CONCEPT>
+        <DEFINITION><![CDATA[Директиви OpenVPN для захисту TLS Handshake за допомогою HMAC або шифрування. tls-crypt надійніший: шифрує та автентифікує control channel.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TOTP (Time-based One-Time Password)</CONCEPT>
+        <DEFINITION><![CDATA[Одноразовий пароль на основі часу (RFC 6238). Використовується для MFA у VPN-автентифікації.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Transit Gateway</CONCEPT>
+        <DEFINITION><![CDATA[Хмарний маршрутизатор AWS, що об'єднує кілька VPC та VPN-підключень в єдину хаб-топологію.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>TUN-інтерфейс</CONCEPT>
+        <DEFINITION><![CDATA[Мережевий тунельний інтерфейс рівня 3 (IP). Використовується для маршрутизованих VPN (IP-пакети).<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Underlay мережа</CONCEPT>
+        <DEFINITION><![CDATA[Фізична або реальна мережева інфраструктура провайдера: кабелі, маршрутизатори, оптичні магістралі, що забезпечують базову передачу пакетів.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Virtual Private Gateway (VGW)</CONCEPT>
+        <DEFINITION><![CDATA[Компонент AWS VPN: шлюз на стороні AWS у VPC для термінування Site-to-Site IPsec тунелів.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VNI (VXLAN Network Identifier)</CONCEPT>
+        <DEFINITION><![CDATA[24-бітний ідентифікатор сегменту VXLAN, аналог VLAN ID. Дозволяє мати до 16 млн ізольованих сегментів.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VPC (Virtual Private Cloud)</CONCEPT>
+        <DEFINITION><![CDATA[Ізольована логічна мережа у хмарному провайдері (AWS, Azure, GCP). Основа хмарної мережевої архітектури.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VPN (Virtual Private Network)</CONCEPT>
+        <DEFINITION><![CDATA[Віртуальна приватна мережа — технологія, що дозволяє створювати захищений зашифрований тунель поверх публічної мережі.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VPN Concentrator</CONCEPT>
+        <DEFINITION><![CDATA[Спеціалізований пристрій або ПЗ для термінування великої кількості VPN-з'єднань. Забезпечує масштабованість та централізацію.<br/><br/><em>Лекція 08</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VTEP (VXLAN Tunnel Endpoint)</CONCEPT>
+        <DEFINITION><![CDATA[Пристрій або програмний компонент, що інкапсулює та декапсулює VXLAN-пакети. Може бути апаратним або програмним (OVS).<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>VXLAN (Virtual eXtensible LAN)</CONCEPT>
+        <DEFINITION><![CDATA[Протокол інкапсуляції Ethernet у UDP (RFC 7348). Підтримує до 16 мільйонів ізольованих сегментів через 24-бітний VNI. Використовується у хмарних ЦОД.<br/><br/><em>Лекція 03</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>WireGuard</CONCEPT>
+        <DEFINITION><![CDATA[Сучасний мінімалістичний VPN-протокол (~4000 рядків коду), вбудований у ядро Linux 5.6+. Використовує Curve25519, ChaCha20-Poly1305, BLAKE2s.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>X.509</CONCEPT>
+        <DEFINITION><![CDATA[Стандарт формату цифрових сертифікатів. Сертифікат X.509 містить відкритий ключ, ідентифікатор власника, підпис CA та термін дії.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>xfrm</CONCEPT>
+        <DEFINITION><![CDATA[Підсистема ядра Linux для обробки IPsec. Реалізує SA та SPD на рівні ядра, незалежно від IKE-демона.<br/><br/><em>Лекція 05</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Zero Trust</CONCEPT>
+        <DEFINITION><![CDATA[Принцип безпеки: «Ніколи не довіряй, завжди перевіряй». Мережева позиція не є основою для надання доступу.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Zero Trust Network Access (ZTNA)</CONCEPT>
+        <DEFINITION><![CDATA[Концепція безпеки «нульової довіри»: кожен запит автентифікується та авторизується незалежно від розташування (всередині чи ззовні мережі).<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Доступність</CONCEPT>
+        <DEFINITION><![CDATA[Принцип CIA: система та дані доступні авторизованим користувачам тоді, коли їм це потрібно.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Конфіденційність</CONCEPT>
+        <DEFINITION><![CDATA[Принцип CIA: інформація доступна лише авторизованим суб'єктам. Забезпечується шифруванням трафіку у VPN.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Мікросегментація</CONCEPT>
+        <DEFINITION><![CDATA[Техніка Zero Trust: поділ мережі на ізольовані мікросегменти з окремими політиками доступу для кожного сервісу або застосунку.<br/><br/><em>Лекція 07</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Протокол-носій (Carrier Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[У тунелюванні — зовнішній протокол, у який вкладається пакет-пасажир (GRE, IPsec, VXLAN).<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Протокол-пасажир (Passenger Protocol)</CONCEPT>
+        <DEFINITION><![CDATA[У тунелюванні — вихідний пакет, що інкапсулюється (IPv4, IPv6, Ethernet).<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Статичний ключ (OpenVPN)</CONCEPT>
+        <DEFINITION><![CDATA[Режим OpenVPN з попередньо розподіленим спільним ключем (PSK). Простий у налаштуванні, але без PFS та взаємної автентифікації.<br/><br/><em>Лекція 06</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Транспортний режим (Transport Mode)</CONCEPT>
+        <DEFINITION><![CDATA[Режим IPsec, де шифрується лише корисне навантаження; вихідний IP-заголовок зберігається. Для Host-to-Host захисту.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Тунельний режим (Tunnel Mode)</CONCEPT>
+        <DEFINITION><![CDATA[Режим IPsec, де шифрується весь вихідний IP-пакет включно із заголовком; додається новий заголовок. Для Site-to-Site VPN.<br/><br/><em>Лекція 04</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Тунелювання</CONCEPT>
+        <DEFINITION><![CDATA[Механізм передачі пакетів одного мережевого протоколу всередині пакетів іншого протоколу.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Цифровий підпис</CONCEPT>
+        <DEFINITION><![CDATA[Криптографічний механізм підтвердження автентичності та цілісності повідомлення за допомогою приватного ключа відправника.<br/><br/><em>Лекція 02</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Цілісність</CONCEPT>
+        <DEFINITION><![CDATA[Принцип CIA: гарантія, що дані не змінені несанкціоновано. Забезпечується MAC/HMAC у VPN-протоколах.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+      <ENTRY>
+        <CONCEPT>Інкапсуляція</CONCEPT>
+        <DEFINITION><![CDATA[Процес обгортання пакета одного протоколу в пакет іншого протоколу для передачі через мережу.<br/><br/><em>Лекція 01</em>]]></DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>1</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+      </ENTRY>
+    </ENTRIES>
+  </INFO>
+</GLOSSARY>
